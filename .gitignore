@@ -1,0 +1,8 @@
+dist/
+tests/
+ape_safe/
+scripts/
+build/
+.build/
+docs/_build/
+.hypothesis/
