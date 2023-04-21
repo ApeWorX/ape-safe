@@ -18,7 +18,7 @@ def test_swap_owner(safe, accounts, OWNERS):
 
     # TODO: Remove `gas_limit` by allowing forking to compute gas limit
     receipt = safe.contract.swapOwner(
-        prev_owner, old_owner, new_owner, sender=safe, gas_limit=200_000, safeTxGas=195_000
+        prev_owner, old_owner, new_owner, sender=safe, gas_limit=200_000
     )
 
     assert not receipt.events.filter(safe.contract.ExecutionFailure)
@@ -36,7 +36,7 @@ def test_add_owner(safe, accounts, OWNERS):
 
     # TODO: Remove `gas_limit` by allowing forking to compute gas limit
     receipt = safe.contract.addOwnerWithThreshold(
-        new_owner, safe.confirmations_required, sender=safe, gas_limit=200_000, safeTxGas=195_000
+        new_owner, safe.confirmations_required, sender=safe, gas_limit=200_000
     )
 
     assert not receipt.events.filter(safe.contract.ExecutionFailure)
@@ -61,7 +61,6 @@ def test_remove_owner(safe, OWNERS):
         max(len(OWNERS) - 1, safe.confirmations_required - 1),
         sender=safe,
         gas_limit=200_000,
-        safeTxGas=195_000,
     )
 
     # TODO: Add fucntionality to ContractEvent such that this can work
