@@ -17,7 +17,6 @@ def test_swap_owner(safe, accounts, OWNERS):
     prev_owner = safe.compute_prev_signer(old_owner)
 
     # TODO: Remove `gas_limit` by allowing forking to compute gas limit
-    # TODO: Figure out why `sender=safe` uses impersonated accounts
     receipt = safe.contract.swapOwner(
         prev_owner, old_owner, new_owner, sender=safe, gas_limit=200_000, safeTxGas=195_000
     )
@@ -36,7 +35,6 @@ def test_add_owner(safe, accounts, OWNERS):
     assert new_owner.address not in safe.signers
 
     # TODO: Remove `gas_limit` by allowing forking to compute gas limit
-    # TODO: Figure out why `sender=safe` uses impersonated accounts
     receipt = safe.contract.addOwnerWithThreshold(
         new_owner, safe.confirmations_required, sender=safe, gas_limit=200_000, safeTxGas=195_000
     )
@@ -56,7 +54,6 @@ def test_remove_owner(safe, OWNERS):
 
     prev_owner = safe.compute_prev_signer(old_owner)
     # TODO: Remove `gas_limit` by allowing forking to compute gas limit
-    # TODO: Figure out why `sender=safe` uses impersonated accounts
     receipt = safe.contract.removeOwner(
         prev_owner,
         old_owner,
