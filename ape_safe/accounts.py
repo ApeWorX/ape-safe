@@ -208,7 +208,18 @@ class SafeAccount(AccountAPI):
         # NOTE: Need to override `AccountAPI` behavior for balance checks
         return self.provider.prepare_transaction(txn)
 
-    def call(self, txn: TransactionAPI, **call_kwargs) -> ReceiptAPI:  # type: ignore[override]
+    def call(  # type: ignore[override]
+        self,
+        txn: TransactionAPI,
+        impersonate: bool = False,
+        **call_kwargs,
+    ) -> ReceiptAPI:
+        if impersonate:
+            # Bypass signature collection logic and attempt to submit by impersonation
+            # NOTE: Only works for fork and local networks
+            impersonated_account = self.account_manager.test_accounts[self.address]
+            return impersonated_account.call(txn)
+
         # NOTE: Override just to produce a more specific exception with better error message
         try:
             return super().call(txn, **call_kwargs)
