@@ -8,7 +8,8 @@ def test_init(safe, OWNERS, THRESHOLD, safe_contract):
     assert safe.next_nonce == 0
 
 
-def test_swap_owner(safe, accounts, OWNERS):
+@pytest.mark.parametrize("impersonate", [False, True])
+def test_swap_owner(safe, accounts, OWNERS, impersonate):
     old_owner = safe.signers[0]
     new_owner = accounts[len(OWNERS)]  # replace owner 1 with account N + 1
     assert new_owner.address not in safe.signers
@@ -18,7 +19,12 @@ def test_swap_owner(safe, accounts, OWNERS):
 
     # TODO: Remove `gas_limit` by allowing forking to compute gas limit
     receipt = safe.contract.swapOwner(
-        prev_owner, old_owner, new_owner, sender=safe, gas_limit=200_000
+        prev_owner,
+        old_owner,
+        new_owner,
+        sender=safe,
+        gas_limit=200_000,
+        impersonate=impersonate,
     )
 
     assert not receipt.events.filter(safe.contract.ExecutionFailure)
@@ -30,13 +36,18 @@ def test_swap_owner(safe, accounts, OWNERS):
     assert new_owner.address in safe.signers
 
 
-def test_add_owner(safe, accounts, OWNERS):
+@pytest.mark.parametrize("impersonate", [False, True])
+def test_add_owner(safe, accounts, OWNERS, impersonate):
     new_owner = accounts[len(OWNERS)]  # replace owner 1 with account N + 1
     assert new_owner.address not in safe.signers
 
     # TODO: Remove `gas_limit` by allowing forking to compute gas limit
     receipt = safe.contract.addOwnerWithThreshold(
-        new_owner, safe.confirmations_required, sender=safe, gas_limit=200_000
+        new_owner,
+        safe.confirmations_required,
+        sender=safe,
+        gas_limit=200_000,
+        impersonate=impersonate,
     )
 
     assert not receipt.events.filter(safe.contract.ExecutionFailure)
@@ -46,7 +57,8 @@ def test_add_owner(safe, accounts, OWNERS):
     assert new_owner.address in safe.signers
 
 
-def test_remove_owner(safe, OWNERS):
+@pytest.mark.parametrize("impersonate", [False, True])
+def test_remove_owner(safe, OWNERS, impersonate):
     if len(OWNERS) == 1:
         pytest.skip("Can't remove the only owner")
 
@@ -61,6 +73,7 @@ def test_remove_owner(safe, OWNERS):
         max(len(OWNERS) - 1, safe.confirmations_required - 1),
         sender=safe,
         gas_limit=200_000,
+        impersonate=impersonate,
     )
 
     # TODO: Add fucntionality to ContractEvent such that this can work
