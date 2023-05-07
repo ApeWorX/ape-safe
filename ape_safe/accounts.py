@@ -208,6 +208,54 @@ class SafeAccount(AccountAPI):
         # NOTE: Need to override `AccountAPI` behavior for balance checks
         return self.provider.prepare_transaction(txn)
 
+    def _impersonated_call(self, txn: TransactionAPI, **safe_tx_kwargs) -> ReceiptAPI:
+        safe_tx = self.create_safe_tx(txn, **safe_tx_kwargs)
+        safe_tx_exec_args = list(safe_tx._body_["message"].values())
+        signatures = []
+        # Bypass signature collection logic and attempt to submit by impersonation
+        # NOTE: Only works for fork and local networks
+        if self.confirmations_required > 1:
+            safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
+            for signer_address in self.signers[: self.confirmations_required - 1]:
+                impersonated_signer = self.account_manager.test_accounts[signer_address]
+                self.contract.approveHash(safe_tx_hash, sender=impersonated_signer)
+                signatures.append(
+                    MessageSignature(
+                        v=1,  # Approved hash (e.g. submitter is approved)
+                        r=b"\x00" * 12 + to_bytes(hexstr=impersonated_signer.address),
+                        s=b"\x00" * 32,
+                    )
+                )
+
+        impersonated_sender = self.account_manager.test_accounts[
+            self.signers[self.confirmations_required - 1]
+        ]
+        signatures.append(
+            MessageSignature(
+                v=1,  # Approved hash (e.g. submitter is approved)
+                r=b"\x00" * 12 + to_bytes(hexstr=impersonated_sender.address),
+                s=b"\x00" * 32,
+            )
+        )
+
+        # NOTE: Must order signatures in ascending order of signer address (converted to int)
+        def sigr2int(sig: MessageSignature) -> int:
+            return to_int(sig.r)
+
+        encoded_signatures = b"".join(sig.encode_rsv() for sig in sorted(signatures, key=sigr2int))
+        # NOTE: Override just to produce a more specific exception with better error message
+        try:
+            # NOTE: Skip `nonce`
+            return self.contract.execTransaction(
+                *safe_tx_exec_args[:-1], encoded_signatures, sender=impersonated_sender
+            )
+        except ContractLogicError as e:
+            if e.message.startswith("GS"):
+                raise SafeLogicError(e.message) from e
+
+            else:
+                raise e
+
     def call(  # type: ignore[override]
         self,
         txn: TransactionAPI,
@@ -215,10 +263,7 @@ class SafeAccount(AccountAPI):
         **call_kwargs,
     ) -> ReceiptAPI:
         if impersonate:
-            # Bypass signature collection logic and attempt to submit by impersonation
-            # NOTE: Only works for fork and local networks
-            impersonated_account = self.account_manager.test_accounts[self.address]
-            return impersonated_account.call(txn)
+            return self._impersonated_call(txn, **call_kwargs)
 
         # NOTE: Override just to produce a more specific exception with better error message
         try:
