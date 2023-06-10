@@ -272,6 +272,7 @@ class SafeAccount(AccountAPI):
         submit: bool = True,
         submitter: Union[AccountAPI, AddressType, str, None] = None,
         skip: Optional[List[Union[AccountAPI, AddressType, str]]] = None,
+        signatures_required: Optional[int] = None,  # NOTE: Required if increasing threshold
         **signer_options,
     ) -> Optional[TransactionAPI]:
         # TODO: Docstring (override AccountAPI)
@@ -306,14 +307,15 @@ class SafeAccount(AccountAPI):
         # Garner either M or M - 1 signatures, depending on if we are submitting
         # and whether the submitter is also a signer (both must be true to submit M - 1).
         available_signers = iter(self.local_signers)
-        if sender and sender.address in self.signers:
-            # Sender doesn't have to sign
-            signatures_required = self.confirmations_required - 1
-            available_signers = filter(lambda s: s != sender, available_signers)
+        if signatures_required is None:
+            if sender and sender.address in self.signers:
+                # Sender doesn't have to sign
+                signatures_required = self.confirmations_required - 1
+                available_signers = filter(lambda s: s != sender, available_signers)
 
-        else:  # NOTE: sender is None if submit is False
-            # Not submitting, or sender isn't a signer, so we need all confirmations
-            signatures_required = self.confirmations_required
+            else:  # NOTE: sender is None if submit is False
+                # Not submitting, or sender isn't a signer, so we need all confirmations
+                signatures_required = self.confirmations_required
 
         # Allow bypassing any specified signers
         if skip:
