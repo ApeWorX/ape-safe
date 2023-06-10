@@ -202,8 +202,13 @@ class SafeAccount(AccountAPI):
 
     def _encode_signatures(self, signatures: Dict[AddressType, MessageSignature]) -> HexBytes:
         # NOTE: Must order signatures in ascending order of signer address (converted to int)
+        def addr_to_int(a: AddressType) -> int:
+            return to_int(hexstr=a)
+
         return HexBytes(
-            b"".join(signatures[signer].encode_rsv() for signer in sorted(signatures, key=to_int))
+            b"".join(
+                signatures[signer].encode_rsv() for signer in sorted(signatures, key=addr_to_int)
+            )
         )
 
     def _impersonated_call(self, txn: TransactionAPI, **safe_tx_kwargs) -> ReceiptAPI:
