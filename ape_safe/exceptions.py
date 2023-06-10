@@ -1,16 +1,16 @@
-from ape.exceptions import ApeException, ContractLogicError
+from ape.exceptions import ApeException, ContractLogicError, SignatureError
 
 
 class ApeSafeException(ApeException):
     pass
 
 
-class NoLocalSigners(ApeSafeException):
+class NoLocalSigners(ApeSafeException, SignatureError):
     def __init__(self):
         super().__init__("No local signers available, try resubmitting with `submitter=` kwarg.")
 
 
-class NotEnoughSignatures(ApeSafeException):
+class NotEnoughSignatures(ApeSafeException, SignatureError):
     def __init__(self, expected: int, actual: int):
         super().__init__(
             f"Not enough signatures, need {expected - actual} more! Bypass this behavior"
