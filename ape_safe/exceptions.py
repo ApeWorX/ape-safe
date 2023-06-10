@@ -13,7 +13,7 @@ class NoLocalSigners(ApeSafeException, SignatureError):
 class NotEnoughSignatures(ApeSafeException, SignatureError):
     def __init__(self, expected: int, actual: int):
         super().__init__(
-            f"Not enough signatures, need {expected - actual} more! Bypass this behavior"
+            f"Not enough signatures, {expected - actual} more are needed. Bypass this behavior"
             " and publish to Safe API by adding 'submit_transaction=False' to your call."
         )
 
