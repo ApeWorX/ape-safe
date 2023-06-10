@@ -1,3 +1,6 @@
+from contextlib import ContextDecorator
+from typing import Type
+
 from ape.exceptions import ApeException, ContractLogicError, SignatureError
 from ape.types import AddressType
 
@@ -60,6 +63,22 @@ SAFE_ERROR_CODES = {
 class SafeLogicError(ApeSafeException, ContractLogicError):
     def __init__(self, error_code: str):
         super().__init__(f"{SAFE_ERROR_CODES[error_code]} ({error_code})")
+
+
+class handle_safe_logic_error(ContextDecorator):
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type: Type[BaseException], exc: BaseException, tb):
+        if (
+            isinstance(exc, ContractLogicError)  # NOTE: Just for mypy
+            and exc_type == ContractLogicError
+            and exc.message.startswith("GS")
+            and exc.message in SAFE_ERROR_CODES
+        ):
+            raise SafeLogicError(exc.message) from exc
+
+        # NOTE: Will raise `exc` by default because we did not return anything
 
 
 class MulticallException(ApeSafeException):

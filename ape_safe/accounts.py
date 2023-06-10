@@ -6,7 +6,6 @@ from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
 from ape.contracts import ContractInstance
-from ape.exceptions import ContractLogicError
 from ape.logging import logger
 from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
 from ape.utils import cached_property
@@ -15,7 +14,7 @@ from eip712.common import create_safe_tx_def
 from eth_utils import to_bytes, to_int
 
 from .client import SafeClient, SafeTx
-from .exceptions import NoLocalSigners, NotASigner, NotEnoughSignatures, SafeLogicError
+from .exceptions import NoLocalSigners, NotASigner, NotEnoughSignatures, handle_safe_logic_error
 
 
 class AccountContainer(AccountContainerAPI):
@@ -165,6 +164,7 @@ class SafeAccount(AccountAPI):
             if sig := signer.sign_message(safe_tx.signable_message):
                 yield signer.address, sig
 
+    @handle_safe_logic_error()
     def create_execute_transaction(
         self,
         safe_tx: SafeTx,
@@ -174,19 +174,10 @@ class SafeAccount(AccountAPI):
         exec_args = list(safe_tx._body_["message"].values())[:-1]  # NOTE: Skip `nonce`
         encoded_signatures = self._encode_signatures(signatures)
 
-        # Try to catch Gnosis Safe error codes before submitting
         # NOTE: executes a `ProviderAPI.prepare_transaction`, which may produce `ContractLogicError`
-        try:
-            return self.contract.execTransaction.as_transaction(
-                *exec_args, encoded_signatures, **txn_options
-            )
-
-        except ContractLogicError as e:
-            if e.message.startswith("GS"):
-                raise SafeLogicError(e.message) from e
-
-            else:
-                raise e
+        return self.contract.execTransaction.as_transaction(
+            *exec_args, encoded_signatures, **txn_options
+        )
 
     def compute_prev_signer(self, signer: Union[str, AddressType, BaseAddress]) -> AddressType:
         """
@@ -232,21 +223,14 @@ class SafeAccount(AccountAPI):
                 s=b"\x00" * 32,
             )
 
-        # NOTE: Override just to produce a more specific exception with better error message
-        try:
-            # NOTE: Skip `nonce`
-            return self.contract.execTransaction(
-                *safe_tx_exec_args[:-1],
-                self._encode_signatures(signatures),
-                sender=impersonated_sender,
-            )
-        except ContractLogicError as e:
-            if e.message.startswith("GS"):
-                raise SafeLogicError(e.message) from e
+        # NOTE: Could raise a `SafeContractError`
+        return self.contract.execTransaction(
+            *safe_tx_exec_args[:-1],  # NOTE: Skip nonce
+            self._encode_signatures(signatures),
+            sender=impersonated_sender,
+        )
 
-            else:
-                raise e
-
+    @handle_safe_logic_error()
     def call(  # type: ignore[override]
         self,
         txn: TransactionAPI,
@@ -256,15 +240,8 @@ class SafeAccount(AccountAPI):
         if impersonate:
             return self._impersonated_call(txn, **call_kwargs)
 
-        # NOTE: Override just to produce a more specific exception with better error message
-        try:
-            return super().call(txn, **call_kwargs)
-        except ContractLogicError as e:
-            if e.message.startswith("GS"):
-                raise SafeLogicError(e.message) from e
+        return super().call(txn, **call_kwargs)
 
-            else:
-                raise e
 
     def sign_transaction(
         self,
