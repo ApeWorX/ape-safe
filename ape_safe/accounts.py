@@ -148,6 +148,7 @@ class SafeAccount(AccountAPI):
 
     @property
     def local_signers(self) -> List[AccountAPI]:
+        # NOTE: Is not ordered by signing order
         # TODO: Use config to skip any local signers
         return list(
             self.account_manager[address]
@@ -382,7 +383,7 @@ class SafeAccount(AccountAPI):
                 nonce=sender.nonce,  # TODO: Why do we need this?
                 **gas_args,
             )
-            return sender.sign_transaction(exec_transaction)
+            return sender.sign_transaction(exec_transaction, **signer_options)
 
         elif submit:
             # NOTE: User wanted to submit transaction, but we can't, so don't publish to API
