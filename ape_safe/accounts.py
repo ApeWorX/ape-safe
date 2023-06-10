@@ -1,14 +1,14 @@
 import json
 from itertools import islice
 from pathlib import Path
-from typing import Iterable, Iterator, List, Optional, Tuple, Type, Union
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
 from ape.contracts import ContractInstance
 from ape.exceptions import ContractLogicError
 from ape.logging import logger
-from ape.types import AddressType, MessageSignature, SignableMessage
+from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
 from ape.utils import cached_property
 from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
@@ -168,11 +168,11 @@ class SafeAccount(AccountAPI):
     def create_execute_transaction(
         self,
         safe_tx: SafeTx,
-        signatures: List[MessageSignature],
+        signatures: Dict[AddressType, MessageSignature],
         **txn_options,
     ) -> TransactionAPI:
         exec_args = list(safe_tx._body_["message"].values())[:-1]  # NOTE: Skip `nonce`
-        encoded_signatures = b"".join(sig.encode_rsv() for sig in signatures)
+        encoded_signatures = self._encode_signatures(signatures)
 
         # Try to catch Gnosis Safe error codes before submitting
         # NOTE: executes a `ProviderAPI.prepare_transaction`, which may produce `ContractLogicError`
@@ -209,46 +209,36 @@ class SafeAccount(AccountAPI):
         # NOTE: Need to override `AccountAPI` behavior for balance checks
         return self.provider.prepare_transaction(txn)
 
+    def _encode_signatures(self, signatures: Dict[AddressType, MessageSignature]) -> HexBytes:
+        # NOTE: Must order signatures in ascending order of signer address (converted to int)
+        return HexBytes(
+            b"".join(signatures[signer].encode_rsv() for signer in sorted(signatures, key=to_int))
+        )
+
     def _impersonated_call(self, txn: TransactionAPI, **safe_tx_kwargs) -> ReceiptAPI:
         safe_tx = self.create_safe_tx(txn, **safe_tx_kwargs)
         safe_tx_exec_args = list(safe_tx._body_["message"].values())
-        signatures = []
+        signatures = {}
         # Bypass signature collection logic and attempt to submit by impersonation
         # NOTE: Only works for fork and local networks
-        if self.confirmations_required > 1:
-            safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
-            for signer_address in self.signers[: self.confirmations_required - 1]:
-                impersonated_signer = self.account_manager.test_accounts[signer_address]
-                self.contract.approveHash(safe_tx_hash, sender=impersonated_signer)
-                signatures.append(
-                    MessageSignature(
-                        v=1,  # Approved hash (e.g. submitter is approved)
-                        r=b"\x00" * 12 + to_bytes(hexstr=impersonated_signer.address),
-                        s=b"\x00" * 32,
-                    )
-                )
-
-        impersonated_sender = self.account_manager.test_accounts[
-            self.signers[self.confirmations_required - 1]
-        ]
-        signatures.append(
-            MessageSignature(
+        # TODO: Once it's a bit easier to set storage slots natively, use that to impersonate
+        safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
+        for signer_address in self.signers[: self.confirmations_required - 1]:
+            impersonated_signer = self.account_manager.test_accounts[signer_address]
+            self.contract.approveHash(safe_tx_hash, sender=impersonated_signer)
+            signatures[signer_address] = MessageSignature(
                 v=1,  # Approved hash (e.g. submitter is approved)
-                r=b"\x00" * 12 + to_bytes(hexstr=impersonated_sender.address),
+                r=b"\x00" * 12 + to_bytes(hexstr=impersonated_signer.address),
                 s=b"\x00" * 32,
             )
-        )
 
-        # NOTE: Must order signatures in ascending order of signer address (converted to int)
-        def sigr2int(sig: MessageSignature) -> int:
-            return to_int(sig.r)
-
-        encoded_signatures = b"".join(sig.encode_rsv() for sig in sorted(signatures, key=sigr2int))
         # NOTE: Override just to produce a more specific exception with better error message
         try:
             # NOTE: Skip `nonce`
             return self.contract.execTransaction(
-                *safe_tx_exec_args[:-1], encoded_signatures, sender=impersonated_sender
+                *safe_tx_exec_args[:-1],
+                self._encode_signatures(signatures),
+                sender=impersonated_sender,
             )
         except ContractLogicError as e:
             if e.message.startswith("GS"):
@@ -371,15 +361,9 @@ class SafeAccount(AccountAPI):
                 gas_args["max_fee"] = txn.max_fee
                 gas_args["max_priority_fee"] = txn.max_priority_fee
 
-            # NOTE: Must order signatures in ascending order of signer address (converted to int)
-            def addr2int(a):
-                return to_int(hexstr=a)
-
-            sigs = [sigs_by_signer[signer] for signer in sorted(sigs_by_signer, key=addr2int)]
-
             exec_transaction = self.create_execute_transaction(
                 safe_tx,
-                sigs,
+                sigs_by_signer,
                 nonce=sender.nonce,  # TODO: Why do we need this?
                 **gas_args,
             )
