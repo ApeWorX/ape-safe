@@ -394,7 +394,7 @@ class SafeAccount(AccountAPI):
 
         elif submit:
             # NOTE: User wanted to submit transaction, but we can't, so don't publish to API
-            raise NotEnoughSignatures(self.confirmations_required, len(sigs_by_signer))
+            raise NotEnoughSignatures(signatures_required, len(sigs_by_signer))
 
         elif submitter and submitter.address in self.signers:
             # Not enough signatures were gathered to submit, but submitter also didn't sign yet,
