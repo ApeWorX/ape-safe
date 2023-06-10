@@ -15,7 +15,7 @@ from eip712.common import create_safe_tx_def
 from eth_utils import to_bytes, to_int
 
 from .client import SafeClient, SafeTx
-from .exceptions import NoLocalSigners, NotEnoughSignatures, SafeLogicError
+from .exceptions import NoLocalSigners, NotASigner, NotEnoughSignatures, SafeLogicError
 
 
 class AccountContainer(AccountContainerAPI):
@@ -196,7 +196,7 @@ class SafeAccount(AccountAPI):
         signer_address: AddressType = self.conversion_manager.convert(signer, AddressType)
         signers = self.contract.getOwners()  # NOTE: Use contract version to ensure correctness
         if signer_address not in signers:
-            raise  # not a signer
+            raise NotASigner(signer_address)
 
         index = signers.index(signer_address)
         if index > 0:

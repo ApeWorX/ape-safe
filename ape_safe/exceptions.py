@@ -1,8 +1,14 @@
 from ape.exceptions import ApeException, ContractLogicError, SignatureError
+from ape.types import AddressType
 
 
 class ApeSafeException(ApeException):
     pass
+
+
+class NotASigner(ApeSafeException):
+    def __init__(self, signer: AddressType):
+        super().__init__(f"{signer} is not a valid signer.")
 
 
 class NoLocalSigners(ApeSafeException, SignatureError):
