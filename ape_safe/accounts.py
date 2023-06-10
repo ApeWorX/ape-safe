@@ -214,6 +214,18 @@ class SafeAccount(AccountAPI):
     def _safe_tx_exec_args(self, safe_tx: SafeTx) -> List:
         return list(safe_tx._body_["message"].values())
 
+    def _preapproved_signature(
+        self, signer: Union[AddressType, BaseAddress, str]
+    ) -> MessageSignature:
+        # Get the Safe-style "preapproval" signature type, which is a sentinel value used to denote
+        # when a signer approved via some other method, such as `approveHash` or being `msg.sender`
+        # TODO: Link documentation for this
+        return MessageSignature(
+            v=1,  # Approved hash (e.g. submitter is approved)
+            r=b"\x00" * 12 + to_bytes(hexstr=self.conversion_manager.convert(signer, AddressType)),
+            s=b"\x00" * 32,
+        )
+
     @handle_safe_logic_error()
     def _impersonated_call(self, txn: TransactionAPI, **safe_tx_and_call_kwargs) -> ReceiptAPI:
         safe_tx = self.create_safe_tx(txn, **safe_tx_and_call_kwargs)
@@ -227,11 +239,7 @@ class SafeAccount(AccountAPI):
         for signer_address in self.signers[: self.confirmations_required - 1]:
             impersonated_signer = self.account_manager.test_accounts[signer_address]
             self.contract.approveHash(safe_tx_hash, sender=impersonated_signer)
-            signatures[signer_address] = MessageSignature(
-                v=1,  # Approved hash (e.g. submitter is approved)
-                r=b"\x00" * 12 + to_bytes(hexstr=impersonated_signer.address),
-                s=b"\x00" * 32,
-            )
+            signatures[signer_address] = self._preapproved_signature(signer_address)
 
         # NOTE: Could raise a `SafeContractError`
         return self.contract.execTransaction(
@@ -333,11 +341,7 @@ class SafeAccount(AccountAPI):
         ):
             # We need to encode the submitter's address for Safe to decode
             if len(sigs_by_signer) < self.confirmations_required:
-                sigs_by_signer[sender.address] = MessageSignature(  # type: ignore[call-arg]
-                    v=1,  # Approved hash (e.g. submitter is approved)
-                    r=b"\x00" * 12 + to_bytes(hexstr=sender.address),
-                    s=b"\x00" * 32,
-                )
+                sigs_by_signer[submitter.address] = self._preapproved_signature(submitter)
 
             # Inherit gas args from safe_tx, if set
             # NOTE: 0 is a sentinel value for Safe
