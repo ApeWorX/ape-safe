@@ -349,12 +349,13 @@ class SafeAccount(AccountAPI):
                     s=b"\x00" * 32,
                 )
 
-            # Inherit gas args
-            gas_args = {}
-            # TODO: Set limit in a way to respects what Safe uses
-            gas_args["gas_limit"] = (
-                3 * txn.gas_limit // 2 if isinstance(txn.gas_limit, int) else txn.gas_limit
-            )
+            # Inherit gas args from safe_tx, if set
+            # NOTE: 0 is a sentinel value for Safe
+            gas_args = {
+                "gas_limit": (
+                    3 * safe_tx.safeTxGas // 2 if safe_tx.safeTxGas > 0 else txn.gas_limit
+                )
+            }
 
             if txn.type == TransactionType.STATIC:
                 gas_args["gas_price"] = txn.gas_price  # type: ignore[attr-defined]
@@ -366,8 +367,8 @@ class SafeAccount(AccountAPI):
             exec_transaction = self.create_execute_transaction(
                 safe_tx,
                 sigs_by_signer,
-                nonce=sender.nonce,  # TODO: Why do we need this?
                 **gas_args,
+                nonce=sender.nonce,  # NOTE: This is required to correctly set nonce in encoded txn
             )
             return sender.sign_transaction(exec_transaction, **signer_options)
 
