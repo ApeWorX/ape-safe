@@ -8,8 +8,9 @@ def test_init(safe, OWNERS, THRESHOLD, safe_contract):
     assert safe.next_nonce == 0
 
 
-@pytest.mark.parametrize("impersonate", [False, True])
-def test_swap_owner(safe, accounts, OWNERS, impersonate):
+@pytest.mark.parametrize("mode", ["impersonate", "sign"])
+def test_swap_owner(safe, accounts, OWNERS, mode):
+    impersonate = mode == "impersonate"
     old_owner = safe.signers[0]
     new_owner = accounts[len(OWNERS)]  # replace owner 1 with account N + 1
     assert new_owner.address not in safe.signers
@@ -36,8 +37,9 @@ def test_swap_owner(safe, accounts, OWNERS, impersonate):
     assert new_owner.address in safe.signers
 
 
-@pytest.mark.parametrize("impersonate", [False, True])
-def test_add_owner(safe, accounts, OWNERS, impersonate):
+@pytest.mark.parametrize("mode", ["impersonate", "sign"])
+def test_add_owner(safe, accounts, OWNERS, mode):
+    impersonate = mode == "impersonate"
     new_owner = accounts[len(OWNERS)]  # replace owner 1 with account N + 1
     assert new_owner.address not in safe.signers
 
@@ -57,8 +59,9 @@ def test_add_owner(safe, accounts, OWNERS, impersonate):
     assert new_owner.address in safe.signers
 
 
-@pytest.mark.parametrize("impersonate", [False, True])
-def test_remove_owner(safe, OWNERS, impersonate):
+@pytest.mark.parametrize("mode", ["impersonate", "sign"])
+def test_remove_owner(safe, OWNERS, mode):
+    impersonate = mode == "impersonate"
     if len(OWNERS) == 1:
         pytest.skip("Can't remove the only owner")
 
