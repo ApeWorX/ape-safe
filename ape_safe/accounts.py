@@ -211,10 +211,15 @@ class SafeAccount(AccountAPI):
             )
         )
 
-    def _impersonated_call(self, txn: TransactionAPI, **safe_tx_kwargs) -> ReceiptAPI:
-        safe_tx = self.create_safe_tx(txn, **safe_tx_kwargs)
-        safe_tx_exec_args = list(safe_tx._body_["message"].values())
+    def _safe_tx_exec_args(self, safe_tx: SafeTx) -> List:
+        return list(safe_tx._body_["message"].values())
+
+    @handle_safe_logic_error()
+    def _impersonated_call(self, txn: TransactionAPI, **safe_tx_and_call_kwargs) -> ReceiptAPI:
+        safe_tx = self.create_safe_tx(txn, **safe_tx_and_call_kwargs)
+        safe_tx_exec_args = self._safe_tx_exec_args(safe_tx)
         signatures = {}
+
         # Bypass signature collection logic and attempt to submit by impersonation
         # NOTE: Only works for fork and local networks
         # TODO: Once it's a bit easier to set storage slots natively, use that to impersonate
