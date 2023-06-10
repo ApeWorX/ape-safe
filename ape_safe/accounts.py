@@ -274,45 +274,46 @@ class SafeAccount(AccountAPI):
         safe_tx = self.create_safe_tx(txn, **signer_options)
 
         # Determine who is submitting the transaction (if enough signatures are gathered)
-        if not submit:
-            if submitter:
-                raise  # Cannot specify a submitter if not submitting
+        if not submit and submitter:
+            raise  # Cannot specify a submitter if not submitting
 
-            sender = None
+        elif submit and not submitter:
+            if len(self.local_signers) == 0:
+                raise NoLocalSigners()
 
-        else:
-            if not submitter:
-                if len(self.local_signers) == 0:
-                    raise NoLocalSigners()
+            submitter = self.local_signers[0]
+            logger.info(f"No submitter specified, so using: {submitter}")
 
-                sender = self.local_signers[0]
+        # NOTE: Works whether `submit` is set or not below here
+        elif (
+            submitter_address := self.conversion_manager.convert(submitter, AddressType)
+            in self.account_manager
+        ):
+            submitter = self.account_manager[submitter_address]
 
-            elif isinstance(submitter, AccountAPI):
-                sender = submitter
+        elif isinstance(submitter, str) and submitter in self.account_manager.aliases:
+            submitter = self.account_manager.load(submitter)
 
-            elif submitter in self.account_manager.aliases:
-                sender = self.account_manager.load(submitter)
+        elif not isinstance(submitter, AccountAPI):
+            raise  # Cannot handle `submitter=type(submitter)`
 
-            elif (
-                submitter_address := self.conversion_manager.convert(submitter, AddressType)
-                in self.account_manager
-            ):
-                sender = self.account_manager[submitter_address]
-
-            else:
-                raise  # Can't find `submitter`!
+        # Invariant: `submitter` should be either `AccountAPI` or we are not submitting here
+        assert isinstance(submitter, AccountAPI) or not submit
 
         # Garner either M or M - 1 signatures, depending on if we are submitting
         # and whether the submitter is also a signer (both must be true to submit M - 1).
         available_signers = iter(self.local_signers)
-        if signatures_required is None:
-            if sender and sender.address in self.signers:
+
+        # If number of signatures required not specified, figure out how many are needed
+        if not signatures_required:
+            if submitter and submitter.address in self.signers:
                 # Sender doesn't have to sign
                 signatures_required = self.confirmations_required - 1
-                available_signers = filter(lambda s: s != sender, available_signers)
+                # NOTE: Adjust signers to sign with by skipping submitter
+                available_signers = filter(lambda s: s != submitter, available_signers)
 
-            else:  # NOTE: sender is None if submit is False
-                # Not submitting, or sender isn't a signer, so we need all confirmations
+            else:  # NOTE: `submitter` is `None` if `submit` is False
+                # Not submitting, or submitter isn't a signer, so we need all confirmations
                 signatures_required = self.confirmations_required
 
         # Allow bypassing any specified signers
@@ -334,12 +335,13 @@ class SafeAccount(AccountAPI):
         # Invariant: len(sigs_by_signer) <= signatures_required
 
         if (
-            sender  # NOTE: sender is None if submit_transaction is False
+            submit  # NOTE: `submitter` should be set if `submit=True`
             # We have enough signatures to commit the transaction,
             # and a non-signer will submit it as their own transaction
             and len(sigs_by_signer) == signatures_required
         ):
             # We need to encode the submitter's address for Safe to decode
+            # NOTE: Should only be triggered if the `submitter` is also a signer
             if len(sigs_by_signer) < self.confirmations_required:
                 sigs_by_signer[submitter.address] = self._preapproved_signature(submitter)
 
@@ -362,19 +364,19 @@ class SafeAccount(AccountAPI):
                 safe_tx,
                 sigs_by_signer,
                 **gas_args,
-                nonce=sender.nonce,  # NOTE: This is required to correctly set nonce in encoded txn
+                nonce=submitter.nonce,  # NOTE: Required to correctly set nonce in encoded txn
             )
-            return sender.sign_transaction(exec_transaction, **signer_options)
+            return submitter.sign_transaction(exec_transaction, **signer_options)
 
         elif submit:
             # NOTE: User wanted to submit transaction, but we can't, so don't publish to API
             raise NotEnoughSignatures(self.confirmations_required, len(sigs_by_signer))
 
-        elif sender and sender.address in self.signers:
-            # Not enough signatures were gathered to submit, but signer didn't sign yet either,
-            # so might as well get one more from them before publishing confirmations to API.
-            if sig := sender.sign_message(safe_tx.signable_message):
-                sigs_by_signer[sender.address] = sig
+        elif submitter and submitter.address in self.signers:
+            # Not enough signatures were gathered to submit, but submitter also didn't sign yet,
+            # so might as well get one more sig from them before publishing confirmations to API.
+            if sig := submitter.sign_message(safe_tx.signable_message):
+                sigs_by_signer[submitter.address] = sig
 
         # NOTE: Not enough signatures were obtained to publish on-chain
         logger.info(
