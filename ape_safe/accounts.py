@@ -260,6 +260,19 @@ class SafeAccount(AccountAPI):
 
         return super().call(txn, **call_kwargs)
 
+    def _contract_approvals(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
+        safe_tx_exec_args = self._safe_tx_exec_args(safe_tx)
+        safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
+
+        return {
+            signer: self._preapproved_signature(signer)
+            for signer in self.signers
+            if self.contract.approvedHashes(signer, safe_tx_hash) > 0
+        }
+
+    def _all_approvals(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
+        # TODO: Combine with approvals from SafeAPI
+        return self._contract_approvals(safe_tx)
 
     def sign_transaction(
         self,
@@ -325,20 +338,25 @@ class SafeAccount(AccountAPI):
 
             available_signers = filter(skip_signer, available_signers)
 
-        # TODO: Allow re-ordering via Config
+        # Check if transaction has existing tracked signatures
+        sigs_by_signer = self._all_approvals(safe_tx)
 
         # Attempt to fetch just enough signatures to satisfy the amount we need
         # NOTE: It is okay to have less signatures, but it never should fetch more than needed
-        sigs_by_signer = dict(
-            islice(self.get_signatures(safe_tx, available_signers), signatures_required)
+        sigs_by_signer.update(
+            dict(
+                islice(
+                    self.get_signatures(safe_tx, available_signers),
+                    signatures_required - len(sigs_by_signer),
+                )
+            )
         )
-        # Invariant: len(sigs_by_signer) <= signatures_required
 
         if (
             submit  # NOTE: `submitter` should be set if `submit=True`
             # We have enough signatures to commit the transaction,
             # and a non-signer will submit it as their own transaction
-            and len(sigs_by_signer) == signatures_required
+            and len(sigs_by_signer) >= signatures_required
         ):
             # We need to encode the submitter's address for Safe to decode
             # NOTE: Should only be triggered if the `submitter` is also a signer
