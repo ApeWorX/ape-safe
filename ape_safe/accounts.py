@@ -148,7 +148,8 @@ class SafeAccount(AccountAPI):
     @property
     def local_signers(self) -> List[AccountAPI]:
         # NOTE: Is not ordered by signing order
-        # TODO: Use config to skip any local signers
+        # TODO: Skip per user config
+        # TODO: Order per user config
         return list(
             self.account_manager[address]
             for address in self.signers
@@ -315,6 +316,7 @@ class SafeAccount(AccountAPI):
 
         # Garner either M or M - 1 signatures, depending on if we are submitting
         # and whether the submitter is also a signer (both must be true to submit M - 1).
+        # NOTE: Will skip or reorder signers based on config
         available_signers = iter(self.local_signers)
 
         # If number of signatures required not specified, figure out how many are needed
@@ -329,7 +331,7 @@ class SafeAccount(AccountAPI):
                 # Not submitting, or submitter isn't a signer, so we need all confirmations
                 signatures_required = self.confirmations_required
 
-        # Allow bypassing any specified signers
+        # Allow bypassing any specified signers (above and beyond user config)
         if skip:
             skip_addresses = [self.conversion_manager.convert(a, AddressType) for a in skip]
 
