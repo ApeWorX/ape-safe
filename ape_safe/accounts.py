@@ -370,12 +370,7 @@ class SafeAccount(AccountAPI):
                 sigs_by_signer[submitter.address] = self._preapproved_signature(submitter)
 
             # Inherit gas args from safe_tx, if set
-            # NOTE: 0 is a sentinel value for Safe
-            gas_args = {
-                "gas_limit": (
-                    3 * safe_tx.safeTxGas // 2 if safe_tx.safeTxGas > 0 else txn.gas_limit
-                )
-            }
+            gas_args = {"gas_limit": txn.gas_limit}
 
             if txn.type == TransactionType.STATIC:
                 gas_args["gas_price"] = txn.gas_price  # type: ignore[attr-defined]

@@ -24,7 +24,6 @@ def test_swap_owner(safe, accounts, OWNERS, mode):
         old_owner,
         new_owner,
         sender=safe,
-        gas_limit=200_000,
         impersonate=impersonate,
     )
 
@@ -48,7 +47,6 @@ def test_add_owner(safe, accounts, OWNERS, mode):
         new_owner,
         safe.confirmations_required,
         sender=safe,
-        gas_limit=200_000,
         impersonate=impersonate,
     )
 
@@ -75,7 +73,6 @@ def test_remove_owner(safe, OWNERS, mode):
         # Can't set the threshold to zero or more than the number of owners after removal
         max(len(OWNERS) - 1, safe.confirmations_required - 1),
         sender=safe,
-        gas_limit=200_000,
         impersonate=impersonate,
     )
 
