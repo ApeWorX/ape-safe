@@ -243,10 +243,14 @@ class SafeAccount(AccountAPI):
             signatures[signer_address] = self._preapproved_signature(signer_address)
 
         # NOTE: Could raise a `SafeContractError`
+        safe_tx_and_call_kwargs["sender"] = safe_tx_and_call_kwargs.get(
+            "submitter",
+            impersonated_signer,  # NOTE: Use whatever the last signer was if no `submitter`
+        )
         return self.contract.execTransaction(
             *safe_tx_exec_args[:-1],  # NOTE: Skip nonce
             self._encode_signatures(signatures),
-            sender=impersonated_sender,
+            **safe_tx_and_call_kwargs,
         )
 
     @handle_safe_logic_error()
