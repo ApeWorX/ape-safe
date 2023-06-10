@@ -15,7 +15,7 @@ from eip712.common import create_safe_tx_def
 from eth_utils import to_bytes, to_int
 
 from .client import SafeClient, SafeTx
-from .exceptions import NotEnoughSignatures, SafeLogicError
+from .exceptions import NoLocalSigners, NotEnoughSignatures, SafeLogicError
 
 
 class AccountContainer(AccountContainerAPI):
@@ -287,6 +287,9 @@ class SafeAccount(AccountAPI):
 
         else:
             if not submitter:
+                if len(self.local_signers) == 0:
+                    raise NoLocalSigners()
+
                 sender = self.local_signers[0]
 
             elif isinstance(submitter, AccountAPI):

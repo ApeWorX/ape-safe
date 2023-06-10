@@ -5,6 +5,11 @@ class ApeSafeException(ApeException):
     pass
 
 
+class NoLocalSigners(ApeSafeException):
+    def __init__(self):
+        super().__init__("No local signers available, try resubmitting with `submitter=` kwarg.")
+
+
 class NotEnoughSignatures(ApeSafeException):
     def __init__(self, expected: int, actual: int):
         super().__init__(
