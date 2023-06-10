@@ -237,7 +237,7 @@ class SafeAccount(AccountAPI):
         # NOTE: Only works for fork and local networks
         # TODO: Once it's a bit easier to set storage slots natively, use that to impersonate
         safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
-        for signer_address in self.signers[: self.confirmations_required - 1]:
+        for signer_address in self.signers[: self.confirmations_required]:
             impersonated_signer = self.account_manager.test_accounts[signer_address]
             self.contract.approveHash(safe_tx_hash, sender=impersonated_signer)
             signatures[signer_address] = self._preapproved_signature(signer_address)
