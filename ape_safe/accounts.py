@@ -11,7 +11,7 @@ from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
 from ape.utils import cached_property
 from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
-from eth_utils import to_bytes, to_int
+from eth_utils import keccak, to_bytes, to_int
 
 from .client import SafeClient, SafeTx
 from .exceptions import NoLocalSigners, NotASigner, NotEnoughSignatures, handle_safe_logic_error
@@ -234,18 +234,24 @@ class SafeAccount(AccountAPI):
         signatures = {}
 
         # Bypass signature collection logic and attempt to submit by impersonation
-        # NOTE: Only works for fork and local networks
-        # TODO: Once it's a bit easier to set storage slots natively, use that to impersonate
+        # NOTE: Only works for fork and local network providers that support `set_storage`
         safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
         for signer_address in self.signers[: self.confirmations_required]:
-            impersonated_signer = self.account_manager.test_accounts[signer_address]
-            self.contract.approveHash(safe_tx_hash, sender=impersonated_signer)
+            # NOTE: `approvedHashes` is `address => safe_tx_hash => num_confs` @ slot 8
+            # TODO: Use native ape slot indexing, once available
+            address_bytes32 = to_bytes(hexstr=signer_address)
+            address_bytes32 = b"\x00" * (32 - len(address_bytes32)) + address_bytes32
+            key_hash = keccak(address_bytes32 + b"\x00" * 31 + to_bytes(8))
+            slot = to_int(keccak(safe_tx_hash + key_hash))
+            self.provider.set_storage(self.address, slot, to_bytes(1))
+
             signatures[signer_address] = self._preapproved_signature(signer_address)
 
         # NOTE: Could raise a `SafeContractError`
         safe_tx_and_call_kwargs["sender"] = safe_tx_and_call_kwargs.get(
             "submitter",
-            impersonated_signer,  # NOTE: Use whatever the last signer was if no `submitter`
+            # NOTE: Use whatever the last signer was if no `submitter`
+            self.account_manager.test_accounts[signer_address],
         )
         return self.contract.execTransaction(
             *safe_tx_exec_args[:-1],  # NOTE: Skip nonce
