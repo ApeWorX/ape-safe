@@ -3,6 +3,7 @@ from typing import Type
 
 from ape.exceptions import ApeException, ContractLogicError, SignatureError
 from ape.types import AddressType
+from requests import Response  # type: ignore[import]
 
 
 class ApeSafeException(ApeException):
@@ -93,3 +94,18 @@ class ValueRequired(MulticallException):
 class UnsupportedChainError(MulticallException):
     def __init__(self):
         super().__init__("Multicall not supported on this chain.")
+
+
+class SafeClientException(ApeSafeException):
+    pass
+
+
+class ClientUnsupportedChainError(SafeClientException):
+    def __init__(self, chain_id: int):
+        super().__init__(f"Unsupported Chain ID '{chain_id}'.")
+
+
+class ClientResponseError(SafeClientException):
+    def __init__(self, endpoint_url: str, response: Response):
+        error_str = response.json()["message"]
+        super().__init__(f"Exception when calling '{endpoint_url}':\n{error_str}")

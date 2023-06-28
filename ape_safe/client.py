@@ -8,6 +8,8 @@ from ape.types import AddressType, HexBytes, MessageSignature
 from eip712.common import SafeTxV1, SafeTxV2
 from pydantic import BaseModel
 
+from .exceptions import ClientResponseError, ClientUnsupportedChainError
+
 SafeTx = Union[SafeTxV1, SafeTxV2]
 SafeTxID = NewType("SafeTxID", HexBytes)
 
@@ -135,21 +137,21 @@ class SafeClient:
 
         elif chain_id:
             if chain_id not in TRANSACTION_SERVICE_URL:
-                raise  # No endpoint for this chain
+                raise ClientUnsupportedChainError(chain_id)
 
             self.transaction_service_url = TRANSACTION_SERVICE_URL.get(  # type: ignore[assignment]
                 chain_id
             )
 
         else:
-            raise  # Must provide one of chain_id or override_url
+            raise ValueError("Must provide one of chain_id or override_url.")
 
     @property
     def safe_details(self) -> SafeDetails:
         url = f"{self.transaction_service_url}/api/v1/safes/{self.address}"
         response = requests.get(url)
         if not response.ok:
-            raise
+            raise ClientResponseError(url, response)
 
         return SafeDetails.parse_obj(response.json())
 
@@ -165,7 +167,7 @@ class SafeClient:
         while url:
             response = requests.get(url)
             if not response.ok:
-                raise
+                raise ClientResponseError(url, response)
 
             data = response.json()
             yield from data["results"]
@@ -220,7 +222,7 @@ class SafeClient:
         while url:
             response = requests.get(url)
             if not response.ok:
-                raise
+                raise ClientResponseError(url, response)
 
             data = response.json()
             yield from map(SafeTxConfirmation.parse_obj, data["results"])
@@ -237,7 +239,7 @@ class SafeClient:
         response = requests.post(url, json=tx_data.dict())
 
         if not response.ok:
-            raise
+            raise ClientResponseError(url, response)
 
     def post_signature(self, safe_tx_hash: SafeTxID, signature: MessageSignature):
         url = (
@@ -247,4 +249,4 @@ class SafeClient:
         response = requests.post(url, json={"signature": signature.encode_vrs().hex()})
 
         if not response.ok:
-            raise
+            raise ClientResponseError(url, response)
