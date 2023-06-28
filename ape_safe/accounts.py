@@ -15,7 +15,7 @@ from eip712.messages import hash_eip712_message
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 
-from .client import SafeClient, SafeTx, SafeTxConfirmation
+from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation
 from .exceptions import NoLocalSigners, NotASigner, NotEnoughSignatures, handle_safe_logic_error
 
 
@@ -102,9 +102,12 @@ class SafeAccount(AccountAPI):
             return None
 
     @cached_property
-    def client(self) -> SafeClient:
+    def client(self) -> BaseSafeClient:
         if self.provider.chain_id not in self.account_file["deployed_chain_ids"]:
             raise  # Not valid on this chain
+
+        if self.provider.network.name == "local":
+            return MockSafeClient(contract=self.contract)
 
         return SafeClient(address=self.address, chain_id=self.provider.chain_id)
 

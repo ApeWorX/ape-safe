@@ -93,5 +93,4 @@ def safe_data_file(chain, safe_contract):
 
 @pytest.fixture
 def safe(safe_data_file):
-    # TODO: Mock `SafeAccount.client` or use local client
     return SafeAccount(account_file_path=safe_data_file)
