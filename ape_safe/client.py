@@ -212,6 +212,20 @@ class SafeClient:
 
             yield ExecutedTxData.parse_obj(txn) if isExecuted else UnexecutedTxData.parse_obj(txn)
 
+    def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
+        url = (
+            f"{self.transaction_service_url}/api"
+            f"/v1/multisig-transactions/{str(safe_tx_hash)}/confirmations"
+        )
+        while url:
+            response = requests.get(url)
+            if not response.ok:
+                raise
+
+            data = response.json()
+            yield from map(SafeTxConfirmation.parse_obj, data["results"])
+            url = data["next"]
+
     def post_transaction(self, safe_tx: SafeTx, sigs: Optional[List[MessageSignature]] = None):
         tx_data = UnexecutedTxData.from_safe_tx(safe_tx)
         if sigs:
