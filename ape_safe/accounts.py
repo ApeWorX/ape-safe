@@ -11,6 +11,7 @@ from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
+from eip712.messages import hash_eip712_message
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 
@@ -194,6 +195,15 @@ class SafeAccount(AccountAPI):
         for signer in signers:
             if sig := signer.sign_message(safe_tx.signable_message):
                 yield signer.address, sig
+
+    def get_confirmations(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
+        safe_tx_hash = hash_eip712_message(safe_tx)
+        return {
+            conf.owner: MessageSignature(
+                r=conf.signature[:32], s=conf.signature[32:64], v=conf.signature[64]
+            )
+            for conf in self.client.get_confirmations(safe_tx_hash)
+        }
 
     @handle_safe_logic_error()
     def create_execute_transaction(
