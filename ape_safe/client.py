@@ -12,19 +12,19 @@ SafeTx = Union[SafeTxV1, SafeTxV2]
 SafeTxID = NewType("SafeTxID", bytes)
 
 TRANSACTION_SERVICE_URL = {
-    1: "https://safe-transaction.mainnet.gnosis.io",
-    4: "https://safe-transaction.rinkeby.gnosis.io",
-    5: "https://safe-transaction.goerli.gnosis.io",
+    1: "https://safe-transaction-mainnet.safe.global",
+    5: "https://safe-transaction-goerli.safe.global",
     10: "https://safe-transaction-optimism.safe.global",
-    56: "https://safe-transaction.bsc.gnosis.io",
-    100: "https://safe-transaction.xdai.gnosis.io",
-    137: "https://safe-transaction.polygon.gnosis.io",
+    56: "https://safe-transaction-bsc.safe.global",
+    100: "https://safe-transaction-gnosis-chain.safe.global",
+    137: "https://safe-transaction-polygon.safe.global",
     250: "https://safe-txservice.fantom.network",
-    246: "https://safe-transaction.ewc.gnosis.io",
     288: "https://safe-transaction.mainnet.boba.network",
+    # NOTE: Not supported yet
+    # 8453: "https://safe-transaction-base.safe.global/",
     42161: "https://safe-transaction-arbitrum.safe.global",
     43114: "https://safe-transaction-avalanche.safe.global",
-    73799: "https://safe-transaction.volta.gnosis.io",
+    84531: "https://safe-transaction-base-testnet.safe.global/",
 }
 
 
