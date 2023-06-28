@@ -14,7 +14,7 @@ from eip712.common import create_safe_tx_def
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 
-from .client import SafeClient, SafeTx
+from .client import SafeClient, SafeTx, SafeTxConfirmation
 from .exceptions import NoLocalSigners, NotASigner, NotEnoughSignatures, handle_safe_logic_error
 
 
@@ -170,6 +170,10 @@ class SafeAccount(AccountAPI):
         )
 
         return self.safe_tx_def(**safe_tx)
+
+    def pending_transactions(self) -> Iterator[Tuple[SafeTx, List[SafeTxConfirmation]]]:
+        for unexec_tx_data in self.client.get_transactions(confirmed=False):
+            yield self.create_safe_tx(**unexec_tx_data.dict()), unexec_tx_data.confirmations
 
     @property
     def local_signers(self) -> List[AccountAPI]:
