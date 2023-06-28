@@ -27,10 +27,11 @@ def test_swap_owner(safe, accounts, OWNERS, mode):
         impersonate=impersonate,
     )
 
-    assert not receipt.events.filter(safe.contract.ExecutionFailure)
-    assert receipt.events.filter(safe.contract.ExecutionSuccess)
-    assert receipt.events.filter(safe.contract.AddedOwner)[0].owner == new_owner
-    assert receipt.events.filter(safe.contract.RemovedOwner)[0].owner == old_owner
+    assert receipt.events == [
+        safe.contract.RemovedOwner(owner=old_owner),
+        safe.contract.AddedOwner(owner=new_owner),
+        safe.contract.ExecutionSuccess(),
+    ]
 
     assert old_owner not in safe.signers
     assert new_owner.address in safe.signers
@@ -50,9 +51,10 @@ def test_add_owner(safe, accounts, OWNERS, mode):
         impersonate=impersonate,
     )
 
-    assert not receipt.events.filter(safe.contract.ExecutionFailure)
-    assert receipt.events.filter(safe.contract.ExecutionSuccess)
-    assert receipt.events.filter(safe.contract.AddedOwner)[0].owner == new_owner
+    assert receipt.events == [
+        safe.contract.AddedOwner(owner=new_owner),
+        safe.contract.ExecutionSuccess(),
+    ]
 
     assert new_owner.address in safe.signers
 
@@ -64,26 +66,25 @@ def test_remove_owner(safe, OWNERS, mode):
         pytest.skip("Can't remove the only owner")
 
     old_owner = safe.signers[0]
+    new_threshold = max(len(OWNERS) - 1, safe.confirmations_required - 1)
+    threshold_changed = new_threshold != safe.confirmations_required
 
     prev_owner = safe.compute_prev_signer(old_owner)
-    # TODO: Remove `gas_limit` by allowing forking to compute gas limit
     receipt = safe.contract.removeOwner(
         prev_owner,
         old_owner,
         # Can't set the threshold to zero or more than the number of owners after removal
-        max(len(OWNERS) - 1, safe.confirmations_required - 1),
+        new_threshold,
         sender=safe,
         impersonate=impersonate,
     )
 
-    # TODO: Add fucntionality to ContractEvent such that this can work
-    # assert receipt.events == [
-    #     safe.contract.ExecutionSuccess(),
-    #     safe.contract.RemovedOwner(owner=old_owner),
-    # ]
-
-    assert not receipt.events.filter(safe.contract.ExecutionFailure)
-    assert receipt.events.filter(safe.contract.ExecutionSuccess)
-    assert receipt.events.filter(safe.contract.RemovedOwner)[0].owner == old_owner
+    expected_events = [
+        safe.contract.RemovedOwner(owner=old_owner),
+        safe.contract.ExecutionSuccess(),
+    ]
+    if threshold_changed:
+        expected_events.insert(1, safe.contract.ChangedThreshold(threshold=new_threshold))
+    assert receipt.events == expected_events
 
     assert old_owner not in safe.signers
