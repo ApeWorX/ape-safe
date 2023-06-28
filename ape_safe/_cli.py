@@ -98,22 +98,34 @@ def remove(cli_ctx, alias):
     cls=NetworkBoundCommand, short_help="See pending transactions for a locally-tracked Safe"
 )
 @network_option()
+@click.option("sign_with_local_signers", "--sign", is_flag=True)
+@click.option("--execute", is_flag=False, flag_value=True, default=False)
 @existing_alias_argument(account_type=SafeAccount)
-def pending(network, alias):
+def pending(network, sign_with_local_signers, execute, alias):
     safe = accounts.load(alias)
-    local_signers = set(signer for signer in accounts if signer.address in safe.signers)
-    if local_signers:
-        click.echo("Local Signer(s) detected!")
-        sign_with_local_signers = click.confirm("Do you want to sign unconfirmed transactions")
 
-    else:
-        sign_with_local_signers = False
+    if isinstance(execute, str):
+        if execute in accounts.aliases:
+            submitter = accounts.load(execute)
+        else:
+            raise
 
-    for txn in safe.client.get_transactions(
-        starting_nonce=safe.next_nonce,
-        filter_by_missing_signers=local_signers if sign_with_local_signers else None,
-    ):
-        click.echo(f"Txn {txn.nonce}: ({len(txn.confirmations)}/{txn.confirmationsRequired})")
+    elif execute is True:
+        submitter = safe.local_signers[0]
+
+    for safe_tx, confirmations in safe.pending_transactions():
+        if sign_with_local_signers and len(confirmations) < safe.confirmations_required:
+            pass  # TODO: sign `safe_tx` with local signers not in `confirmations`
+
+        else:
+            click.echo(f"Txn {safe_tx.nonce}: ({len(confirmations)}/{safe.confirmations_required})")
+
+        if execute is not False:
+            signatures = safe.get_confirmations(safe_tx)
+            if len(signatures) >= safe.confirmations_required and click.confirm(
+                f"Submit Txn {safe_tx.nonce}"
+            ):
+                submitter.call(safe.create_execute_transaction(safe_tx, signatures))
 
 
 @cli.command(cls=NetworkBoundCommand, short_help="Reject one or more pending transactions")
