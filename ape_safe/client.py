@@ -9,7 +9,7 @@ from eip712.common import SafeTxV1, SafeTxV2
 from pydantic import BaseModel
 
 SafeTx = Union[SafeTxV1, SafeTxV2]
-SafeTxID = NewType("SafeTxID", bytes)
+SafeTxID = NewType("SafeTxID", HexBytes)
 
 TRANSACTION_SERVICE_URL = {
     1: "https://safe-transaction-mainnet.safe.global",
@@ -225,10 +225,10 @@ class SafeClient:
         if not response.ok:
             raise
 
-    def post_signature(self, safe_tx_id: SafeTxID, signature: MessageSignature):
+    def post_signature(self, safe_tx_hash: SafeTxID, signature: MessageSignature):
         url = (
-            f"{self.transaction_service_url}"
-            f"/api/v1/multisig-transactions/{safe_tx_id.hex()}/confirmations"
+            f"{self.transaction_service_url}/api"
+            f"/v1/multisig-transactions/{str(safe_tx_hash)}/confirmations"
         )
         response = requests.post(url, json={"signature": signature.encode_vrs().hex()})
 
