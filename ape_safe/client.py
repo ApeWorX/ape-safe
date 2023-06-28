@@ -275,7 +275,7 @@ class SafeClient(BaseSafeClient):
             )
 
         url = f"{self.transaction_service_url}/api/v1/multisig-transactions"
-        response = requests.post(url, json=tx_data.dict())
+        response = requests.post(url, json={"origin": "ApeWorX/ape-safe", **tx_data.dict()})
 
         if not response.ok:
             raise ClientResponseError(url, response)
@@ -285,7 +285,9 @@ class SafeClient(BaseSafeClient):
             f"{self.transaction_service_url}/api"
             f"/v1/multisig-transactions/{str(safe_tx_hash)}/confirmations"
         )
-        response = requests.post(url, json={"signature": signature.encode_vrs().hex()})
+        response = requests.post(
+            url, json={"origin": "ApeWorX/ape-safe", "signature": signature.encode_vrs().hex()}
+        )
 
         if not response.ok:
             raise ClientResponseError(url, response)
