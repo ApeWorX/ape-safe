@@ -271,7 +271,7 @@ class SafeClient(BaseSafeClient):
         tx_data = UnexecutedTxData.from_safe_tx(safe_tx)
         if sigs:
             tx_data.signatures = HexBytes(
-                reduce(lambda raw_sig, next_sig: raw_sig + next_sig.encode_vrs(), sigs, b"")
+                reduce(lambda raw_sig, next_sig: raw_sig + next_sig.encode_rsv(), sigs, b"")
             )
 
         url = f"{self.transaction_service_url}/api/v1/multisig-transactions"
@@ -286,7 +286,7 @@ class SafeClient(BaseSafeClient):
             f"/v1/multisig-transactions/{str(safe_tx_hash)}/confirmations"
         )
         response = requests.post(
-            url, json={"origin": "ApeWorX/ape-safe", "signature": signature.encode_vrs().hex()}
+            url, json={"origin": "ApeWorX/ape-safe", "signature": signature.encode_rsv().hex()}
         )
 
         if not response.ok:
