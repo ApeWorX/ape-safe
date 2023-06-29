@@ -83,15 +83,19 @@ class UnexecutedTxData(BaseModel):
     modified: datetime
     safeTxHash: SafeTxID
     confirmationsRequired: int
-    confirmations: List[SafeTxConfirmation]
-    trusted: bool
+    confirmations: List[SafeTxConfirmation] = []
+    trusted: bool = True
     signatures: Optional[HexBytes] = None
 
     @classmethod
-    def from_safe_tx(cls, safe_tx: SafeTx) -> "UnexecutedTxData":
+    def from_safe_tx(cls, safe_tx: SafeTx, confirmationsRequired: int) -> "UnexecutedTxData":
         return cls(  # type: ignore[arg-type]
             safe=safe_tx._verifyingContract_,
-            **safe_tx,
+            submissionDate=datetime.now(),
+            modified=datetime.now(),
+            confirmationsRequired=confirmationsRequired,
+            safeTxHash=hash_eip712_message(safe_tx),
+            **safe_tx._body_["message"],
         )
 
     def __str__(self) -> str:
@@ -270,7 +274,7 @@ class SafeClient(BaseSafeClient):
             url = data["next"]
 
     def post_transaction(self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature]):
-        tx_data = UnexecutedTxData.from_safe_tx(safe_tx)
+        tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
         tx_data.signatures = HexBytes(
             reduce(
                 lambda raw_sig, next_sig: raw_sig + next_sig.encode_rsv(),
@@ -339,7 +343,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             yield from safe_tx_data.confirmations
 
     def post_transaction(self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature]):
-        safe_tx_data = UnexecutedTxData.from_safe_tx(safe_tx)
+        safe_tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
         safe_tx_data.confirmations.extend(
             SafeTxConfirmation(
                 owner=signer,
