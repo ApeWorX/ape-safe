@@ -477,5 +477,7 @@ class SafeAccount(AccountAPI):
             f"Collected {len(sigs_by_signer)}/{self.confirmations_required} signatures "
             f"for Safe {self.address}#{safe_tx.nonce}"  # TODO: put URI
         )
-        # TODO: Submit safe_tx and sigs to Safe API
+
+        # NOTE: Signatures don't have to be in order for Safe API post
+        self.client.post_transaction(safe_tx, sigs_by_signer)
         return None
