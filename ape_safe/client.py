@@ -7,7 +7,7 @@ from typing import Dict, Iterator, List, NewType, Optional, Set, Union
 import requests  # type: ignore
 from ape.contracts import ContractInstance
 from ape.types import AddressType, HexBytes, MessageSignature
-from ape.utils import ManagerAccessMixin
+from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
 from eip712.common import SafeTxV1, SafeTxV2
 from eip712.messages import hash_eip712_message
 from eth_utils import keccak
@@ -322,10 +322,10 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             threshold=self.contract.getThreshold(),
             owners=self.contract.getOwners(),
             masterCopy=self.contract.masterCopy(),
-            modules=self.contract.getModules(),
+            modules=self.contract.getModules() if hasattr(self.contract, "getModules") else [],
             # TODO: Add fallback handler getter
             fallbackHandler=fallback_address,
-            guard=self.contract.getGuard(),
+            guard=self.contract.getGuard() if hasattr(self.contract, "getGuard") else ZERO_ADDRESS,
             version=self.contract.VERSION(),
         )
 
