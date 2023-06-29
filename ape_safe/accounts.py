@@ -8,10 +8,11 @@ from ape.api.address import BaseAddress
 from ape.contracts import ContractInstance
 from ape.logging import logger
 from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
-from ape.utils import cached_property
+from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
 from eth_utils import keccak, to_bytes, to_int
+from ethpm_types import ContractType
 
 from .client import SafeClient, SafeTx
 from .exceptions import NoLocalSigners, NotASigner, NotEnoughSignatures, handle_safe_logic_error
@@ -70,9 +71,34 @@ class SafeAccount(AccountAPI):
     def address(self) -> AddressType:
         return self.network_manager.ethereum.decode_address(self.account_file["address"])
 
-    @property
+    @cached_property
     def contract(self) -> ContractInstance:
-        return self.chain_manager.contracts.instance_at(self.address)
+        safe_contract = self.chain_manager.contracts.instance_at(self.address)
+        if self.fallback_handler:
+            contract_signatures = {x.signature for x in safe_contract.contract_type.abi}
+            fallback_signatures = {x.signature for x in self.fallback_handler.contract_type.abi}
+            if fallback_signatures < contract_signatures:
+                return safe_contract  # for some reason this never gets hit
+
+            contract_type = safe_contract.contract_type.dict()
+            fallback_type = self.fallback_handler.contract_type.dict()
+            contract_type["abi"].extend(fallback_type["abi"])
+            return self.chain_manager.contracts.instance_at(
+                self.address, contract_type=ContractType.parse_obj(contract_type)
+            )
+
+        else:
+            return safe_contract
+
+    @cached_property
+    def fallback_handler(self) -> Optional[ContractInstance]:
+        slot = keccak(text="fallback_manager.handler.address")
+        value = self.provider.get_storage_at(self.address, slot)
+        address = self.network_manager.ecosystem.decode_address(value[-20:])
+        if address != ZERO_ADDRESS:
+            return self.chain_manager.contracts.instance_at(address)
+        else:
+            return None
 
     @cached_property
     def client(self) -> SafeClient:
@@ -84,7 +110,7 @@ class SafeAccount(AccountAPI):
     @property
     def version(self) -> str:
         try:
-            return self.client.safe_details.version
+            return self.client.safe_details.version.replace("+L2", "")
         except Exception:
             return self.contract.VERSION()
 
