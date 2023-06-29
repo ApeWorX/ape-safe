@@ -10,11 +10,11 @@ from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ManagerAccessMixin
 from eip712.common import SafeTxV1, SafeTxV2
 from eip712.messages import hash_eip712_message
-from eth_account import Account
 from eth_utils import keccak
 from pydantic import BaseModel
 
 from .exceptions import ClientResponseError, ClientUnsupportedChainError
+from .utils import order_by_signer
 
 SafeTx = Union[SafeTxV1, SafeTxV2]
 SafeTxID = NewType("SafeTxID", HexBytes)
@@ -188,11 +188,13 @@ class BaseSafeClient(ABC):
         ...
 
     @abstractmethod
-    def post_transaction(self, safe_tx: SafeTx, sigs: Optional[List[MessageSignature]] = None):
+    def post_transaction(self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature]):
         ...
 
     @abstractmethod
-    def post_signature(self, safe_tx_hash: SafeTxID, signature: MessageSignature):
+    def post_signature(
+        self, safe_tx_hash: SafeTxID, signer: AddressType, signature: MessageSignature
+    ):
         ...
 
 
@@ -267,12 +269,15 @@ class SafeClient(BaseSafeClient):
             yield from map(SafeTxConfirmation.parse_obj, data["results"])
             url = data["next"]
 
-    def post_transaction(self, safe_tx: SafeTx, sigs: Optional[List[MessageSignature]] = None):
+    def post_transaction(self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature]):
         tx_data = UnexecutedTxData.from_safe_tx(safe_tx)
-        if sigs:
-            tx_data.signatures = HexBytes(
-                reduce(lambda raw_sig, next_sig: raw_sig + next_sig.encode_rsv(), sigs, b"")
+        tx_data.signatures = HexBytes(
+            reduce(
+                lambda raw_sig, next_sig: raw_sig + next_sig.encode_rsv(),
+                order_by_signer(sigs),
+                b"",
             )
+        )
 
         url = f"{self.transaction_service_url}/api/v1/multisig-transactions"
         response = requests.post(url, json={"origin": "ApeWorX/ape-safe", **tx_data.dict()})
@@ -280,7 +285,9 @@ class SafeClient(BaseSafeClient):
         if not response.ok:
             raise ClientResponseError(url, response)
 
-    def post_signature(self, safe_tx_hash: SafeTxID, signature: MessageSignature):
+    def post_signature(
+        self, safe_tx_hash: SafeTxID, signer: AddressType, signature: MessageSignature
+    ):
         url = (
             f"{self.transaction_service_url}/api"
             f"/v1/multisig-transactions/{str(safe_tx_hash)}/confirmations"
@@ -331,18 +338,17 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         if safe_tx_data := self.transactions.get(safe_tx_hash):
             yield from safe_tx_data.confirmations
 
-    def post_transaction(self, safe_tx: SafeTx, sigs: Optional[List[MessageSignature]] = None):
+    def post_transaction(self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature]):
         safe_tx_data = UnexecutedTxData.from_safe_tx(safe_tx)
-        if sigs:
-            safe_tx_data.confirmations.extend(
-                SafeTxConfirmation(
-                    owner=Account.recover_message(hash_eip712_message(safe_tx), sig),
-                    submissionDate=datetime.now(),
-                    signature=sig.encode_rsv(),
-                    signatureType=SignatureType.EOA,
-                )
-                for sig in sigs
+        safe_tx_data.confirmations.extend(
+            SafeTxConfirmation(
+                owner=signer,
+                submissionDate=datetime.now(),
+                signature=sig.encode_rsv(),
+                signatureType=SignatureType.EOA,
             )
+            for signer, sig in sigs.items()
+        )
 
         self.transactions[safe_tx_data.safeTxHash] = safe_tx_data
 
@@ -351,10 +357,12 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         else:
             self.transactions_by_nonce[safe_tx_data.nonce] = [safe_tx_data.safeTxHash]
 
-    def post_signature(self, safe_tx_hash: SafeTxID, signature: MessageSignature):
+    def post_signature(
+        self, safe_tx_hash: SafeTxID, signer: AddressType, signature: MessageSignature
+    ):
         self.transactions[safe_tx_hash].confirmations.append(
             SafeTxConfirmation(
-                owner=Account.recover_message(safe_tx_hash, signature),
+                owner=signer,
                 submissionDate=datetime.now(),
                 signature=signature.encode_rsv(),
                 signatureType=SignatureType.EOA,

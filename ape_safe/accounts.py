@@ -17,6 +17,7 @@ from ethpm_types import ContractType
 
 from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation
 from .exceptions import NoLocalSigners, NotASigner, NotEnoughSignatures, handle_safe_logic_error
+from .utils import order_by_signer
 
 
 class AccountContainer(AccountContainerAPI):
@@ -216,7 +217,9 @@ class SafeAccount(AccountAPI):
         **txn_options,
     ) -> TransactionAPI:
         exec_args = list(safe_tx._body_["message"].values())[:-1]  # NOTE: Skip `nonce`
-        encoded_signatures = self._encode_signatures(signatures)
+        encoded_signatures = HexBytes(
+            b"".join(sig.encode_rsv() for sig in order_by_signer(signatures))
+        )
 
         # NOTE: executes a `ProviderAPI.prepare_transaction`, which may produce `ContractLogicError`
         return self.contract.execTransaction.as_transaction(
@@ -243,17 +246,6 @@ class SafeAccount(AccountAPI):
     def prepare_transaction(self, txn: TransactionAPI) -> TransactionAPI:
         # NOTE: Need to override `AccountAPI` behavior for balance checks
         return self.provider.prepare_transaction(txn)
-
-    def _encode_signatures(self, signatures: Dict[AddressType, MessageSignature]) -> HexBytes:
-        # NOTE: Must order signatures in ascending order of signer address (converted to int)
-        def addr_to_int(a: AddressType) -> int:
-            return to_int(hexstr=a)
-
-        return HexBytes(
-            b"".join(
-                signatures[signer].encode_rsv() for signer in sorted(signatures, key=addr_to_int)
-            )
-        )
 
     def _safe_tx_exec_args(self, safe_tx: SafeTx) -> List:
         return list(safe_tx._body_["message"].values())
@@ -298,7 +290,7 @@ class SafeAccount(AccountAPI):
         )
         return self.contract.execTransaction(
             *safe_tx_exec_args[:-1],  # NOTE: Skip nonce
-            self._encode_signatures(signatures),
+            HexBytes(b"".join(sig.encode_rsv() for sig in order_by_signer(signatures))),
             **safe_tx_and_call_kwargs,
         )
 
