@@ -240,6 +240,28 @@ class SafeAccount(AccountAPI):
         # NOTE: SENTINEL_OWNERS is the "previous" address to index 0
         return AddressType("0x0000000000000000000000000000000000000001")  # type: ignore[arg-type]
 
+    def load_submitter(
+        self,
+        submitter: Union[AddressType, str, None] = None,
+    ) -> AccountAPI:
+        if submitter is None:
+            if len(self.local_signers) == 0:
+                raise NoLocalSigners()
+
+            return self.local_signers[0]
+
+        elif (
+            submitter_address := self.conversion_manager.convert(submitter, AddressType)
+            in self.account_manager
+        ):
+            return self.account_manager[submitter_address]
+
+        elif isinstance(submitter, str) and submitter in self.account_manager.aliases:
+            return self.account_manager.load(submitter)
+
+        else:
+            raise  # Cannot handle `submitter=type(submitter)`
+
     def prepare_transaction(self, txn: TransactionAPI) -> TransactionAPI:
         # NOTE: Need to override `AccountAPI` behavior for balance checks
         return self.provider.prepare_transaction(txn)
@@ -349,25 +371,11 @@ class SafeAccount(AccountAPI):
         if not submit and submitter:
             raise  # Cannot specify a submitter if not submitting
 
-        elif submit and not submitter:
-            if len(self.local_signers) == 0:
-                raise NoLocalSigners()
-
-            submitter = self.local_signers[0]
-            logger.info(f"No submitter specified, so using: {submitter}")
-
-        # NOTE: Works whether `submit` is set or not below here
-        elif (
-            submitter_address := self.conversion_manager.convert(submitter, AddressType)
-            in self.account_manager
-        ):
-            submitter = self.account_manager[submitter_address]
-
-        elif isinstance(submitter, str) and submitter in self.account_manager.aliases:
-            submitter = self.account_manager.load(submitter)
-
         elif not isinstance(submitter, AccountAPI):
-            raise  # Cannot handle `submitter=type(submitter)`
+            submitter_not_specified = submitter is None
+            submitter = self.load_submitter(submitter)
+            if submitter_not_specified:
+                logger.info(f"No submitter specified, so using: {submitter}")
 
         # Invariant: `submitter` should be either `AccountAPI` or we are not submitting here
         assert isinstance(submitter, AccountAPI) or not submit
@@ -419,8 +427,7 @@ class SafeAccount(AccountAPI):
             and len(sigs_by_signer) >= signatures_required
         ):
             # We need to encode the submitter's address for Safe to decode
-            # NOTE: Should only be triggered if the `submitter` is also a signer
-            if len(sigs_by_signer) < self.confirmations_required:
+            if submitter.address in self.signers:
                 sigs_by_signer[submitter.address] = self._preapproved_signature(submitter)
 
             # Inherit gas args from safe_tx, if set
