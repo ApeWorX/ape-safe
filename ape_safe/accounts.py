@@ -16,7 +16,13 @@ from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 
 from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation
-from .exceptions import NoLocalSigners, NotASigner, NotEnoughSignatures, handle_safe_logic_error
+from .exceptions import (
+    NoLocalSigners,
+    NotASigner,
+    NotEnoughSignatures,
+    SafeClientException,
+    handle_safe_logic_error,
+)
 from .utils import order_by_signer
 
 
@@ -200,15 +206,6 @@ class SafeAccount(AccountAPI):
             if sig := signer.sign_message(safe_tx.signable_message):
                 yield signer.address, sig
 
-    def get_confirmations(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
-        safe_tx_hash = hash_eip712_message(safe_tx)
-        return {
-            conf.owner: MessageSignature(
-                r=conf.signature[:32], s=conf.signature[32:64], v=conf.signature[64]
-            )
-            for conf in self.client.get_confirmations(safe_tx_hash)
-        }
-
     @handle_safe_logic_error()
     def create_execute_transaction(
         self,
@@ -306,6 +303,20 @@ class SafeAccount(AccountAPI):
 
         return super().call(txn, **call_kwargs)
 
+    def get_api_confirmations(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
+        safe_tx_hash = hash_eip712_message(safe_tx)
+        try:
+            client_confs = self.client.get_confirmations(safe_tx_hash)
+        except SafeClientException:
+            return {}
+
+        return {
+            conf.owner: MessageSignature(
+                r=conf.signature[:32], s=conf.signature[32:64], v=conf.signature[64]
+            )
+            for conf in client_confs
+        }
+
     def _contract_approvals(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
         safe_tx_exec_args = self._safe_tx_exec_args(safe_tx)
         safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
@@ -317,8 +328,10 @@ class SafeAccount(AccountAPI):
         }
 
     def _all_approvals(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
-        # TODO: Combine with approvals from SafeAPI
-        return self._contract_approvals(safe_tx)
+        approvals = self.get_api_confirmations(safe_tx)
+        # NOTE: Do this last because it should take precedence
+        approvals.update(self._contract_approvals(safe_tx))
+        return approvals
 
     def sign_transaction(
         self,
