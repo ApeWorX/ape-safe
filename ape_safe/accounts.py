@@ -355,6 +355,20 @@ class SafeAccount(AccountAPI):
         approvals.update(self._contract_approvals(safe_tx))
         return approvals
 
+    def submit_safe_tx(
+        self,
+        safe_tx: SafeTx,
+        submitter: Union[AccountAPI, AddressType, str, None] = None,
+        **txn_options,
+    ) -> ReceiptAPI:
+        signatures = self._all_approvals(safe_tx)
+        txn = self.create_execute_transaction(safe_tx, signatures, **txn_options)
+
+        if not isinstance(submitter, AccountAPI):
+            submitter = self.load_submitter(submitter)
+
+        return submitter.call(txn)
+
     def sign_transaction(
         self,
         txn: TransactionAPI,
