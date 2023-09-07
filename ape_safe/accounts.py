@@ -5,6 +5,7 @@ from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
+from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractInstance
 from ape.logging import logger
 from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
@@ -176,8 +177,13 @@ class SafeAccount(AccountAPI):
         # NOTE: Is not ordered by signing order
         # TODO: Skip per user config
         # TODO: Order per user config
+        if self.network_manager.active_provider and self.provider.network.name == LOCAL_NETWORK_NAME or self.provider.network.name.endswith("-fork"):
+            container = self.account_manager.test_accounts
+        else:
+            container = self.account_manager
+
         return list(
-            self.account_manager[address]
+            container[address]
             for address in self.signers
             if address in self.account_manager
         )
