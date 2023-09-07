@@ -112,5 +112,5 @@ class ClientUnsupportedChainError(SafeClientException):
 
 class ClientResponseError(SafeClientException):
     def __init__(self, endpoint_url: str, response: Response):
-        error_str = response.json()["message"]
+        error_str = response.text
         super().__init__(f"Exception when calling '{endpoint_url}':\n{error_str}")

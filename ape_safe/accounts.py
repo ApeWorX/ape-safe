@@ -337,7 +337,7 @@ class SafeAccount(AccountAPI):
         return super().call(txn, **call_kwargs)
 
     def get_api_confirmations(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
-        safe_tx_hash = hash_eip712_message(safe_tx)
+        safe_tx_hash = hash_eip712_message(safe_tx).hex()
         try:
             client_confs = self.client.get_confirmations(safe_tx_hash)
         except SafeClientException:
