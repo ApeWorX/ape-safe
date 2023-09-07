@@ -8,6 +8,7 @@ from ape.api.address import BaseAddress
 from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractInstance
 from ape.logging import logger
+from ape.managers.accounts import AccountManager, TestAccountManager
 from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.transactions import TransactionType
@@ -177,6 +178,7 @@ class SafeAccount(AccountAPI):
         # NOTE: Is not ordered by signing order
         # TODO: Skip per user config
         # TODO: Order per user config
+        container: Union[AccountManager, TestAccountManager]
         if (
             self.network_manager.active_provider
             and self.provider.network.name == LOCAL_NETWORK_NAME
