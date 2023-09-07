@@ -4,11 +4,11 @@ Account plugin for the [Safe](https://safe.global//) Multisig wallet (previously
 
 ## Dependencies
 
-* [python3](https://www.python.org/downloads) version 3.8 up to 3.11.
+- [python3](https://www.python.org/downloads) version 3.8 up to 3.11.
 
 ## Installation
 
-### via ``ape``
+### via `ape`
 
 You can install using the [ape](https://github.com/ApeWorX/ape) built-in plugin manager:
 
@@ -16,7 +16,7 @@ You can install using the [ape](https://github.com/ApeWorX/ape) built-in plugin 
 $ ape plugins install safe
 ```
 
-### via ``pip``
+### via `pip`
 
 You can install the latest release via [`pip`](https://pypi.org/project/pip/):
 
@@ -24,7 +24,7 @@ You can install the latest release via [`pip`](https://pypi.org/project/pip/):
 $ pip install ape-safe
 ```
 
-### via ``setuptools``
+### via `setuptools`
 
 You can clone the repository and use [`setuptools`](https://github.com/pypa/setuptools) for the most up-to-date version:
 
