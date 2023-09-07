@@ -5,8 +5,10 @@ from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
+from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractInstance
 from ape.logging import logger
+from ape.managers.accounts import AccountManager, TestAccountManager
 from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.transactions import TransactionType
@@ -176,11 +178,17 @@ class SafeAccount(AccountAPI):
         # NOTE: Is not ordered by signing order
         # TODO: Skip per user config
         # TODO: Order per user config
-        return list(
-            self.account_manager[address]
-            for address in self.signers
-            if address in self.account_manager
-        )
+        container: Union[AccountManager, TestAccountManager]
+        if (
+            self.network_manager.active_provider
+            and self.provider.network.name == LOCAL_NETWORK_NAME
+            or self.provider.network.name.endswith("-fork")
+        ):
+            container = self.account_manager.test_accounts
+        else:
+            container = self.account_manager
+
+        return list(container[address] for address in self.signers if address in container)
 
     def get_signatures(
         self,
