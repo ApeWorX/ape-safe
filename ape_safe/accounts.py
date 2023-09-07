@@ -186,9 +186,7 @@ class SafeAccount(AccountAPI):
         else:
             container = self.account_manager
 
-        return list(
-            container[address] for address in self.signers if address in container
-        )
+        return list(container[address] for address in self.signers if address in container)
 
     def get_signatures(
         self,
