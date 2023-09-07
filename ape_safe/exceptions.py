@@ -1,5 +1,5 @@
 from contextlib import ContextDecorator
-from typing import Type
+from typing import Optional, Type
 
 from ape.exceptions import ApeException, ContractLogicError, SignatureError
 from ape.types import AddressType
@@ -26,6 +26,11 @@ class NotEnoughSignatures(ApeSafeException, SignatureError):
             f"Not enough signatures, {expected - actual} more are needed. Bypass this behavior"
             " and publish to Safe API by adding 'submit_transaction=False' to your call."
         )
+
+
+class ClientUnavailable(ApeSafeException):
+    def __init__(self, message: Optional[str] = None) -> None:
+        super().__init__(message or "Client unavailable.")
 
 
 SAFE_ERROR_CODES = {

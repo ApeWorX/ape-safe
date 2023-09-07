@@ -5,8 +5,10 @@ from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
+from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractInstance
 from ape.logging import logger
+from ape.managers.accounts import AccountManager, TestAccountManager
 from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.transactions import TransactionType
@@ -15,14 +17,16 @@ from eip712.messages import hash_eip712_message
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 
-from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation
-from .exceptions import (
+from ape_safe.client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation
+from ape_safe.exceptions import (
+    ClientUnavailable,
     NoLocalSigners,
     NotASigner,
     NotEnoughSignatures,
     SafeClientException,
     handle_safe_logic_error,
 )
+
 from .utils import order_by_signer
 
 
@@ -110,8 +114,9 @@ class SafeAccount(AccountAPI):
 
     @cached_property
     def client(self) -> BaseSafeClient:
-        if self.provider.chain_id not in self.account_file["deployed_chain_ids"]:
-            raise  # Not valid on this chain
+        chain_id = self.provider.chain_id
+        if chain_id not in self.account_file["deployed_chain_ids"]:
+            raise ClientUnavailable(f"Safe client not valid on chain '{chain_id}'.")
 
         if self.provider.network.name == "local":
             return MockSafeClient(contract=self.contract)
@@ -191,11 +196,17 @@ class SafeAccount(AccountAPI):
         # NOTE: Is not ordered by signing order
         # TODO: Skip per user config
         # TODO: Order per user config
-        return list(
-            self.account_manager[address]
-            for address in self.signers
-            if address in self.account_manager
-        )
+        container: Union[AccountManager, TestAccountManager]
+        if (
+            self.network_manager.active_provider
+            and self.provider.network.name == LOCAL_NETWORK_NAME
+            or self.provider.network.name.endswith("-fork")
+        ):
+            container = self.account_manager.test_accounts
+        else:
+            container = self.account_manager
+
+        return list(container[address] for address in self.signers if address in container)
 
     def get_signatures(
         self,
@@ -383,7 +394,7 @@ class SafeAccount(AccountAPI):
 
         # Determine who is submitting the transaction (if enough signatures are gathered)
         if not submit and submitter:
-            raise  # Cannot specify a submitter if not submitting
+            raise ValueError("Cannot specify a submitter if not submitting.")
 
         elif not isinstance(submitter, AccountAPI):
             submitter_not_specified = submitter is None
