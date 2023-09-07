@@ -14,8 +14,14 @@ from eip712.common import create_safe_tx_def
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 
-from .client import SafeClient, SafeTx
-from .exceptions import NoLocalSigners, NotASigner, NotEnoughSignatures, handle_safe_logic_error
+from ape_safe.client import SafeClient, SafeTx
+from ape_safe.exceptions import (
+    ClientUnavailable,
+    NoLocalSigners,
+    NotASigner,
+    NotEnoughSignatures,
+    handle_safe_logic_error,
+)
 
 
 class AccountContainer(AccountContainerAPI):
@@ -102,8 +108,9 @@ class SafeAccount(AccountAPI):
 
     @cached_property
     def client(self) -> SafeClient:
-        if self.provider.chain_id not in self.account_file["deployed_chain_ids"]:
-            raise  # Not valid on this chain
+        chain_id = self.provider.chain_id
+        if chain_id not in self.account_file["deployed_chain_ids"]:
+            raise ClientUnavailable(f"Safe client not valid on chain '{chain_id}'.")
 
         return SafeClient(address=self.address, chain_id=self.provider.chain_id)
 
@@ -325,7 +332,7 @@ class SafeAccount(AccountAPI):
 
         # Determine who is submitting the transaction (if enough signatures are gathered)
         if not submit and submitter:
-            raise  # Cannot specify a submitter if not submitting
+            raise ValueError("Cannot specify a submitter if not submitting.")
 
         elif submit and not submitter:
             if len(self.local_signers) == 0:
@@ -345,7 +352,7 @@ class SafeAccount(AccountAPI):
             submitter = self.account_manager.load(submitter)
 
         elif not isinstance(submitter, AccountAPI):
-            raise  # Cannot handle `submitter=type(submitter)`
+            raise TypeError(f"Cannot handle 'submitter={type(submitter)}'.")
 
         # Invariant: `submitter` should be either `AccountAPI` or we are not submitting here
         assert isinstance(submitter, AccountAPI) or not submit
