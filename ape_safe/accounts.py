@@ -177,15 +177,17 @@ class SafeAccount(AccountAPI):
         # NOTE: Is not ordered by signing order
         # TODO: Skip per user config
         # TODO: Order per user config
-        if self.network_manager.active_provider and self.provider.network.name == LOCAL_NETWORK_NAME or self.provider.network.name.endswith("-fork"):
+        if (
+            self.network_manager.active_provider
+            and self.provider.network.name == LOCAL_NETWORK_NAME
+            or self.provider.network.name.endswith("-fork")
+        ):
             container = self.account_manager.test_accounts
         else:
             container = self.account_manager
 
         return list(
-            container[address]
-            for address in self.signers
-            if address in self.account_manager
+            container[address] for address in self.signers if address in self.account_manager
         )
 
     def get_signatures(
