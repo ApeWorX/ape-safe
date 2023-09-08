@@ -51,6 +51,10 @@ class AccountContainer(AccountContainerAPI):
     def save_account(self, alias: str, address: str):
         """
         Save a new Safe to your ape configuration.
+
+        Args:
+            alias (str): The alias to save the Safe under.
+            address (str): The address of the Safe account.
         """
         chain_id = self.provider.chain_id
         account_data = {"address": address, "deployed_chain_ids": [chain_id]}
@@ -58,10 +62,25 @@ class AccountContainer(AccountContainerAPI):
         path.write_text(json.dumps(account_data))
 
     def load_account(self, alias: str) -> "SafeAccount":
+        """
+        Loads the Safe account.
+
+        Args:
+            alias (str): The alias the Safe account is saved under.
+
+        Returns:
+            ``SafeAccount``: The Safe account loaded.
+        """
         account_path = self.data_folder.joinpath(f"{alias}.json")
         return SafeAccount(account_file_path=account_path)
 
     def delete_account(self, alias: str):
+        """
+        Deletes the local Safe account.
+
+        Args:
+            alias (str): The alias the Safe account is saved under.
+        """
         path = self.data_folder.joinpath(f"{alias}.json")
 
         if path.exists():
@@ -164,6 +183,16 @@ class SafeAccount(AccountAPI):
         )
 
     def create_safe_tx(self, txn: Optional[TransactionAPI] = None, **safe_tx_kwargs) -> SafeTx:
+        """
+        Creates the Safe transaction.
+
+        Args:
+            txn (Optional[``TransactionAPI``]): The transaction 
+            **safe_tx_kwargs: The safe transactions specifications, such as ``submitter``.
+
+        Returns:
+            ``SafeTx``: The Safe Transaction to be used.
+        """
         safe_tx = {}
         safe_tx["to"] = safe_tx_kwargs.get(
             "to", txn.receiver if txn else self.address  # Self-call, e.g. rejection
@@ -372,6 +401,17 @@ class SafeAccount(AccountAPI):
         submitter: Union[AccountAPI, AddressType, str, None] = None,
         **txn_options,
     ) -> ReceiptAPI:
+        """
+        Submit the safe transaction using the submitter after all signatures have been collected.
+
+        Args:
+            safe_tx (``SafeTX``): The safe transaction to submit.
+            submitter (Union[``AccountAPI``, ``AddressType``, str, ``None``]):
+                The submitter to use for the transaction. Defaults to ``None``.
+
+        Returns:
+            :class:`~ape.api.transactions.ReceiptAPI`
+        """
         signatures = self._all_approvals(safe_tx)
         txn = self.create_execute_transaction(safe_tx, signatures, **txn_options)
 
@@ -389,7 +429,24 @@ class SafeAccount(AccountAPI):
         signatures_required: Optional[int] = None,  # NOTE: Required if increasing threshold
         **signer_options,
     ) -> Optional[TransactionAPI]:
-        # TODO: Docstring (override AccountAPI)
+        """
+        Sign the created safe transaction for the safe client to post.
+        **NOTE** ``signatures_required`` is required if the transaction is increasting the threshold.
+
+        Args:
+            txn (``TransactionAPI``): The contract transaction.
+            submit (bool): The option to submit the transaction. Defaults to ``True``.
+            submittter (Union[``AccountAPI``, ``AddressType``, str, None]): 
+                Determine who is submitting the transaction. Defaults to ``None``.
+            skip (Optional[List[Union[``AccountAPI, `AddressType``, str]]]): 
+                Allow bypassing any specified signer. Defaults to ``None``.
+            signatures_required (Optional[int]):
+                The amount of signers required to confirm the transaction. Defaults to ``None``.
+            **signer_options: Other signer options.
+
+        Returns:
+            Optional[``TransactionAPI``]: Returns ``None`` if the transaction is successful.
+        """
         safe_tx = self.create_safe_tx(txn, **signer_options)
 
         # Determine who is submitting the transaction (if enough signatures are gathered)
