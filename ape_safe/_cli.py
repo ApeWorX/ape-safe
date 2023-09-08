@@ -87,7 +87,7 @@ def remove(cli_ctx, alias):
     safe_container = accounts.containers["safe"]
 
     if alias not in safe_container.aliases:
-        raise
+        raise ValueError("There is no {alias} in the safe accounts.")
 
     address = safe_container.load_account(alias).address
     if click.confirm(f"Remove safe {address} ({alias})"):
@@ -108,7 +108,7 @@ def pending(network, sign_with_local_signers, execute, alias):
         if execute in accounts.aliases:
             submitter = accounts.load(execute)
         else:
-            raise
+            raise ValueError("Execute not in account aliases.")
 
     elif execute is True:
         submitter = safe.local_signers[0]

@@ -300,7 +300,7 @@ class SafeAccount(AccountAPI):
             return self.account_manager.load(submitter)
 
         else:
-            raise  # Cannot handle `submitter=type(submitter)`
+            raise  ValueError(f"Cannot handle {submitter}={type(submitter)}")
 
     def prepare_transaction(self, txn: TransactionAPI) -> TransactionAPI:
         # NOTE: Need to override `AccountAPI` behavior for balance checks
