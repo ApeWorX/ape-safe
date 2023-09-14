@@ -3,7 +3,7 @@ from typing import Optional, Type
 
 from ape.exceptions import ApeException, ContractLogicError, SignatureError
 from ape.types import AddressType
-from requests import Response  # type: ignore[import]
+from requests import Response
 
 
 class ApeSafeException(ApeException):

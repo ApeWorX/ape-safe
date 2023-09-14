@@ -12,6 +12,7 @@ extras_require = {
     "lint": [
         "black>=23.7.0,<24",  # Auto-formatter and linter
         "mypy>=1.5.1,<2",  # Static type analyzer
+        "types-requests",  # Needed for mypy type shed
         "types-setuptools",  # Needed for mypy type shed
         "flake8>=6.1.0,<7",  # Style linter
         "isort>=5.10.1,<6",  # Import sorting linter

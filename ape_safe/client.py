@@ -353,7 +353,6 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             )
             for signer, sig in sigs.items()
         )
-
         self.transactions[safe_tx_data.safeTxHash] = safe_tx_data
 
         if safe_tx_data.nonce in self.transactions_by_nonce:

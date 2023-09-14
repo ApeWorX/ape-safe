@@ -7,7 +7,7 @@ from ape.cli import (
     network_option,
     non_existing_alias_argument,
 )
-from ape.exceptions import ChainError
+from ape.exceptions import AccountsError, ChainError
 from ape.types import AddressType
 
 from .accounts import SafeAccount
@@ -87,7 +87,7 @@ def remove(cli_ctx, alias):
     safe_container = accounts.containers["safe"]
 
     if alias not in safe_container.aliases:
-        raise ValueError("There is no {alias} in the safe accounts.")
+        raise AccountsError("There is no account with the alias `{alias}` in the safe accounts.")
 
     address = safe_container.load_account(alias).address
     if click.confirm(f"Remove safe {address} ({alias})"):
@@ -107,8 +107,10 @@ def pending(network, sign_with_local_signers, execute, alias):
     if isinstance(execute, str):
         if execute in accounts.aliases:
             submitter = accounts.load(execute)
+        elif execute in accounts:
+            submitter = accounts[execute]
         else:
-            raise ValueError("Execute not in account aliases.")
+            raise AccountsError(f"`--execute` value '{execute}` not found in local accounts.")
 
     elif execute is True:
         submitter = safe.local_signers[0]
@@ -120,7 +122,7 @@ def pending(network, sign_with_local_signers, execute, alias):
         else:
             click.echo(f"Txn {safe_tx.nonce}: ({len(confirmations)}/{safe.confirmations_required})")
 
-        if execute is not False:
+        if not execute:
             signatures = safe.get_confirmations(safe_tx)
             if len(signatures) >= safe.confirmations_required and click.confirm(
                 f"Submit Txn {safe_tx.nonce}"
