@@ -17,7 +17,7 @@ from .exceptions import ClientResponseError, ClientUnsupportedChainError
 from .utils import order_by_signer
 
 SafeTx = Union[SafeTxV1, SafeTxV2]
-SafeTxID = NewType("SafeTxID", HexBytes)
+SafeTxID = NewType("SafeTxID", str)
 
 TRANSACTION_SERVICE_URL = {
     1: "https://safe-transaction-mainnet.safe.global",
@@ -94,7 +94,7 @@ class UnexecutedTxData(BaseModel):
             submissionDate=datetime.now(),
             modified=datetime.now(),
             confirmationsRequired=confirmationsRequired,
-            safeTxHash=hash_eip712_message(safe_tx),
+            safeTxHash=hash_eip712_message(safe_tx).hex(),
             **safe_tx._body_["message"],
         )
 
