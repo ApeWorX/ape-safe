@@ -163,13 +163,13 @@ class BaseSafeClient(ABC):
             if txn.nonce < starting_nonce:
                 break  # NOTE: order is largest nonce to smallest, so safe to break here
 
-            isConfirmed = len(txn.confirmations) >= txn.confirmationsRequired
+            is_confirmed = len(txn.confirmations) >= txn.confirmationsRequired
 
             if confirmed is not None:
                 if not confirmed and isinstance(txn, ExecutedTxData):
                     break  # NOTE: Break at the first executed transaction
 
-                elif confirmed and not isConfirmed:
+                elif confirmed and not is_confirmed:
                     continue  # NOTE: Skip not confirmed transactions
 
             if txn.nonce < next_nonce and isinstance(txn, UnexecutedTxData):

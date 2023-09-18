@@ -87,7 +87,7 @@ def remove(cli_ctx, alias):
     safe_container = accounts.containers["safe"]
 
     if alias not in safe_container.aliases:
-        raise AccountsError("There is no account with the alias `{alias}` in the safe accounts.")
+        raise AccountsError(f"There is no account with the alias `{alias}` in the safe accounts.")
 
     address = safe_container.load_account(alias).address
     if click.confirm(f"Remove safe {address} ({alias})"):
@@ -123,7 +123,7 @@ def pending(network, sign_with_local_signers, execute, alias):
             click.echo(f"Txn {safe_tx.nonce}: ({len(confirmations)}/{safe.confirmations_required})")
 
         if not execute:
-            signatures = safe.get_confirmations(safe_tx)
+            signatures = safe.get_api_confirmations(safe_tx)
             if len(signatures) >= safe.confirmations_required and click.confirm(
                 f"Submit Txn {safe_tx.nonce}"
             ):
