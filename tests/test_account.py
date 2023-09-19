@@ -41,7 +41,7 @@ def test_swap_owner(safe, accounts, OWNERS, mode):
 
         assert len(list(safe.client.get_transactions(confirmed=False))) == 1
 
-        # `safe_tx` is in mock client, extreact it and execute it successfully this time
+        # `safe_tx` is in mock client, extract it and execute it successfully this time
         safe_tx_data = next(safe.client.get_transactions(confirmed=False))
         safe_tx = safe.create_safe_tx(**safe_tx_data.dict())
         receipt = safe.submit_safe_tx(safe_tx)
@@ -83,7 +83,7 @@ def test_add_owner(safe, accounts, OWNERS, mode):
 
         assert len(list(safe.client.get_transactions(confirmed=False))) == 1
 
-        # `safe_tx` is in mock client, extreact it and execute it successfully this time
+        # `safe_tx` is in mock client, extract it and execute it successfully this time
         safe_tx_data = next(safe.client.get_transactions(confirmed=False))
         safe_tx = safe.create_safe_tx(**safe_tx_data.dict())
         receipt = safe.submit_safe_tx(safe_tx)
@@ -129,7 +129,7 @@ def test_remove_owner(safe, OWNERS, mode):
 
         assert len(list(safe.client.get_transactions(confirmed=False))) == 1
 
-        # `safe_tx` is in mock client, extreact it and execute it successfully this time
+        # `safe_tx` is in mock client, extract it and execute it successfully this time
         safe_tx_data = next(safe.client.get_transactions(confirmed=False))
         safe_tx = safe.create_safe_tx(**safe_tx_data.dict())
         receipt = safe.submit_safe_tx(safe_tx)

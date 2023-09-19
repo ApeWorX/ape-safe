@@ -136,7 +136,7 @@ class SafeAccount(AccountAPI):
         if chain_id not in self.account_file["deployed_chain_ids"]:
             raise ClientUnavailable(f"Safe client not valid on chain '{chain_id}'.")
 
-        if self.provider.network.name == "local":
+        if self.provider.network.name == LOCAL_NETWORK_NAME:
             return MockSafeClient(contract=self.contract)
 
         return SafeClient(address=self.address, chain_id=self.provider.chain_id)

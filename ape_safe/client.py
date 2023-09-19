@@ -88,12 +88,12 @@ class UnexecutedTxData(BaseModel):
     signatures: Optional[HexBytes] = None
 
     @classmethod
-    def from_safe_tx(cls, safe_tx: SafeTx, confirmationsRequired: int) -> "UnexecutedTxData":
+    def from_safe_tx(cls, safe_tx: SafeTx, confirmations_required: int) -> "UnexecutedTxData":
         return cls(  # type: ignore[arg-type]
             safe=safe_tx._verifyingContract_,
             submissionDate=datetime.now(),
             modified=datetime.now(),
-            confirmationsRequired=confirmationsRequired,
+            confirmationsRequired=confirmations_required,
             safeTxHash=hash_eip712_message(safe_tx).hex(),
             **safe_tx._body_["message"],
         )
