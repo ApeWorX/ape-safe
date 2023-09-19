@@ -78,7 +78,10 @@ def add(cli_ctx, network, address, alias):
     )
 
     if click.confirm("Add safe"):
-        cli_ctx.account_manager.containers["safe"].save_account(alias, address)
+        container = cli_ctx.account_manager.containers["safe"]
+        container.save_account(alias, address)
+
+    cli_ctx.logger.success(f"Safe '{address}' ({alias}) added.")
 
 
 @cli.command(short_help="Stop tracking a locally-tracked Safe")
@@ -95,6 +98,8 @@ def remove(cli_ctx, alias):
     address = safe_container.load_account(alias).address
     if click.confirm(f"Remove safe {address} ({alias})"):
         safe_container.delete_account(alias)
+
+    cli_ctx.logger.success(f"Safe '{address}' ({alias}) removed.")
 
 
 def _execute_callback(ctx, param, val):
@@ -138,7 +143,7 @@ def pending(cli_ctx, network, sign_with_local_signers, execute, alias):
         # Add signatures, if was requested to do so.
         if sign_with_local_signers and len(confirmations) < safe.confirmations_required:
             safe.add_signatures(safe_tx, confirmations)
-            cli_ctx.logger.success(f"Added signature to transaction {safe_tx.nonce}")
+            cli_ctx.logger.success(f"Signature added to 'Transaction {safe_tx.nonce}'.")
 
         if not execute:
             signatures = safe.get_api_confirmations(safe_tx)
