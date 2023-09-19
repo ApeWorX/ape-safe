@@ -13,7 +13,11 @@ from eip712.messages import hash_eip712_message
 from eth_utils import keccak
 from pydantic import BaseModel
 
-from ape_safe.exceptions import ClientResponseError, ClientUnsupportedChainError
+from ape_safe.exceptions import (
+    ClientResponseError,
+    ClientUnsupportedChainError,
+    MultisigTransactionNotFoundError,
+)
 from ape_safe.utils import order_by_signer
 
 SafeTx = Union[SafeTxV1, SafeTxV2]
@@ -97,6 +101,21 @@ class UnexecutedTxData(BaseModel):
             safeTxHash=hash_eip712_message(safe_tx).hex(),
             **safe_tx._body_["message"],
         )
+
+    @property
+    def base_tx_dict(self) -> Dict:
+        return {
+            "to": self.to,
+            "value": self.value,
+            "data": self.data,
+            "operation": self.operation,
+            "safeTxGas": self.safeTxGas,
+            "baseGas": self.baseGas,
+            "gasPrice": self.gasPrice,
+            "gasToken": self.gasToken,
+            "refundReceiver": self.refundReceiver,
+            "nonce": self.nonce,
+        }
 
     def __str__(self) -> str:
         # TODO: Decode data
@@ -282,9 +301,21 @@ class SafeClient(BaseSafeClient):
                 b"",
             )
         )
+        post_dict: Dict = {}
+        for key, value in tx_data.dict().items():
+            if isinstance(value, HexBytes):
+                post_dict[key] = value.hex()
+            elif isinstance(value, OperationType):
+                post_dict[key] = int(value)
+            elif isinstance(value, datetime):
+                # not needed
+                continue
+            else:
+                post_dict[key] = value
 
-        url = f"{self.transaction_service_url}/api/v1/multisig-transactions"
-        response = requests.post(url, json={"origin": "ApeWorX/ape-safe", **tx_data.dict()})
+        url = f"{self.transaction_service_url}/api/v1/safes/{tx_data.safe}/multisig-transactions"
+        json_data = {"origin": "ApeWorX/ape-safe", **post_dict}
+        response = requests.post(url, json=json_data)
 
         if not response.ok:
             raise ClientResponseError(url, response)
@@ -292,15 +323,21 @@ class SafeClient(BaseSafeClient):
     def post_signature(
         self, safe_tx_hash: SafeTxID, signer: AddressType, signature: MessageSignature
     ):
+        if not isinstance(safe_tx_hash, str):
+            raise TypeError("Expecting str-like type for 'safe_tx_hash'.")
+
         url = (
             f"{self.transaction_service_url}/api"
-            f"/v1/multisig-transactions/{str(safe_tx_hash)}/confirmations"
+            f"/v1/multisig-transactions/{safe_tx_hash}/confirmations"
         )
         response = requests.post(
             url, json={"origin": "ApeWorX/ape-safe", "signature": signature.encode_rsv().hex()}
         )
 
         if not response.ok:
+            if "The requested resource was not found on this server" in response.text:
+                raise MultisigTransactionNotFoundError(safe_tx_hash, url, response)
+
             raise ClientResponseError(url, response)
 
 

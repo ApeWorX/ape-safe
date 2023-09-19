@@ -1,7 +1,7 @@
 import json
 from itertools import islice
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union, cast
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
@@ -17,7 +17,14 @@ from eip712.messages import hash_eip712_message
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 
-from ape_safe.client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation
+from ape_safe.client import (
+    BaseSafeClient,
+    MockSafeClient,
+    SafeClient,
+    SafeTx,
+    SafeTxConfirmation,
+    SafeTxID,
+)
 from ape_safe.exceptions import (
     ApeSafeError,
     ClientUnavailable,
@@ -568,3 +575,25 @@ class SafeAccount(AccountAPI):
 
         # Return None so that Ape does not try to submit the transaction.
         return None
+
+    def add_signatures(self, safe_tx: SafeTx, confirmations: List[SafeTxConfirmation]):
+        if not self.local_signers:
+            raise ApeSafeError("Cannot sign without local signers.")
+
+        elif len(confirmations) >= self.confirmations_required:
+            raise ApeSafeError("Signatures full.")
+
+        signers = [
+            ls for ls in self.local_signers if ls.address not in [c.owner for c in confirmations]
+        ]
+        for signer in signers:
+            if not (tx_hash_result := next((c.transactionHash for c in confirmations), None)):
+                tx_hash_result = self.contract.getTransactionHash(*safe_tx)
+
+            if tx_hash_result is None:
+                raise ApeSafeError("Failed to get transaction hash.")
+
+            tx_hash = HexBytes(tx_hash_result).hex()
+            signature = signer.sign_message(safe_tx.signable_message)
+            if signature:
+                self.client.post_signature(cast(SafeTxID, tx_hash), signer.address, signature)

@@ -117,6 +117,14 @@ class ClientUnsupportedChainError(SafeClientException):
 
 
 class ClientResponseError(SafeClientException):
-    def __init__(self, endpoint_url: str, response: Response):
-        error_str = response.text
-        super().__init__(f"Exception when calling '{endpoint_url}':\n{error_str}")
+    def __init__(self, endpoint_url: str, response: Response, message: Optional[str] = None):
+        self.endpoint_url = endpoint_url
+        self.response = response
+        message = message or f"Exception when calling '{endpoint_url}':\n{response.text}"
+        super().__init__(message)
+
+
+class MultisigTransactionNotFoundError(ClientResponseError):
+    def __init__(self, tx_hash: str, endpoint_url: str, response: Response):
+        message = f"Multisig transaction '{tx_hash}' not found."
+        super().__init__(endpoint_url, response, message=message)
