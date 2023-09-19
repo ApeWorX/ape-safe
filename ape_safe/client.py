@@ -4,7 +4,7 @@ from enum import Enum
 from functools import reduce
 from typing import Dict, Iterator, List, NewType, Optional, Set, Union
 
-import requests  # type: ignore
+import requests
 from ape.contracts import ContractInstance
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
@@ -13,8 +13,8 @@ from eip712.messages import hash_eip712_message
 from eth_utils import keccak
 from pydantic import BaseModel
 
-from .exceptions import ClientResponseError, ClientUnsupportedChainError
-from .utils import order_by_signer
+from ape_safe.exceptions import ClientResponseError, ClientUnsupportedChainError
+from ape_safe.utils import order_by_signer
 
 SafeTx = Union[SafeTxV1, SafeTxV2]
 SafeTxID = NewType("SafeTxID", str)
@@ -89,7 +89,7 @@ class UnexecutedTxData(BaseModel):
 
     @classmethod
     def from_safe_tx(cls, safe_tx: SafeTx, confirmations_required: int) -> "UnexecutedTxData":
-        return cls(  # type: ignore[arg-type]
+        return cls(
             safe=safe_tx._verifyingContract_,
             submissionDate=datetime.now(),
             modified=datetime.now(),

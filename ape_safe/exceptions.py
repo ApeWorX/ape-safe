@@ -1,13 +1,19 @@
 from contextlib import ContextDecorator
 from typing import Optional, Type
 
-from ape.exceptions import ApeException, ContractLogicError, SignatureError
+from ape.exceptions import AccountsError, ApeException, ContractLogicError, SignatureError
 from ape.types import AddressType
 from requests import Response
 
 
 class ApeSafeException(ApeException):
     pass
+
+
+class ApeSafeError(ApeSafeException, AccountsError):
+    """
+    An error to raise in place of AccountsError for the ``ape-safe`` plugin.
+    """
 
 
 class NotASigner(ApeSafeException):
