@@ -365,6 +365,14 @@ class SafeAccount(AccountAPI):
         impersonate: bool = False,
         **call_kwargs,
     ) -> ReceiptAPI:
+        # NOTE: The `or True` at the end is in case we get `submit=None`,
+        #   meaning use the default.
+        default_submit = not impersonate
+        submit = (
+            call_kwargs.pop("submit_transaction", call_kwargs.pop("submit", default_submit))
+            or not default_submit
+        )
+        call_kwargs["submit"] = submit
         if impersonate:
             return self._impersonated_call(txn, **call_kwargs)
 
