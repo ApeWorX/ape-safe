@@ -103,6 +103,23 @@ class AccountContainer(AccountContainerAPI):
         """
         self._get_path(alias).unlink(missing_ok=True)
 
+    def _get_client(self, key: str) -> BaseSafeClient:
+        if key in self.aliases:
+            safe = self.load_account(key)
+            return safe.client
+
+        elif key in self:
+            account = self[key]  # type: ignore[index]
+            if not isinstance(account, SafeAccount):
+                raise TypeError("Safe container returned non-safe account.")
+
+            return account.client
+
+        else:
+            # Is not locally managed.
+            address = self.conversion_manager.convert(key, AddressType)
+            return SafeClient(address=address, chain_id=self.chain_manager.provider.chain_id)
+
     def _get_path(self, alias: str) -> Path:
         return self.data_folder.joinpath(f"{alias}.json")
 

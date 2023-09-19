@@ -11,7 +11,7 @@ from ape.types import AddressType
 from click import BadArgumentUsage, BadOptionUsage
 
 from ape_safe.accounts import SafeAccount
-from ape_safe.client import ExecutedTxData, SafeClient
+from ape_safe.client import ExecutedTxData
 
 
 @click.group(short_help="Manage Safe accounts and view Safe API data")
@@ -28,14 +28,14 @@ def cli():
 def _list(cli_ctx, network):
     _ = network  # Needed for NetworkBoundCommand
     safes = cli_ctx.account_manager.get_accounts_by_type(type_=SafeAccount)
-    safes_length = len(safes)
+    number_of_safes = len(safes)
 
-    if safes_length == 0:
+    if number_of_safes == 0:
         cli_ctx.logger.warning("No Safes found.")
         return
 
-    header = f"Found {safes_length} Safe"
-    header += "s:" if safes_length > 1 else ":"
+    header = f"Found {number_of_safes} Safe"
+    header += "s:" if number_of_safes > 1 else ":"
     click.echo(header)
 
     for account in safes:
@@ -91,9 +91,7 @@ def remove(cli_ctx, alias):
     safe_container = cli_ctx.account_manager.containers["safe"]
 
     if alias not in safe_container.aliases:
-        raise BadArgumentUsage(
-            f"There is no account with the alias `{alias}` in the safe accounts."
-        )
+        raise BadArgumentUsage(f"There is no safe with the alias `{alias}`.")
 
     address = safe_container.load_account(alias).address
     if click.confirm(f"Remove safe {address} ({alias})"):
@@ -185,12 +183,7 @@ def reject(cli_ctx, network, alias, txn_ids):
 def all_txns(cli_ctx, network, address, confirmed):
     _ = network  # Needed for NetworkBoundCommand
     safe_container = cli_ctx.account_manager.containers["safe"]
-    address = (
-        safe_container.load_account(address).address
-        if address in safe_container.aliases
-        else cli_ctx.conversion_manager.convert(address, AddressType)
-    )
-    client = SafeClient(address=address, chain_id=cli_ctx.chain_manager.provider.chain_id)
+    client = safe_container._get_client(address)
 
     for txn in client.get_transactions(confirmed=confirmed):
         if isinstance(txn, ExecutedTxData):
