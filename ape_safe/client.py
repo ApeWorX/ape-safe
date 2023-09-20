@@ -324,8 +324,14 @@ class SafeClient(BaseSafeClient):
             raise ClientResponseError(url, response)
 
     def post_signature(
-        self, safe_tx_hash: SafeTxID, signer: AddressType, signature: MessageSignature
+        self, safe_tx_or_hash: Union[SafeTx, SafeTxID], signature: MessageSignature
     ):
+        if isinstance(safe_tx_or_hash, SafeTx):
+            safe_tx = safe_tx_or_hash
+            safe_tx_hash = hash_eip712_message(safe_tx).hex()
+        elif isinstance(safe_tx_or_hash, SafeTxID):
+            safe_tx_hash = safe_tx_or_hash
+
         if not isinstance(safe_tx_hash, str):
             raise TypeError("Expecting str-like type for 'safe_tx_hash'.")
 
