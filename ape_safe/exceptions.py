@@ -120,7 +120,7 @@ class ClientResponseError(SafeClientException):
     def __init__(self, endpoint_url: str, response: Response, message: Optional[str] = None):
         self.endpoint_url = endpoint_url
         self.response = response
-        message = message or f"Exception when calling '{endpoint_url}':\n{response.text}"
+        message = message or f"Exception when calling '{endpoint_url}':\n{response}"
         super().__init__(message)
 
 
