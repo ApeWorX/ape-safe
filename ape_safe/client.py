@@ -24,6 +24,9 @@ SafeTx = Union[SafeTxV1, SafeTxV2]
 SafeTxID = NewType("SafeTxID", str)
 
 TRANSACTION_SERVICE_URL = {
+    # NOTE: If URLs need to be updated, a list of available service URLs can be found at 
+    # https://docs.safe.global/safe-core-api/available-services.
+    # NOTE: There should be no trailing slashes at the end of the URL.
     1: "https://safe-transaction-mainnet.safe.global",
     5: "https://safe-transaction-goerli.safe.global",
     10: "https://safe-transaction-optimism.safe.global",
@@ -33,10 +36,10 @@ TRANSACTION_SERVICE_URL = {
     250: "https://safe-txservice.fantom.network",
     288: "https://safe-transaction.mainnet.boba.network",
     # NOTE: Not supported yet
-    # 8453: "https://safe-transaction-base.safe.global/",
+    # 8453: "https://safe-transaction-base.safe.global",
     42161: "https://safe-transaction-arbitrum.safe.global",
     43114: "https://safe-transaction-avalanche.safe.global",
-    84531: "https://safe-transaction-base-testnet.safe.global/",
+    84531: "https://safe-transaction-base-testnet.safe.global",
 }
 
 
