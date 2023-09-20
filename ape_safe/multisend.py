@@ -6,7 +6,7 @@ from ape.types import ContractType, HexBytes
 from ape.utils import ManagerAccessMixin, cached_property
 from eth_abi.packed import encode_packed
 
-from .exceptions import UnsupportedChainError, ValueRequired
+from ape_safe.exceptions import UnsupportedChainError, ValueRequired
 
 MULTISEND_CODE = HexBytes(
     "0x60806040526004361061001e5760003560e01c80638d80ff0a14610023575b600080fd5b6100dc6004803603602"
@@ -145,7 +145,7 @@ class MultiSend(ManagerAccessMixin):
         self,
         call,
         *args,
-        delegatecall=False,
+        delegatecall=True,
         value=0,
     ):
         """
