@@ -598,9 +598,6 @@ class SafeAccount(AccountAPI):
         if not self.local_signers:
             raise ApeSafeError("Cannot sign without local signers.")
 
-        elif len(confirmations) >= self.confirmations_required:
-            raise ApeSafeError("Signatures full.")
-
         signers = [
             ls for ls in self.local_signers if ls.address not in [c.owner for c in confirmations]
         ]
