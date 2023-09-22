@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
 from functools import reduce
-from typing import Dict, Iterator, List, NewType, Optional, Set, Union
+from typing import Dict, Iterator, List, NewType, Optional, Set, Union, get_args
 
 import requests
 from ape.contracts import ContractInstance
@@ -24,7 +24,7 @@ SafeTx = Union[SafeTxV1, SafeTxV2]
 SafeTxID = NewType("SafeTxID", str)
 
 TRANSACTION_SERVICE_URL = {
-    # NOTE: If URLs need to be updated, a list of available service URLs can be found at 
+    # NOTE: If URLs need to be updated, a list of available service URLs can be found at
     # https://docs.safe.global/safe-core-api/available-services.
     # NOTE: There should be no trailing slashes at the end of the URL.
     1: "https://safe-transaction-mainnet.safe.global",
@@ -324,12 +324,15 @@ class SafeClient(BaseSafeClient):
             raise ClientResponseError(url, response)
 
     def post_signature(
-        self, safe_tx_or_hash: Union[SafeTx, SafeTxID], signature: MessageSignature
+        self,
+        safe_tx_or_hash: Union[SafeTx, SafeTxID],
+        signer: AddressType,
+        signature: MessageSignature,
     ):
-        if isinstance(safe_tx_or_hash, SafeTx):
+        if isinstance(safe_tx_or_hash, get_args(SafeTx)):
             safe_tx = safe_tx_or_hash
             safe_tx_hash = hash_eip712_message(safe_tx).hex()
-        elif isinstance(safe_tx_or_hash, SafeTxID):
+        elif isinstance(safe_tx_or_hash, get_args(SafeTxID)):
             safe_tx_hash = safe_tx_or_hash
 
         if not isinstance(safe_tx_hash, str):
@@ -407,9 +410,12 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             self.transactions_by_nonce[safe_tx_data.nonce] = [safe_tx_data.safeTxHash]
 
     def post_signature(
-        self, safe_tx_hash: SafeTxID, signer: AddressType, signature: MessageSignature
+        self,
+        safe_tx_or_hash: Union[SafeTx, SafeTxID],
+        signer: AddressType,
+        signature: MessageSignature,
     ):
-        self.transactions[safe_tx_hash].confirmations.append(
+        self.transactions[safe_tx_or_hash].confirmations.append(
             SafeTxConfirmation(
                 owner=signer,
                 submissionDate=datetime.now(),
