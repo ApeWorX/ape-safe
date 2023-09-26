@@ -219,7 +219,10 @@ class BaseSafeClient(ABC):
 
     @abstractmethod
     def post_signature(
-        self, safe_tx_hash: SafeTxID, signer: AddressType, signature: MessageSignature
+        self,
+        safe_tx_or_hash: Union[SafeTx, SafeTxID],
+        signer: AddressType,
+        signature: MessageSignature,
     ):
         ...
 
