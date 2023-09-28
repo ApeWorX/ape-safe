@@ -214,9 +214,7 @@ class MultiSend(ManagerAccessMixin):
             :class:`~ape.api.transactions.ReceiptAPI`
         """
         self._validate_calls(**txn_kwargs)
-        if "operation" not in txn_kwargs and (
-            "impersonate" not in txn_kwargs or not txn_kwargs["impersonate"]
-        ):
+        if "operation" not in txn_kwargs and (not txn_kwargs.get("impersonate", False)):
             txn_kwargs["operation"] = 1
         return self.handler(b"".join(self.encoded_calls), **txn_kwargs)
 
@@ -230,9 +228,7 @@ class MultiSend(ManagerAccessMixin):
         self._validate_calls(**txn_kwargs)
         # NOTE: Will fail using `self.handler.as_transaction` because handler
         #       expects to be called only via delegatecall
-        if "operation" not in txn_kwargs and (
-            "impersonate" not in txn_kwargs or not txn_kwargs["impersonate"]
-        ):
+        if "operation" not in txn_kwargs and (not txn_kwargs.get("impersonate", False)):
             txn_kwargs["operation"] = 1
         return self.network_manager.ecosystem.create_transaction(
             receiver=self.handler.contract.address,
