@@ -1,0 +1,18 @@
+ethereum:
+  mainnnet:
+    default_provider: alchemy
+  local:
+    default_provider: foundry
+
+foundry:
+  fork:
+      ethereum:
+        mainnet:
+          upstream_provider: alchemy
+          block_number: 15776634
+        goerli:
+          upstream_provider: alchemy
+          block_number: 7849922
+        sepolia:
+          upstream_provider: alchemy
+          block_number: 3091950

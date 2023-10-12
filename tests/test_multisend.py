@@ -1,5 +1,4 @@
 import pytest
-from ape import networks
 
 from ape_safe import MultiSend
 from ape_safe.exceptions import SafeLogicError
