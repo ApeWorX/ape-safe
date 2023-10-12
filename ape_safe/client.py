@@ -359,7 +359,7 @@ class SafeClient(BaseSafeClient):
 class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
     def __init__(self, contract: ContractInstance):
         self.contract = contract
-        self.transactions: Dict[SafeTx | SafeTxID, SafeApiTxData] = {}
+        self.transactions: Union[SafeTx, SafeTxID, SafeApiTxData] = {}
         self.transactions_by_nonce: Dict[int, List[SafeTxID]] = {}
 
     @property
