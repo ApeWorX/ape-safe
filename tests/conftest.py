@@ -9,7 +9,7 @@ from ethpm_types import ContractType
 
 from ape_safe.accounts import SafeAccount
 
-projects_directory = Path(__file__).parent / "contracts"
+contracts_directory = Path(__file__).parent / "contracts"
 
 
 @pytest.fixture(scope="session")
@@ -102,11 +102,17 @@ def safe(safe_data_file):
 
 @pytest.fixture
 def token(deployer):
-    contract = ContractType.parse_file(projects_directory / "Token.json")
+    contract = ContractType.parse_file(contracts_directory / "Token.json")
     return deployer.deploy(ContractContainer(contract))
 
 
 @pytest.fixture
 def vault(deployer, token):
-    vault = ContractContainer(ContractType.parse_file(projects_directory / "VyperVault.json"))
+    vault = ContractContainer(ContractType.parse_file(contracts_directory / "VyperVault.json"))
     return deployer.deploy(vault, token)
+
+
+@pytest.fixture
+def foundry(networks):
+    with networks.ethereum.local.use_provider("foundry") as provider:
+        yield provider
