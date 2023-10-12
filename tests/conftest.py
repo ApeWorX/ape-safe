@@ -3,9 +3,13 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from ape.contracts import ContractContainer
 from ape.utils import ZERO_ADDRESS
+from ethpm_types import ContractType
 
 from ape_safe.accounts import SafeAccount
+
+projects_directory = Path(__file__).parent / "contracts"
 
 
 @pytest.fixture(scope="session")
@@ -94,3 +98,15 @@ def safe_data_file(chain, safe_contract):
 @pytest.fixture
 def safe(safe_data_file):
     return SafeAccount(account_file_path=safe_data_file)
+
+
+@pytest.fixture
+def token(deployer):
+    contract = ContractType.parse_file(projects_directory / "Token.json")
+    return deployer.deploy(ContractContainer(contract))
+
+
+@pytest.fixture
+def vault(deployer, token):
+    vault = ContractContainer(ContractType.parse_file(projects_directory / "VyperVault.json"))
+    return deployer.deploy(vault, token)
