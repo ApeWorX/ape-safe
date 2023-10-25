@@ -47,7 +47,7 @@ def _list(cli_ctx, network):
             extras.append(f"version: '{account.version}'")
         except ChainError:
             # Not connected to the network where safe is deployed
-            pass
+            extras.append(f"version: (not connected)")
 
         extras_display = f" ({', '.join(extras)})" if extras else ""
         click.echo(f"  {account.address}{extras_display}")
@@ -81,7 +81,7 @@ def add(cli_ctx, network, address, alias):
         container = cli_ctx.account_manager.containers["safe"]
         container.save_account(alias, address)
 
-    cli_ctx.logger.success(f"Safe '{address}' ({alias}) added.")
+        cli_ctx.logger.success(f"Safe '{address}' ({alias}) added.")
 
 
 @cli.command(short_help="Stop tracking a locally-tracked Safe")
