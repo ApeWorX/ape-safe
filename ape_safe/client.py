@@ -35,8 +35,7 @@ TRANSACTION_SERVICE_URL = {
     137: "https://safe-transaction-polygon.safe.global",
     250: "https://safe-txservice.fantom.network",
     288: "https://safe-transaction.mainnet.boba.network",
-    # NOTE: Not supported yet
-    # 8453: "https://safe-transaction-base.safe.global",
+    8453: "https://safe-transaction-base.safe.global",
     42161: "https://safe-transaction-arbitrum.safe.global",
     43114: "https://safe-transaction-avalanche.safe.global",
     84531: "https://safe-transaction-base-testnet.safe.global",
