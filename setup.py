@@ -8,6 +8,8 @@ extras_require = {
         "pytest-xdist",  # multi-process runner
         "pytest-cov",  # Coverage analyzer plugin
         "hypothesis>=6.2.0,<7.0",  # Strategy-based fuzzer
+        "ape-alchemy>=0.6.5,<0.7.0",
+        "ape-foundry>=0.6.17,<0.7.0",
     ],
     "lint": [
         "black>=23.7.0,<24",  # Auto-formatter and linter
@@ -57,8 +59,6 @@ setup(
     include_package_data=True,
     install_requires=[
         "eth-ape>=0.6.11,<0.7.0",
-        "ape-alchemy>=0.6.5,<0.7.0",
-        "ape-foundry>=0.6.17,<0.7.0",
         "eip712>=0.2.0,<0.3.0",
         "requests>=2.31.0,<3",
         "pydantic",  # Use same version as eth-ape
