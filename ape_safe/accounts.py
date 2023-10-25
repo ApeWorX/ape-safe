@@ -85,7 +85,7 @@ class AccountContainer(AccountContainerAPI):
             alias (str): The alias the Safe account is saved under.
 
         Returns:
-            ``:class:~ape_safe.accounts.SafeAccount``: The Safe account loaded.
+            :class:`~ape_safe.accounts.SafeAccount`: The Safe account loaded.
         """
         account_path = self._get_path(alias)
         if not account_path.is_file():
@@ -240,7 +240,7 @@ class SafeAccount(AccountAPI):
             **safe_tx_kwargs: The safe transactions specifications, such as ``submitter``.
 
         Returns:
-            ``:class:~ape_safe.client.SafeTx``: The Safe Transaction to be used.
+            :class:`~ape_safe.client.SafeTx`: The Safe Transaction to be used.
         """
         safe_tx = {
             "to": txn.receiver if txn else self.address,  # Self-call, e.g. rejection
