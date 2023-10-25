@@ -8,6 +8,7 @@ from ape.utils import ZERO_ADDRESS
 from ethpm_types import ContractType
 
 from ape_safe.accounts import SafeAccount
+from ape_safe import MultiSend
 
 contracts_directory = Path(__file__).parent / "contracts"
 
@@ -116,3 +117,9 @@ def vault(deployer, token):
 def foundry(networks):
     with networks.ethereum.local.use_provider("foundry") as provider:
         yield provider
+
+@pytest.fixture
+def multisend():
+    ms = MultiSend()
+    ms.inject()
+    return ms

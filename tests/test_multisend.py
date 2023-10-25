@@ -8,21 +8,17 @@ def test_asset(vault, token):
     assert vault.asset() == token
 
 
-def test_default_operation(safe, token, vault):
-    ms = MultiSend()
-    ms.inject()
+def test_default_operation(safe, token, vault, multisend):
     amount = token.balanceOf(safe)
-    ms.add(token.approve, vault, safe)
-    ms.add(vault.transfer, safe, amount)
-    receipt = ms(sender=safe)
+    multisend.add(token.approve, vault, safe)
+    multisend.add(vault.transfer, safe, amount)
+    receipt = multisend(sender=safe)
     assert receipt.txn_hash
 
 
-def test_no_operation(safe, token, vault):
-    ms = MultiSend()
-    ms.inject()
+def test_no_operation(safe, token, vault, multisend):
     amount = token.balanceOf(safe)
-    ms.add(token.approve, vault, safe)
-    ms.add(vault.transfer, safe, amount)
+    multisend.add(token.approve, vault, safe)
+    multisend.add(vault.transfer, safe, amount)
     with pytest.raises(SafeLogicError, match="Safe transaction failed"):
-        ms(sender=safe, operation=0)
+        multisend(sender=safe, operation=0)
