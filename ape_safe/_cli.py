@@ -139,7 +139,7 @@ def pending(cli_ctx, network, sign_with_local_signers, execute, alias):
         )
 
         # Add signatures, if was requested to do so.
-        if sign_with_local_signers and len(confirmations) < safe.confirmations_required:
+        if sign_with_local_signers and len(confirmations) < safe.confirmations_required - 1:
             safe.add_signatures(safe_tx, confirmations)
             cli_ctx.logger.success(f"Signature added to 'Transaction {safe_tx.nonce}'.")
 
