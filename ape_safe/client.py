@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
 from functools import reduce
-from typing import Dict, Iterator, List, NewType, Optional, Set, Union, get_args
+from typing import Dict, Iterator, List, NewType, Optional, Set, Union
 
 import requests
 from ape.contracts import ContractInstance
@@ -332,10 +332,10 @@ class SafeClient(BaseSafeClient):
         signer: AddressType,
         signature: MessageSignature,
     ):
-        if isinstance(safe_tx_or_hash, get_args(SafeTx)):
+        if isinstance(safe_tx_or_hash, SafeTx):
             safe_tx = safe_tx_or_hash
             safe_tx_hash = hash_eip712_message(safe_tx).hex()
-        elif isinstance(safe_tx_or_hash, get_args(SafeTxID)):
+        else:
             safe_tx_hash = safe_tx_or_hash
 
         if not isinstance(safe_tx_hash, str):
