@@ -274,14 +274,14 @@ class SafeClient(BaseSafeClient):
 
             data = response.json()
 
-            for txn in data["results"]:
+            for txn in data.get("results"):
                 if "isExecuted" in txn and txn["isExecuted"]:
                     yield ExecutedTxData.parse_obj(txn)
 
                 else:
                     yield UnexecutedTxData.parse_obj(txn)
 
-            url = data["next"]
+            url = data.get("next")
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
         url = (
@@ -294,8 +294,8 @@ class SafeClient(BaseSafeClient):
                 raise ClientResponseError(url, response)
 
             data = response.json()
-            yield from map(SafeTxConfirmation.parse_obj, data["results"])
-            url = data["next"]
+            yield from map(SafeTxConfirmation.parse_obj, data.get("results"))
+            url = data.get("next")
 
     def post_transaction(self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature]):
         tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
