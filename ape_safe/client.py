@@ -11,7 +11,7 @@ from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
 from eip712.common import SafeTxV1, SafeTxV2
 from eip712.messages import hash_eip712_message
 from eth_utils import keccak
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ape_safe.exceptions import (
     ClientResponseError,
@@ -79,16 +79,16 @@ class UnexecutedTxData(BaseModel):
     value: int
     data: Optional[HexBytes] = None
     operation: OperationType
-    gasToken: AddressType
-    safeTxGas: int
-    baseGas: int
-    gasPrice: int
-    refundReceiver: AddressType
+    gas_token: AddressType = Field(alias="gasToken")
+    safe_tx_gas: int = Field(alias="safeTxGas")
+    base_gas: int = Field(alias="baseGas")
+    gas_price: int = Field(alias="gasPrice")
+    refund_receiver: AddressType = Field(alias="refundReceiver")
     nonce: int
-    submissionDate: datetime
+    submission_date: datetime = Field(alias="submissionDate")
     modified: datetime
-    safeTxHash: SafeTxID
-    confirmationsRequired: int
+    safe_tx_hash: SafeTxID = Field(alias="safeTxHash")
+    confirmations_required: int = Field(alias="confirmationsRequired")
     confirmations: List[SafeTxConfirmation] = []
     trusted: bool = True
     signatures: Optional[HexBytes] = None
@@ -111,11 +111,11 @@ class UnexecutedTxData(BaseModel):
             "value": self.value,
             "data": self.data,
             "operation": self.operation,
-            "safeTxGas": self.safeTxGas,
-            "baseGas": self.baseGas,
-            "gasPrice": self.gasPrice,
-            "gasToken": self.gasToken,
-            "refundReceiver": self.refundReceiver,
+            "safeTxGas": self.safe_tx_gas,
+            "baseGas": self.base_gas,
+            "gasPrice": self.gas_price,
+            "gasToken": self.gas_token,
+            "refundReceiver": self.refund_receiver,
             "nonce": self.nonce,
         }
 
@@ -184,7 +184,7 @@ class BaseSafeClient(ABC):
             if txn.nonce < starting_nonce:
                 break  # NOTE: order is largest nonce to smallest, so safe to break here
 
-            is_confirmed = len(txn.confirmations) >= txn.confirmationsRequired
+            is_confirmed = len(txn.confirmations) >= txn.confirmations_required
 
             if confirmed is not None:
                 if not confirmed and isinstance(txn, ExecutedTxData):
@@ -196,7 +196,7 @@ class BaseSafeClient(ABC):
             if txn.nonce < next_nonce and isinstance(txn, UnexecutedTxData):
                 continue  # NOTE: Skip orphaned transactions
 
-            if filter_by_ids and txn.safeTxHash not in filter_by_ids:
+            if filter_by_ids and txn.safe_tx_hash not in filter_by_ids:
                 continue  # NOTE: Skip transactions not in the filter
 
             if filter_by_missing_signers and filter_by_missing_signers.issubset(
@@ -404,12 +404,12 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             )
             for signer, sig in sigs.items()
         )
-        self.transactions[safe_tx_data.safeTxHash] = safe_tx_data
+        self.transactions[safe_tx_data.safe_tx_hash] = safe_tx_data
 
         if safe_tx_data.nonce in self.transactions_by_nonce:
-            self.transactions_by_nonce[safe_tx_data.nonce].append(safe_tx_data.safeTxHash)
+            self.transactions_by_nonce[safe_tx_data.nonce].append(safe_tx_data.safe_tx_hash)
         else:
-            self.transactions_by_nonce[safe_tx_data.nonce] = [safe_tx_data.safeTxHash]
+            self.transactions_by_nonce[safe_tx_data.nonce] = [safe_tx_data.safe_tx_hash]
 
     def post_signature(
         self,

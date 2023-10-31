@@ -244,5 +244,5 @@ def all_txns(cli_ctx: SafeCliContext, network, address, confirmed):
             click.echo(f"Txn {txn.nonce}: {success_str} @ {txn.executionDate}")
         else:
             click.echo(
-                f"Txn {txn.nonce}: pending ({len(txn.confirmations)}/{txn.confirmationsRequired})"
+                f"Txn {txn.nonce}: pending ({len(txn.confirmations)}/{txn.confirmations_required})"
             )
