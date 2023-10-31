@@ -5,7 +5,7 @@ from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union,
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
-from ape.api.networks import LOCAL_NETWORK_NAME
+from ape.api.networks import LOCAL_NETWORK_NAME, ForkedNetworkAPI
 from ape.contracts import ContractInstance
 from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
@@ -27,7 +27,6 @@ from ape_safe.client import (
 )
 from ape_safe.exceptions import (
     ApeSafeError,
-    ClientUnavailable,
     NoLocalSigners,
     NotASigner,
     NotEnoughSignatures,
@@ -127,12 +126,11 @@ class SafeContainer(AccountContainerAPI):
             safe = self.load_account(key)
             return safe.client
 
-        elif key in self:
-            account = self[key]  # type: ignore[index]
-            if not isinstance(account, SafeAccount):
-                raise TypeError("Safe container returned non-safe account.")
+        elif key in self.addresses:
+            return self[cast(AddressType, key)].client
 
-            return account.client
+        elif key in self.aliases:
+            return self.load_account(key).client
 
         else:
             # Is not locally managed.
@@ -169,7 +167,7 @@ class SafeAccount(AccountAPI):
 
     @property
     def address(self) -> AddressType:
-        return self.network_manager.ethereum.decode_address(self.account_file["address"])
+        return self.provider.network.ecosystem.decode_address(self.account_file["address"])
 
     @cached_property
     def contract(self) -> ContractInstance:
@@ -202,10 +200,26 @@ class SafeAccount(AccountAPI):
     @cached_property
     def client(self) -> BaseSafeClient:
         chain_id = self.provider.chain_id
-        if chain_id not in self.account_file["deployed_chain_ids"]:
-            raise ClientUnavailable(f"Safe client not valid on chain '{chain_id}'.")
 
-        elif self.provider.network.name == LOCAL_NETWORK_NAME:
+        if self.provider.network.name == LOCAL_NETWORK_NAME:
+            return MockSafeClient(contract=self.contract)
+
+        elif chain_id in self.account_file["deployed_chain_ids"]:
+            return SafeClient(address=self.address, chain_id=self.provider.chain_id)
+
+        elif (
+            self.provider.network.name.endswith("-fork")
+            and isinstance(self.provider.network, ForkedNetworkAPI)
+            and self.provider.network.upstream_chain_id in self.account_file["deployed_chain_ids"]
+        ):
+            return SafeClient(
+                address=self.address, chain_id=self.provider.network.upstream_chain_id
+            )
+
+        elif (
+            self.provider.network.name == LOCAL_NETWORK_NAME
+            or self.provider.network.name.endswith("-fork")
+        ):
             return MockSafeClient(contract=self.contract)
 
         return SafeClient(address=self.address, chain_id=self.provider.chain_id)
