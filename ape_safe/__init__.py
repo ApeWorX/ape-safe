@@ -1,12 +1,12 @@
 from ape import plugins
 
-from .accounts import AccountContainer, SafeAccount
+from .accounts import SafeAccount, SafeContainer
 from .multisend import MultiSend
 
 
 @plugins.register(plugins.AccountPlugin)
 def account_types():
-    return AccountContainer, SafeAccount
+    return SafeContainer, SafeAccount
 
 
 __all__ = [

@@ -37,7 +37,7 @@ from ape_safe.exceptions import (
 from ape_safe.utils import order_by_signer
 
 
-class AccountContainer(AccountContainerAPI):
+class SafeContainer(AccountContainerAPI):
     @property
     def _account_files(self) -> Iterator[Path]:
         yield from self.data_folder.glob("*.json")
@@ -46,6 +46,11 @@ class AccountContainer(AccountContainerAPI):
     def aliases(self) -> Iterator[str]:
         for p in self._account_files:
             yield p.stem
+
+    @property
+    def addresses(self) -> Iterator[str]:
+        for safe in self.accounts:
+            yield safe.address
 
     @property
     def accounts(self) -> Iterator[AccountAPI]:
@@ -60,6 +65,20 @@ class AccountContainer(AccountContainerAPI):
 
     def __delitem__(self, alias: str):
         self.delete_account(alias)
+
+    def __iter__(self) -> Iterator["SafeAccount"]:
+        yield from self.accounts
+
+    def __contains__(self, item: Union[str, "SafeAccount"]) -> bool:
+        if isinstance(item, str):
+            return item in self.aliases or item in self.addresses
+
+        # Is account object
+        for account in self.accounts:
+            if account.address == item.address:
+                return True
+
+        return False
 
     def save_account(self, alias: str, address: str):
         """

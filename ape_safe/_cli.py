@@ -3,6 +3,7 @@ from typing import Optional
 import click
 from ape.api import AccountAPI
 from ape.cli import (
+    ApeCliContextObject,
     NetworkBoundCommand,
     ape_cli_context,
     existing_alias_argument,
@@ -10,12 +11,24 @@ from ape.cli import (
     network_option,
     non_existing_alias_argument,
 )
-from ape.exceptions import ChainError
+from ape.exceptions import AccountsError, ChainError
 from ape.types import AddressType
 from click import BadArgumentUsage, BadOptionUsage
 
-from ape_safe.accounts import SafeAccount
+from ape_safe.accounts import SafeAccount, SafeContainer
 from ape_safe.client import ExecutedTxData
+
+
+class SafeCliContext(ApeCliContextObject):
+    @property
+    def safes(self) -> SafeContainer:
+        if "safe" in self.account_manager.containers:
+            return self.account_manager.containers["safe"]
+
+        raise AccountsError("Safe account container missing; plugin failure.")
+
+
+safe_cli_ctx = ape_cli_context(obj_type=SafeCliContext)
 
 
 @click.group(short_help="Manage Safe accounts and view Safe API data")
@@ -27,12 +40,11 @@ def cli():
 
 
 @cli.command(name="list", cls=NetworkBoundCommand, short_help="Show locally-tracked Safes")
-@ape_cli_context()
+@safe_cli_ctx
 @network_option()
-def _list(cli_ctx, network):
+def _list(cli_ctx: SafeCliContext, network):
     _ = network  # Needed for NetworkBoundCommand
-    safes = cli_ctx.account_manager.get_accounts_by_type(type_=SafeAccount)
-    number_of_safes = len(safes)
+    number_of_safes = len(cli_ctx.safes)
 
     if number_of_safes == 0:
         cli_ctx.logger.warning("No Safes found.")
@@ -42,7 +54,7 @@ def _list(cli_ctx, network):
     header += "s:" if number_of_safes > 1 else ":"
     click.echo(header)
 
-    for account in safes:
+    for account in cli_ctx.safes:
         extras = []
         if account.alias:
             extras.append(f"alias: '{account.alias}'")
@@ -58,11 +70,11 @@ def _list(cli_ctx, network):
 
 
 @cli.command(cls=NetworkBoundCommand, short_help="Add a Safe to locally tracked Safes")
-@ape_cli_context()
+@safe_cli_ctx
 @network_option()
 @click.argument("address", type=AddressType)
 @non_existing_alias_argument()
-def add(cli_ctx, network, address, alias):
+def add(cli_ctx: SafeCliContext, network, address, alias):
     _ = network  # Needed for NetworkBoundCommand
     address = cli_ctx.conversion_manager.convert(address, AddressType)
     safe_contract = cli_ctx.chain_manager.contracts.instance_at(address)
@@ -82,24 +94,20 @@ def add(cli_ctx, network, address, alias):
     )
 
     if click.confirm("Add safe"):
-        container = cli_ctx.account_manager.containers["safe"]
-        container.save_account(alias, address)
-
+        cli_ctx.safes.save_account(alias, address)
         cli_ctx.logger.success(f"Safe '{address}' ({alias}) added.")
 
 
 @cli.command(short_help="Stop tracking a locally-tracked Safe")
-@ape_cli_context()
+@safe_cli_ctx
 @existing_alias_argument()
-def remove(cli_ctx, alias):
-    safe_container = cli_ctx.account_manager.containers["safe"]
-
-    if alias not in safe_container.aliases:
+def remove(cli_ctx: SafeCliContext, alias):
+    if alias not in cli_ctx.safes.aliases:
         raise BadArgumentUsage(f"There is no safe with the alias `{alias}`.")
 
-    address = safe_container.load_account(alias).address
+    address = cli_ctx.safes.load_account(alias).address
     if click.confirm(f"Remove safe {address} ({alias})"):
-        safe_container.delete_account(alias)
+        cli_ctx.safes.delete_account(alias)
 
     cli_ctx.logger.success(f"Safe '{address}' ({alias}) removed.")
 
@@ -137,12 +145,12 @@ def _handle_execute_cli_arg(ctx, param, val):
 
 
 @cli.command(cls=NetworkBoundCommand)
-@ape_cli_context()
+@safe_cli_ctx
 @network_option()
 @click.option("sign_with_local_signers", "--sign", is_flag=True)
 @click.option("--execute", callback=_handle_execute_cli_arg)
 @existing_alias_argument(account_type=SafeAccount)
-def pending(cli_ctx, network, sign_with_local_signers, execute, alias) -> None:
+def pending(cli_ctx: SafeCliContext, network, sign_with_local_signers, execute, alias) -> None:
     """
     View pending transactions for a Safe
     """
@@ -198,11 +206,11 @@ def pending(cli_ctx, network, sign_with_local_signers, execute, alias) -> None:
 
 
 @cli.command(cls=NetworkBoundCommand, short_help="Reject one or more pending transactions")
+@safe_cli_ctx()
 @network_option()
 @existing_alias_argument(account_type=SafeAccount)
 @click.argument("txn-ids", type=int, nargs=-1)
-@ape_cli_context()
-def reject(cli_ctx, network, alias, txn_ids):
+def reject(cli_ctx: SafeCliContext, network, alias, txn_ids):
     _ = network  # Needed for NetworkBoundCommand
     safe = cli_ctx.account_manager.load(alias)
     pending_transactions = safe.client.get_transactions(starting_nonce=safe.next_nonce)
@@ -222,14 +230,13 @@ def reject(cli_ctx, network, alias, txn_ids):
     cls=NetworkBoundCommand,
     short_help="View and filter all transactions for a given Safe using Safe API",
 )
-@ape_cli_context()
+@safe_cli_ctx
 @network_option()
 @click.argument("address", type=AddressType)
 @click.option("--confirmed", is_flag=True, default=None)
-def all_txns(cli_ctx, network, address, confirmed):
+def all_txns(cli_ctx: SafeCliContext, network, address, confirmed):
     _ = network  # Needed for NetworkBoundCommand
-    safe_container = cli_ctx.account_manager.containers["safe"]
-    client = safe_container._get_client(address)
+    client = cli_ctx.safes._get_client(address)
 
     for txn in client.get_transactions(confirmed=confirmed):
         if isinstance(txn, ExecutedTxData):
