@@ -373,12 +373,22 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             threshold=self.contract.getThreshold(),
             owners=self.contract.getOwners(),
             masterCopy=self.contract.masterCopy(),
-            modules=self.contract.getModules() if hasattr(self.contract, "getModules") else [],
+            modules=self.modules,
             # TODO: Add fallback handler getter
             fallbackHandler=fallback_address,
-            guard=self.contract.getGuard() if hasattr(self.contract, "getGuard") else ZERO_ADDRESS,
+            guard=self.guard,
             version=self.contract.VERSION(),
         )
+
+    @property
+    def guard(self) -> AddressType:
+        return (
+            self.contract.getGuard() if "getGuard" in self.contract._view_methods_ else ZERO_ADDRESS
+        )
+
+    @property
+    def modules(self) -> List[AddressType]:
+        return self.contract.getModules() if "getModules" in self.contract._view_methods_ else []
 
     def get_next_nonce(self) -> int:
         return self.contract._view_methods_["nonce"]()
