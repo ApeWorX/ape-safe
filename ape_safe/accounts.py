@@ -83,6 +83,10 @@ class SafeContainer(AccountContainerAPI):
         """
         Save a new Safe to your ape configuration.
 
+        Raises:
+            :class:`~ape_safe.exceptions.ApeSafeError`: When the alias
+              already exists.
+
         Args:
             alias (str): The alias to save the Safe under.
             address (str): The address of the Safe account.
