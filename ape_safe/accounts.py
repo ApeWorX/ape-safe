@@ -7,6 +7,7 @@ from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
 from ape.api.networks import LOCAL_NETWORK_NAME, ForkedNetworkAPI
 from ape.contracts import ContractInstance
+from ape.exceptions import ProviderNotConnectedError
 from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
 from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
@@ -69,6 +70,9 @@ class SafeContainer(AccountContainerAPI):
         yield from self.accounts
 
     def __contains__(self, item: Union[str, "SafeAccount"]) -> bool:
+        if item is None:
+            return False
+
         if isinstance(item, str):
             return item in self.aliases or item in self.addresses
 
@@ -178,7 +182,12 @@ class SafeAccount(AccountAPI):
 
     @property
     def address(self) -> AddressType:
-        return self.provider.network.ecosystem.decode_address(self.account_file["address"])
+        try:
+            ecosystem = self.provider.network.ecosystem
+        except ProviderNotConnectedError:
+            ecosystem = self.network_manager.ethereum
+
+        return ecosystem.decode_address(self.account_file["address"])
 
     @cached_property
     def contract(self) -> ContractInstance:

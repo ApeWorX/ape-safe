@@ -116,7 +116,14 @@ def remove(cli_ctx: SafeCliContext, alias):
 #    value of `--execute` was provided.
 def _handle_execute_cli_arg(ctx, param, val):
     # Account alias - execute using this account.
-    if val in ctx.obj.account_manager.aliases:
+    if val is None:
+        # Was not given any value.
+        # If it is determined in `pending` that a tx can execute,
+        # the user will get prompted.
+        # Avoid this by always doing `--execute false`.
+        return val
+
+    elif val in ctx.obj.account_manager.aliases:
         return ctx.obj.account_manager.load(val)
 
     # Account address - execute using this account.
@@ -130,13 +137,6 @@ def _handle_execute_cli_arg(ctx, param, val):
     # Saying "no, do not execute", even if we could.
     elif val.lower() in ("false", "f", "0"):
         return False
-
-    elif val is None:
-        # Was not given any value.
-        # If it is determined in `pending` that a tx can execute,
-        # the user will get prompted.
-        # Avoid this by always doing `--execute false`.
-        return val
 
     raise BadOptionUsage(
         "--execute", f"`--execute` value '{val}` not a boolean or account identifier."
