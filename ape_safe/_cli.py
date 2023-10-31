@@ -1,8 +1,12 @@
+from typing import Optional
+
 import click
+from ape.api import AccountAPI
 from ape.cli import (
     NetworkBoundCommand,
     ape_cli_context,
     existing_alias_argument,
+    get_user_selected_account,
     network_option,
     non_existing_alias_argument,
 )
@@ -47,7 +51,7 @@ def _list(cli_ctx, network):
             extras.append(f"version: '{account.version}'")
         except ChainError:
             # Not connected to the network where safe is deployed
-            extras.append(f"version: (not connected)")
+            extras.append("version: (not connected)")
 
         extras_display = f" ({', '.join(extras)})" if extras else ""
         click.echo(f"  {account.address}{extras_display}")
@@ -100,38 +104,66 @@ def remove(cli_ctx, alias):
     cli_ctx.logger.success(f"Safe '{address}' ({alias}) removed.")
 
 
-def _execute_callback(ctx, param, val):
-    if isinstance(val, str):
-        if val in ctx.obj.account_manager.aliases:
-            return ctx.obj.account_manager.load(val)
-        elif val in ctx.obj.account_manager:
-            return ctx.obj.account_manager[val]
-        else:
-            raise BadOptionUsage(
-                "--execute", f"`--execute` value '{val}` not found in local accounts."
-            )
+# NOTE: The handling of the `--execute` flag in the `pending` CLI
+#    all happens here EXCEPT if a pending tx is executable and no
+#    value of `--execute` was provided.
+def _handle_execute_cli_arg(ctx, param, val):
+    # Account alias - execute using this account.
+    if val in ctx.obj.account_manager.aliases:
+        return ctx.obj.account_manager.load(val)
 
-    # Additional handling may occur in command definition.
-    return val
+    # Account address - execute using this account.
+    elif val in ctx.obj.account_manager:
+        return ctx.obj.account_manager[val]
+
+    # Saying "yes, execute". Use first "local signer".
+    elif val.lower() in ("true", "t", "1"):
+        return True
+
+    # Saying "no, do not execute", even if we could.
+    elif val.lower() in ("false", "f", "0"):
+        return False
+
+    elif val is None:
+        # Was not given any value.
+        # If it is determined in `pending` that a tx can execute,
+        # the user will get prompted.
+        # Avoid this by always doing `--execute false`.
+        return val
+
+    raise BadOptionUsage(
+        "--execute", f"`--execute` value '{val}` not a boolean or account identifier."
+    )
 
 
-@cli.command(
-    cls=NetworkBoundCommand, short_help="See pending transactions for a locally-tracked Safe"
-)
+@cli.command(cls=NetworkBoundCommand)
 @ape_cli_context()
 @network_option()
 @click.option("sign_with_local_signers", "--sign", is_flag=True)
-@click.option("--execute", is_flag=True, flag_value=True, default=False, callback=_execute_callback)
+@click.option("--execute", callback=_handle_execute_cli_arg)
 @existing_alias_argument(account_type=SafeAccount)
-def pending(cli_ctx, network, sign_with_local_signers, execute, alias):
+def pending(cli_ctx, network, sign_with_local_signers, execute, alias) -> None:
+    """
+    View pending transactions for a Safe
+    """
+
     _ = network  # Needed for NetworkBoundCommand
     safe = cli_ctx.account_manager.load(alias)
-    submitter = execute
-    if submitter is True:
-        if not safe.local_signers:
-            cli_ctx.abort("Cannot execute without a local signer.")
+    submitter: Optional[AccountAPI] = None
 
-        submitter = safe.local_signers[0]
+    if execute is True:
+        if not safe.local_signers:
+            cli_ctx.abort("Cannot use `--execute TRUE` without a local signer.")
+
+        submitter = get_user_selected_account(account_list=safe.local_signers)
+
+    elif isinstance(execute, AccountAPI):
+        # The callback handler loaded the local account.
+        submitter = execute
+
+    # NOTE: --execute is only None when not specified at all.
+    #   In this case, for any found executable txns, the user will be prompted.
+    execute_cli_arg_specified = execute is not None
 
     for safe_tx, confirmations in safe.pending_transactions():
         click.echo(
@@ -143,12 +175,26 @@ def pending(cli_ctx, network, sign_with_local_signers, execute, alias):
             safe.add_signatures(safe_tx, confirmations)
             cli_ctx.logger.success(f"Signature added to 'Transaction {safe_tx.nonce}'.")
 
-        if not execute:
+        # NOTE: Lazily check signatures.
+        signatures = None
+
+        if not execute_cli_arg_specified:
+            # Check if we _can_ execute and ask the user.
             signatures = safe.get_api_confirmations(safe_tx)
-            if len(signatures) >= safe.confirmations_required and click.confirm(
-                f"Submit Transaction {safe_tx.nonce}"
-            ):
-                submitter.call(safe.create_execute_transaction(safe_tx, signatures))
+            do_execute = (
+                len(safe.local_signers) > 0
+                and len(signatures) >= safe.confirmations_required
+                and click.confirm(f"Submit Transaction {safe_tx.nonce}")
+            )
+            if do_execute:
+                submitter = get_user_selected_account(account_list=safe.local_signers)
+
+        if submitter:
+            # NOTE: Signatures may have gotten set above already.
+            signatures = signatures or safe.get_api_confirmations(safe_tx)
+
+            exc_tx = safe.create_execute_transaction(safe_tx, signatures)
+            submitter.call(exc_tx)
 
 
 @cli.command(cls=NetworkBoundCommand, short_help="Reject one or more pending transactions")

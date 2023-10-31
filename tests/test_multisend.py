@@ -1,6 +1,5 @@
 import pytest
 
-from ape_safe import MultiSend
 from ape_safe.exceptions import SafeLogicError
 
 

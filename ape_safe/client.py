@@ -331,7 +331,7 @@ class SafeClient(BaseSafeClient):
         signer: AddressType,
         signature: MessageSignature,
     ):
-        if isinstance(safe_tx_or_hash, SafeTx):
+        if isinstance(safe_tx_or_hash, (SafeTxV1, SafeTxV2)):
             safe_tx = safe_tx_or_hash
             safe_tx_hash = hash_eip712_message(safe_tx).hex()
         else:
