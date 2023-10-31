@@ -103,6 +103,10 @@ class SafeContainer(AccountContainerAPI):
         """
         Load the Safe account.
 
+        Raises:
+            :class:`~ape_safe.exceptions.ApeSafeError`: When the alias does
+              not exist.
+
         Args:
             alias (str): The alias the Safe account is saved under.
 
