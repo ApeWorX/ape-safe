@@ -141,8 +141,11 @@ class SafeContainer(AccountContainerAPI):
             return self.load_account(key).client
 
         else:
-            # Is not locally managed.
             address = self.conversion_manager.convert(key, AddressType)
+            if address in self.addresses:
+                return self[cast(AddressType, key)].client
+
+            # Is not locally managed.
             return SafeClient(address=address, chain_id=self.chain_manager.provider.chain_id)
 
     def _get_path(self, alias: str) -> Path:
