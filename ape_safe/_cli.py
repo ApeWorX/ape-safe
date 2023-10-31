@@ -162,7 +162,7 @@ def pending(cli_ctx: SafeCliContext, network, sign_with_local_signers, execute, 
         if not safe.local_signers:
             cli_ctx.abort("Cannot use `--execute TRUE` without a local signer.")
 
-        submitter = get_user_selected_account(account_list=safe.local_signers)
+        submitter = get_user_selected_account(account_type=safe.local_signers)
 
     elif isinstance(execute, AccountAPI):
         # The callback handler loaded the local account.
@@ -194,7 +194,7 @@ def pending(cli_ctx: SafeCliContext, network, sign_with_local_signers, execute, 
                 and click.confirm(f"Submit Transaction {safe_tx.nonce}")
             )
             if do_execute:
-                submitter = get_user_selected_account(account_list=safe.local_signers)
+                submitter = get_user_selected_account(account_type=safe.local_signers)
 
         if submitter:
             # NOTE: Signatures may have gotten set above already.
