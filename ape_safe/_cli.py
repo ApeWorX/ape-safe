@@ -11,7 +11,7 @@ from ape.cli import (
     network_option,
     non_existing_alias_argument,
 )
-from ape.exceptions import AccountsError, ChainError
+from ape.exceptions import ChainError
 from ape.types import AddressType
 from click import BadArgumentUsage, BadOptionUsage
 
@@ -22,10 +22,9 @@ from ape_safe.client import ExecutedTxData
 class SafeCliContext(ApeCliContextObject):
     @property
     def safes(self) -> SafeContainer:
-        if "safe" in self.account_manager.containers:
-            return self.account_manager.containers["safe"]
-
-        raise AccountsError("Safe account container missing; plugin failure.")
+        # NOTE: Would only happen in local development of this plugin.
+        assert "safe" in self.account_manager.containers, "Are all API methods implemented?"
+        return self.account_manager.containers["safe"]
 
 
 safe_cli_ctx = ape_cli_context(obj_type=SafeCliContext)
