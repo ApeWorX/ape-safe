@@ -206,7 +206,7 @@ def pending(cli_ctx: SafeCliContext, network, sign_with_local_signers, execute, 
 
 
 @cli.command(cls=NetworkBoundCommand, short_help="Reject one or more pending transactions")
-@safe_cli_ctx()
+@safe_cli_ctx
 @network_option()
 @existing_alias_argument(account_type=SafeAccount)
 @click.argument("txn-ids", type=int, nargs=-1)
