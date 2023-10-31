@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from functools import reduce
 from typing import Dict, Iterator, List, NewType, Optional, Set, Union
@@ -97,8 +97,8 @@ class UnexecutedTxData(BaseModel):
     def from_safe_tx(cls, safe_tx: SafeTx, confirmations_required: int) -> "UnexecutedTxData":
         return cls(
             safe=safe_tx._verifyingContract_,
-            submissionDate=datetime.now(),
-            modified=datetime.now(),
+            submissionDate=datetime.now(timezone.utc),
+            modified=datetime.now(timezone.utc),
             confirmationsRequired=confirmations_required,
             safeTxHash=hash_eip712_message(safe_tx).hex(),
             **safe_tx._body_["message"],
@@ -398,7 +398,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         safe_tx_data.confirmations.extend(
             SafeTxConfirmation(
                 owner=signer,
-                submissionDate=datetime.now(),
+                submissionDate=datetime.now(timezone.utc),
                 signature=sig.encode_rsv(),
                 signatureType=SignatureType.EOA,
             )
@@ -420,7 +420,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         self.transactions[safe_tx_or_hash].confirmations.append(
             SafeTxConfirmation(
                 owner=signer,
-                submissionDate=datetime.now(),
+                submissionDate=datetime.now(timezone.utc),
                 signature=signature.encode_rsv(),
                 signatureType=SignatureType.EOA,
             )
