@@ -38,10 +38,14 @@ def cli():
     """
 
 
-@cli.command(name="list", cls=NetworkBoundCommand, short_help="Show locally-tracked Safes")
+@cli.command(name="list", cls=NetworkBoundCommand)
 @safe_cli_ctx
 @network_option()
 def _list(cli_ctx: SafeCliContext, network):
+    """
+    Show locally-tracked Safes
+    """
+
     _ = network  # Needed for NetworkBoundCommand
     number_of_safes = len(cli_ctx.safes)
 
@@ -68,12 +72,16 @@ def _list(cli_ctx: SafeCliContext, network):
         click.echo(f"  {account.address}{extras_display}")
 
 
-@cli.command(cls=NetworkBoundCommand, short_help="Add a Safe to locally tracked Safes")
+@cli.command(cls=NetworkBoundCommand)
 @safe_cli_ctx
 @network_option()
 @click.argument("address", type=AddressType)
 @non_existing_alias_argument()
 def add(cli_ctx: SafeCliContext, network, address, alias):
+    """
+    Add a Safe to locally tracked Safes
+    """
+
     _ = network  # Needed for NetworkBoundCommand
     address = cli_ctx.conversion_manager.convert(address, AddressType)
     safe_contract = cli_ctx.chain_manager.contracts.instance_at(address)
@@ -97,10 +105,14 @@ def add(cli_ctx: SafeCliContext, network, address, alias):
         cli_ctx.logger.success(f"Safe '{address}' ({alias}) added.")
 
 
-@cli.command(short_help="Stop tracking a locally-tracked Safe")
+@cli.command()
 @safe_cli_ctx
 @existing_alias_argument()
 def remove(cli_ctx: SafeCliContext, alias):
+    """
+    Stop tracking a locally-tracked Safe
+    """
+
     if alias not in cli_ctx.safes.aliases:
         raise BadArgumentUsage(f"There is no safe with the alias `{alias}`.")
 
@@ -204,12 +216,16 @@ def pending(cli_ctx: SafeCliContext, network, sign_with_local_signers, execute, 
             submitter.call(exc_tx)
 
 
-@cli.command(cls=NetworkBoundCommand, short_help="Reject one or more pending transactions")
+@cli.command(cls=NetworkBoundCommand)
 @safe_cli_ctx
 @network_option()
 @existing_alias_argument(account_type=SafeAccount)
 @click.argument("txn-ids", type=int, nargs=-1)
 def reject(cli_ctx: SafeCliContext, network, alias, txn_ids):
+    """
+    Reject one or more pending transactions
+    """
+
     _ = network  # Needed for NetworkBoundCommand
     safe = cli_ctx.account_manager.load(alias)
     pending_transactions = safe.client.get_transactions(starting_nonce=safe.next_nonce)
@@ -225,15 +241,16 @@ def reject(cli_ctx: SafeCliContext, network, alias, txn_ids):
             safe.transfer(safe, "0 ether", nonce=txn_id, submit_transaction=False)
 
 
-@cli.command(
-    cls=NetworkBoundCommand,
-    short_help="View and filter all transactions for a given Safe using Safe API",
-)
+@cli.command(cls=NetworkBoundCommand)
 @safe_cli_ctx
 @network_option()
 @click.argument("address", type=AddressType)
 @click.option("--confirmed", is_flag=True, default=None)
 def all_txns(cli_ctx: SafeCliContext, network, address, confirmed):
+    """
+    View and filter all transactions for a given Safe using Safe API
+    """
+
     _ = network  # Needed for NetworkBoundCommand
     client = cli_ctx.safes._get_client(address)
 
