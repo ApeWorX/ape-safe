@@ -60,7 +60,8 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-latest, macos-latest]   # eventually add `windows-latest`
-                python-version: [3.8, 3.9, "3.10", "3.11"]
+                python-version: ["3.8", "3.9", "3.10", "3.11"]
+                safe-version: ["1.3.0"]
 
         env:
           GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,10 +87,13 @@ jobs:
         - name: Install plugins
           run: ape plugins install .
 
-        # TODO: Remove once dependency work is completed
-        # https://github.com/ApeWorX/ape/issues/1327
-        - name: Copy smart-contracts to dependencies
-          run: mkdir -p ~/.ape/packages/safe-contracts/v1.3.0/ && cp safe-contracts.json ~/.ape/packages/safe-contracts/v1.3.0/
+        - name: Setup Node
+          uses: actions/setup-node@v3
+          with:
+              node-version: '16'
+
+        - name: Install gnosis safe
+          run: npm install "@gnosis.pm/safe-contracts@${{ matrix.safe-version }}"
 
         - name: Run Tests
           run: pytest -n 0 -s --cov

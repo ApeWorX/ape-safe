@@ -10,6 +10,7 @@ extras_require = {
         "hypothesis>=6.2.0,<7.0",  # Strategy-based fuzzer
         "ape-alchemy",  # Needed for testing in a forked network
         "ape-foundry",  # Needed for forked-network features
+        "ape-solidity",  # Needed for compiling the Safe contracts
     ],
     "lint": [
         "black>=23.10.1,<24",  # Auto-formatter and linter
@@ -27,7 +28,7 @@ extras_require = {
     ],
     "dev": [
         "commitizen",  # Manage commits and publishing releases
-        "pre-commit",  # Ensure that linters are run prior to commiting
+        "pre-commit",  # Ensure that linters are run prior to committing
         "pytest-watch",  # `ptw` test watcher/runner
         "IPython",  # Console for interacting
         "ipdb",  # Debugger (Must use `export PYTHONBREAKPOINT=ipdb.set_trace`)

@@ -11,6 +11,15 @@ from ape_safe import MultiSend
 from ape_safe.accounts import SafeAccount
 
 contracts_directory = Path(__file__).parent / "contracts"
+TESTS_DIR = Path(__file__).parent.absolute()
+
+
+# @pytest.fixture(autouse=True)
+# def project():
+#     # This is needed for processing the Safe dependency.
+#     with config.using_project(TESTS_DIR) as proj:
+#         yield proj
+#
 
 
 @pytest.fixture(scope="session")
