@@ -12,8 +12,8 @@ extras_require = {
         "ape-foundry",  # Needed for forked-network features
     ],
     "lint": [
-        "black>=23.7.0,<24",  # Auto-formatter and linter
-        "mypy>=1.5.1,<2",  # Static type analyzer
+        "black>=23.10.1,<24",  # Auto-formatter and linter
+        "mypy>=1.6.1,<2",  # Static type analyzer
         "types-requests",  # Needed for mypy type shed
         "types-setuptools",  # Needed for mypy type shed
         "flake8>=6.1.0,<7",  # Style linter
