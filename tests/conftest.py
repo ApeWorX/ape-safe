@@ -14,14 +14,6 @@ contracts_directory = Path(__file__).parent / "contracts"
 TESTS_DIR = Path(__file__).parent.absolute()
 
 
-# @pytest.fixture(autouse=True)
-# def project():
-#     # This is needed for processing the Safe dependency.
-#     with config.using_project(TESTS_DIR) as proj:
-#         yield proj
-#
-
-
 @pytest.fixture(scope="session")
 def deployer(accounts):
     return accounts[-1]
@@ -38,7 +30,7 @@ def SafeSingleton(project, VERSION):
 
 
 @pytest.fixture
-def singleton(deployer, SafeSingleton):
+def singleton(deployer: SafeAccount, SafeSingleton):
     return deployer.deploy(SafeSingleton)
 
 
@@ -111,13 +103,13 @@ def safe(safe_data_file):
 
 
 @pytest.fixture
-def token(deployer):
+def token(deployer: SafeAccount):
     contract = ContractType.parse_file(contracts_directory / "Token.json")
     return deployer.deploy(ContractContainer(contract))
 
 
 @pytest.fixture
-def vault(deployer, token):
+def vault(deployer: SafeAccount, token):
     vault = ContractContainer(ContractType.parse_file(contracts_directory / "VyperVault.json"))
     return deployer.deploy(vault, token)
 
