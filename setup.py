@@ -59,7 +59,7 @@ setup(
     url="https://github.com/banteg/ape-safe",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.6.11,<0.7.0",
+        "eth-ape>=0.6.23,<0.7.0",
         "eip712>=0.2.0,<0.3.0",
         "requests>=2.31.0,<3",
         "click",  # Use same version as eth-ape
