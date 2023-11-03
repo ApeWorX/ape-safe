@@ -133,6 +133,7 @@ def _handle_execute_cli_arg(ctx, param, val):
         # If it is determined in `pending` that a tx can execute,
         # the user will get prompted.
         # Avoid this by always doing `--execute false`.
+
         return val
 
     elif val in ctx.obj.account_manager.aliases:
@@ -144,7 +145,11 @@ def _handle_execute_cli_arg(ctx, param, val):
 
     # Saying "yes, execute". Use first "local signer".
     elif val.lower() in ("true", "t", "1"):
-        return True
+        safe = ctx.obj.account_manager.load(ctx.params["alias"])
+        if not safe.local_signers:
+            ctx.obj.abort("Cannot use `--execute TRUE` without a local signer.")
+
+        return get_user_selected_account(account_type=safe.local_signers)
 
     # Saying "no, do not execute", even if we could.
     elif val.lower() in ("false", "f", "0"):
@@ -168,21 +173,7 @@ def pending(cli_ctx: SafeCliContext, network, sign_with_local_signers, execute, 
 
     _ = network  # Needed for NetworkBoundCommand
     safe = cli_ctx.account_manager.load(alias)
-    submitter: Optional[AccountAPI] = None
-
-    if execute is True:
-        if not safe.local_signers:
-            cli_ctx.abort("Cannot use `--execute TRUE` without a local signer.")
-
-        submitter = get_user_selected_account(account_type=safe.local_signers)
-
-    elif isinstance(execute, AccountAPI):
-        # The callback handler loaded the local account.
-        submitter = execute
-
-    # NOTE: --execute is only None when not specified at all.
-    #   In this case, for any found executable txns, the user will be prompted.
-    execute_cli_arg_specified = execute is not None
+    submitter: Optional[AccountAPI] = execute if isinstance(execute, AccountAPI) else None
 
     for safe_tx, confirmations in safe.pending_transactions():
         click.echo(
@@ -190,14 +181,29 @@ def pending(cli_ctx: SafeCliContext, network, sign_with_local_signers, execute, 
         )
 
         # Add signatures, if was requested to do so.
-        if sign_with_local_signers and len(confirmations) < safe.confirmations_required - 1:
-            safe.add_signatures(safe_tx, confirmations)
-            cli_ctx.logger.success(f"Signature added to 'Transaction {safe_tx.nonce}'.")
+
+        if sign_with_local_signers:
+            threshold = safe.confirmations_required - 1
+            num_confirmations = len(confirmations)
+            if num_confirmations == threshold:
+                proceed = click.prompt("Additional signatures not required. Proceed?")
+                if proceed:
+                    safe.add_signatures(safe_tx, confirmations)
+                    cli_ctx.logger.success(f"Signature added to 'Transaction {safe_tx.nonce}'.")
+
+            elif num_confirmations < threshold:
+                safe.add_signatures(safe_tx, confirmations)
+                cli_ctx.logger.success(f"Signature added to 'Transaction {safe_tx.nonce}'.")
+
+            else:
+                cli_ctx.logger.error("Unable to add signatures. Transaction fully signed.")
 
         # NOTE: Lazily check signatures.
         signatures = None
 
-        if not execute_cli_arg_specified:
+        # The user did provider a value for `--execute` however we are able to
+        # So we prompt them.
+        if execute is None and submitter is None:
             # Check if we _can_ execute and ask the user.
             signatures = safe.get_api_confirmations(safe_tx)
             do_execute = (
