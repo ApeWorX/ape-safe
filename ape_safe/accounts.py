@@ -236,10 +236,7 @@ class SafeAccount(AccountAPI):
                 address=self.address, chain_id=self.provider.network.upstream_chain_id
             )
 
-        elif (
-            self.provider.network.name == LOCAL_NETWORK_NAME
-            or self.provider.network.name.endswith("-fork")
-        ):
+        elif self.provider.network.is_dev:
             return MockSafeClient(contract=self.contract)
 
         return SafeClient(address=self.address, chain_id=self.provider.chain_id)
@@ -308,6 +305,9 @@ class SafeAccount(AccountAPI):
         }
         safe_tx = {**safe_tx, **{k: v for k, v in safe_tx_kwargs.items() if k in safe_tx}}
         return self.safe_tx_def(**safe_tx)
+
+    def get_transaction(self, txn_id: SafeTxID):
+        return self.client.get_transactions()
 
     def pending_transactions(self) -> Iterator[Tuple[SafeTx, List[SafeTxConfirmation]]]:
         for executed_tx in self.client.get_transactions(confirmed=False):
@@ -654,7 +654,7 @@ class SafeAccount(AccountAPI):
             ls for ls in self.local_signers if ls.address not in [c.owner for c in confirmations]
         ]
         for signer in signers:
-            if not (tx_hash_result := next((c.transactionHash for c in confirmations), None)):
+            if not (tx_hash_result := next((c.transaction_hash for c in confirmations), None)):
                 tx_hash_result = self.contract.getTransactionHash(*safe_tx)
 
             if tx_hash_result is None:
