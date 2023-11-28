@@ -39,25 +39,18 @@ $ python3 setup.py install
 To use the plugin, first use the CLI extension to add a safe you created:
 
 ```bash
-# Add the safe located at "my-safe.eth" ENS on the ethereum mainnet network
-$ ape safe add --network ethereum:mainnet "my-safe.eth" my-safe
-Safe Found
-    network: ethereum:mainnet
-    address: 0x1234....AbCd
-    version: 1.3.0
-    required_confirmations: 2
-    signers:
-    - 0x2345....BcDe
-    - 0x3456....CdEf
-    - 0x4567....DeFg
-
-Add safe [y/N]: y
+ape safe add --network ethereum:mainnet "my-safe.eth" my-safe
 ```
 
-Once you've added the safe, you can use the multisig inside any of your ape scripts or the console:
+If you only add 1 safe, you will not have to specify in future commands.
+Otherwise, for most commands, specify the safe using the `--safe` option by alias.
+
+Once you've added a safe, you manage pending transactions:
 
 ```python
 from ape_safe import multisend
+from ape import accounts
+from ape_tokens import tokens
 
 safe = accounts.load("my-safe")
 
@@ -76,13 +69,13 @@ txn.add(vault.deposit, amount)
 txn(sender=safe)
 ```
 
-You can then use the CLI extension to view and sign for pending transactions:
+You can use the CLI extension to view and sign for pending transactions:
 
 ```bash
-$ ape safe pending --network ethereum:mainnet my-safe
-Local Signer(s) detected!
-Do you want to sign unconfirmed transactions [y/N]: y
-...  # Sign with any local signers that have not confirmed yet
+ape safe pending list --network ethereum:goerli:alchemy
+ape safe pending show-confs 2 --network ethereum:goerli:alchemy
+ape safe pending approve 3 --network ethereum:goerli:alchemy
+ape safe pending reject 4 --network ethereum:goerli:alchemy
 ```
 
 ## Development

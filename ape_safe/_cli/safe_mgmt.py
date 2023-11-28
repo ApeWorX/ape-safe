@@ -1,44 +1,53 @@
 import click
 from ape.cli import NetworkBoundCommand, network_option, non_existing_alias_argument
-from ape.exceptions import ChainError
+from ape.exceptions import ChainError, ProviderNotConnectedError
 from ape.types import AddressType
 
 from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx, safe_option
 from ape_safe.client import ExecutedTxData
 
 
-@click.command(name="list", cls=NetworkBoundCommand)
+@click.command(name="list")
 @safe_cli_ctx
-@network_option()
+@network_option(default=None)
 def _list(cli_ctx: SafeCliContext, network):
     """
     Show locally-tracked Safes
     """
 
-    _ = network  # Needed for NetworkBoundCommand
-    number_of_safes = len(cli_ctx.safes)
+    network_ctx = None
+    if network is not None:
+        network_ctx = cli_ctx.network_manager.parse_network_choice(network)
+        network_ctx.__enter__()
 
-    if number_of_safes == 0:
-        cli_ctx.logger.warning("No Safes found.")
-        return
+    try:
+        number_of_safes = len(cli_ctx.safes)
 
-    header = f"Found {number_of_safes} Safe"
-    header += "s:" if number_of_safes > 1 else ":"
-    click.echo(header)
+        if number_of_safes == 0:
+            cli_ctx.logger.warning("No Safes found.")
+            return
 
-    for account in cli_ctx.safes:
-        extras = []
-        if account.alias:
-            extras.append(f"alias: '{account.alias}'")
+        header = f"Found {number_of_safes} Safe"
+        header += "s:" if number_of_safes > 1 else ":"
+        click.echo(header)
 
-        try:
-            extras.append(f"version: '{account.version}'")
-        except ChainError:
-            # Not connected to the network where safe is deployed
-            extras.append("version: (not connected)")
+        for account in cli_ctx.safes:
+            extras = []
+            if account.alias:
+                extras.append(f"alias: '{account.alias}'")
 
-        extras_display = f" ({', '.join(extras)})" if extras else ""
-        click.echo(f"  {account.address}{extras_display}")
+            try:
+                extras.append(f"version: '{account.version}'")
+            except (ChainError, ProviderNotConnectedError):
+                # Not connected to the network where safe is deployed
+                extras.append("version: (not connected)")
+
+            extras_display = f" ({', '.join(extras)})" if extras else ""
+            click.echo(f"  {account.address}{extras_display}")
+
+    finally:
+        if network_ctx:
+            network_ctx.__exit__()
 
 
 @click.command(cls=NetworkBoundCommand)
