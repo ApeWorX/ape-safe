@@ -1,7 +1,7 @@
 import json
 from itertools import islice
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union, cast
+from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union, cast
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
@@ -133,7 +133,7 @@ class SafeContainer(AccountContainerAPI):
         """
         self._get_path(alias).unlink(missing_ok=True)
 
-    def _get_client(self, key: str) -> BaseSafeClient:
+    def create_client(self, key: str) -> BaseSafeClient:
         if key in self.aliases:
             safe = self.load_account(key)
             return safe.client
@@ -306,9 +306,6 @@ class SafeAccount(AccountAPI):
         safe_tx = {**safe_tx, **{k: v for k, v in safe_tx_kwargs.items() if k in safe_tx}}
         return self.safe_tx_def(**safe_tx)
 
-    def get_transaction(self, txn_id: SafeTxID):
-        return self.client.get_transactions()
-
     def pending_transactions(self) -> Iterator[Tuple[SafeTx, List[SafeTxConfirmation]]]:
         for executed_tx in self.client.get_transactions(confirmed=False):
             yield self.create_safe_tx(**executed_tx.dict()), executed_tx.confirmations
@@ -334,12 +331,15 @@ class SafeAccount(AccountAPI):
     def create_execute_transaction(
         self,
         safe_tx: SafeTx,
-        signatures: Dict[AddressType, MessageSignature],
+        signatures: Mapping[AddressType, Union[MessageSignature, HexBytes]],
         **txn_options,
     ) -> TransactionAPI:
         exec_args = list(safe_tx._body_["message"].values())[:-1]  # NOTE: Skip `nonce`
         encoded_signatures = HexBytes(
-            b"".join(sig.encode_rsv() for sig in order_by_signer(signatures))
+            b"".join(
+                sig.encode_rsv() if isinstance(sig, MessageSignature) else sig
+                for sig in order_by_signer(signatures)
+            )
         )
 
         # NOTE: executes a `ProviderAPI.prepare_transaction`, which may produce `ContractLogicError`
@@ -431,7 +431,12 @@ class SafeAccount(AccountAPI):
         )
         return self.contract.execTransaction(
             *safe_tx_exec_args[:-1],  # NOTE: Skip nonce
-            HexBytes(b"".join(sig.encode_rsv() for sig in order_by_signer(signatures))),
+            HexBytes(
+                b"".join(
+                    sig.encode_rsv() if isinstance(sig, MessageSignature) else sig
+                    for sig in order_by_signer(signatures)
+                )
+            ),
             **safe_tx_and_call_kwargs,
         )
 
@@ -455,6 +460,7 @@ class SafeAccount(AccountAPI):
         return super().call(txn, **call_kwargs)
 
     def get_api_confirmations(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
+        # TODO: This signature is wrong.
         safe_tx.to = safe_tx.to or ZERO_ADDRESS
         safe_tx_hash = hash_eip712_message(safe_tx).hex()
         try:
@@ -469,7 +475,7 @@ class SafeAccount(AccountAPI):
             for conf in client_confirmations
         }
 
-    def _contract_approvals(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
+    def _contract_approvals(self, safe_tx: SafeTx) -> Mapping[AddressType, MessageSignature]:
         safe_tx_exec_args = _safe_tx_exec_args(safe_tx)
         safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
 
@@ -646,13 +652,18 @@ class SafeAccount(AccountAPI):
         # Return None so that Ape does not try to submit the transaction.
         return None
 
-    def add_signatures(self, safe_tx: SafeTx, confirmations: List[SafeTxConfirmation]):
+    def add_signatures(
+        self, safe_tx: SafeTx, confirmations: List[SafeTxConfirmation]
+    ) -> Dict[AddressType, Union[MessageSignature, HexBytes]]:
         if not self.local_signers:
             raise ApeSafeError("Cannot sign without local signers.")
 
+        amount_needed = self.confirmations_required - len(confirmations)
         signers = [
-            ls for ls in self.local_signers if ls.address not in [c.owner for c in confirmations]
-        ]
+            acc for acc in self.local_signers if acc.address not in [c.owner for c in confirmations]
+        ][:amount_needed]
+
+        signatures: Dict[AddressType, Union[MessageSignature, HexBytes]] = {}
         for signer in signers:
             if not (tx_hash_result := next((c.transaction_hash for c in confirmations), None)):
                 tx_hash_result = self.contract.getTransactionHash(*safe_tx)
@@ -664,3 +675,6 @@ class SafeAccount(AccountAPI):
             signature = signer.sign_message(safe_tx.signable_message)
             if signature:
                 self.client.post_signature(cast(SafeTxID, tx_hash), signer.address, signature)
+                signatures[signer.address] = signature
+
+        return signatures

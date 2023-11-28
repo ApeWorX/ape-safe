@@ -1,15 +1,9 @@
 import click
-from ape.cli import (
-    NetworkBoundCommand,
-    existing_alias_argument,
-    network_option,
-    non_existing_alias_argument,
-)
+from ape.cli import NetworkBoundCommand, network_option, non_existing_alias_argument
 from ape.exceptions import ChainError
 from ape.types import AddressType
-from click import BadArgumentUsage
 
-from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx
+from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx, safe_option
 from ape_safe.client import ExecutedTxData
 
 
@@ -82,20 +76,15 @@ def add(cli_ctx: SafeCliContext, network, address, alias):
 
 @click.command()
 @safe_cli_ctx
-@existing_alias_argument()
-def remove(cli_ctx: SafeCliContext, alias):
+@safe_option
+def remove(cli_ctx: SafeCliContext, safe):
     """
     Stop tracking a locally-tracked Safe
     """
 
-    if alias not in cli_ctx.safes.aliases:
-        raise BadArgumentUsage(f"There is no safe with the alias `{alias}`.")
-
-    address = cli_ctx.safes.load_account(alias).address
-    if click.confirm(f"Remove safe {address} ({alias})"):
-        cli_ctx.safes.delete_account(alias)
-
-    cli_ctx.logger.success(f"Safe '{address}' ({alias}) removed.")
+    if click.confirm(f"Remove safe {safe.address} ({safe.alias})"):
+        cli_ctx.safes.delete_account(safe.alias)
+        cli_ctx.logger.success(f"Safe '{safe.address}' ({safe.alias}) removed.")
 
 
 @click.command(cls=NetworkBoundCommand)
@@ -109,7 +98,9 @@ def all_txns(cli_ctx: SafeCliContext, network, address, confirmed):
     """
 
     _ = network  # Needed for NetworkBoundCommand
-    client = cli_ctx.safes._get_client(address)
+
+    # NOTE: Create a client to support non-local safes.
+    client = cli_ctx.safes.create_client(address)
 
     for txn in client.get_transactions(confirmed=confirmed):
         if isinstance(txn, ExecutedTxData):

@@ -12,8 +12,8 @@ def cli():
     """
 
 
-cli.add_command(_list)  # type: ignore
-cli.add_command(add)  # type: ignore
-cli.add_command(remove)  # type: ignore
-cli.add_command(all_txns)  # type: ignore
-cli.add_command(pending)  # type: ignore
+cli.add_command(_list)
+cli.add_command(add)
+cli.add_command(remove)
+cli.add_command(all_txns)
+cli.add_command(pending)

@@ -1,8 +1,9 @@
-from ape.cli import ApeCliContextObject, ape_cli_context, existing_alias_argument
+import click
+from ape import accounts
+from ape.cli import ApeCliContextObject, ape_cli_context
 from click import MissingParameter
 
-from ape import accounts
-from ape_safe.accounts import SafeAccount, SafeContainer
+from ape_safe.accounts import SafeContainer
 
 
 class SafeCliContext(ApeCliContextObject):
@@ -16,7 +17,7 @@ class SafeCliContext(ApeCliContextObject):
 safe_cli_ctx = ape_cli_context(obj_type=SafeCliContext)
 
 
-def _safe_alias_callback(ctx, param, value):
+def _safe_callback(ctx, param, value):
     # NOTE: For some reason, the Cli CTX object is not the SafeCliCtx yet at this point.
     safes = accounts.containers["safe"]
     if value is None:
@@ -31,6 +32,4 @@ def _safe_alias_callback(ctx, param, value):
         return accounts.load(value)
 
 
-safe_alias_argument = existing_alias_argument(
-    account_type=SafeAccount, callback=_safe_alias_callback, required=False
-)
+safe_option = click.option("--safe", callback=_safe_callback)

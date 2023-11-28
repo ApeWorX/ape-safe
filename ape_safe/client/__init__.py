@@ -2,7 +2,6 @@ from datetime import datetime
 from functools import reduce
 from typing import Dict, Iterator, Optional, Union
 
-import requests
 from ape.types import AddressType, HexBytes, MessageSignature
 from eip712.common import SafeTxV1, SafeTxV2
 from eip712.messages import hash_eip712_message
@@ -56,26 +55,22 @@ class SafeClient(BaseSafeClient):
         self.address = address
 
         if override_url:
-            self.transaction_service_url = override_url
+            tx_service_url = override_url
 
         elif chain_id:
             if chain_id not in TRANSACTION_SERVICE_URL:
                 raise ClientUnsupportedChainError(chain_id)
 
-            self.transaction_service_url = TRANSACTION_SERVICE_URL.get(  # type: ignore[assignment]
-                chain_id
-            )
+            tx_service_url = TRANSACTION_SERVICE_URL.get(chain_id)  # type: ignore[assignment]
 
         else:
             raise ValueError("Must provide one of chain_id or override_url.")
 
+        super().__init__(tx_service_url)
+
     @property
     def safe_details(self) -> SafeDetails:
-        url = f"{self.transaction_service_url}/api/v1/safes/{self.address}"
-        response = requests.get(url)
-        if not response.ok:
-            raise ClientResponseError(url, response)
-
+        response = self._get(f"safes/{self.address}")
         return SafeDetails.parse_obj(response.json())
 
     def get_next_nonce(self) -> int:
@@ -86,12 +81,9 @@ class SafeClient(BaseSafeClient):
         confirmed: Confirmed if True, not confirmed if False, both if None
         """
 
-        url = f"{self.transaction_service_url}/api/v1/safes/{self.address}/transactions"
+        url = f"safes/{self.address}/transactions"
         while url:
-            response = requests.get(url)
-            if not response.ok:
-                raise ClientResponseError(url, response)
-
+            response = self._get(url)
             data = response.json()
 
             for txn in data.get("results"):
@@ -104,15 +96,9 @@ class SafeClient(BaseSafeClient):
             url = data.get("next")
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
-        url = (
-            f"{self.transaction_service_url}/api"
-            f"/v1/multisig-transactions/{str(safe_tx_hash)}/confirmations"
-        )
+        url = f"multisig-transactions/{str(safe_tx_hash.replace('8', '0'))}/confirmations"
         while url:
-            response = requests.get(url)
-            if not response.ok:
-                raise ClientResponseError(url, response)
-
+            response = self._get(url)
             data = response.json()
             yield from map(SafeTxConfirmation.parse_obj, data.get("results"))
             url = data.get("next")
@@ -121,7 +107,8 @@ class SafeClient(BaseSafeClient):
         tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
         tx_data.signatures = HexBytes(
             reduce(
-                lambda raw_sig, next_sig: raw_sig + next_sig.encode_rsv(),
+                lambda raw_sig, next_sig: raw_sig
+                + (next_sig.encode_rsv() if isinstance(next_sig, MessageSignature) else next_sig),
                 order_by_signer(sigs),
                 b"",
             )
@@ -138,12 +125,9 @@ class SafeClient(BaseSafeClient):
             else:
                 post_dict[key] = value
 
-        url = f"{self.transaction_service_url}/api/v1/safes/{tx_data.safe}/multisig-transactions"
+        url = f"safes/{tx_data.safe}/multisig-transactions"
         json_data = {"origin": "ApeWorX/ape-safe", **post_dict}
-        response = requests.post(url, json=json_data)
-
-        if not response.ok:
-            raise ClientResponseError(url, response)
+        self._post(url, json=json_data)
 
     def post_signature(
         self,
@@ -160,19 +144,15 @@ class SafeClient(BaseSafeClient):
         if not isinstance(safe_tx_hash, str):
             raise TypeError("Expecting str-like type for 'safe_tx_hash'.")
 
-        url = (
-            f"{self.transaction_service_url}/api"
-            f"/v1/multisig-transactions/{safe_tx_hash}/confirmations"
-        )
-        response = requests.post(
-            url, json={"origin": "ApeWorX/ape-safe", "signature": signature.encode_rsv().hex()}
-        )
+        url = f"multisig-transactions/{safe_tx_hash}/confirmations"
+        json_data = {"origin": "ApeWorX/ape-safe", "signature": signature.encode_rsv().hex()}
+        try:
+            self._post(url, json=json_data)
+        except ClientResponseError as err:
+            if "The requested resource was not found on this server" in err.response.text:
+                raise MultisigTransactionNotFoundError(safe_tx_hash, url, err.response) from err
 
-        if not response.ok:
-            if "The requested resource was not found on this server" in response.text:
-                raise MultisigTransactionNotFoundError(safe_tx_hash, url, response)
-
-            raise ClientResponseError(url, response)
+            raise  # The error from BaseClient we are already raising (no changes)
 
 
 __all__ = [

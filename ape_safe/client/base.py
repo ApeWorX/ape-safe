@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Iterator, Optional, Set, Union
 
+import requests
 from ape.types import AddressType, MessageSignature
+from requests import Response
 
 from ape_safe.client.models import (
     ExecutedTxData,
@@ -12,9 +14,15 @@ from ape_safe.client.models import (
     SafeTxID,
     UnexecutedTxData,
 )
+from ape_safe.exceptions import ClientResponseError
 
 
 class BaseSafeClient(ABC):
+    def __init__(self, transaction_service_url: str):
+        self.transaction_service_url = transaction_service_url
+
+    """Abstract methods"""
+
     @property
     @abstractmethod
     def safe_details(self) -> SafeDetails:
@@ -27,6 +35,25 @@ class BaseSafeClient(ABC):
     @abstractmethod
     def _all_transactions(self) -> Iterator[SafeApiTxData]:
         ...
+
+    @abstractmethod
+    def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
+        ...
+
+    @abstractmethod
+    def post_transaction(self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature]):
+        ...
+
+    @abstractmethod
+    def post_signature(
+        self,
+        safe_tx_or_hash: Union[SafeTx, SafeTxID],
+        signer: AddressType,
+        signature: MessageSignature,
+    ):
+        ...
+
+    """Shared methods"""
 
     def get_transactions(
         self,
@@ -68,19 +95,18 @@ class BaseSafeClient(ABC):
 
             yield txn
 
-    @abstractmethod
-    def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
-        ...
+    """Request methods"""
 
-    @abstractmethod
-    def post_transaction(self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature]):
-        ...
+    def _get(self, url: str) -> Response:
+        return self._request("GET", url)
 
-    @abstractmethod
-    def post_signature(
-        self,
-        safe_tx_or_hash: Union[SafeTx, SafeTxID],
-        signer: AddressType,
-        signature: MessageSignature,
-    ):
-        ...
+    def _post(self, url: str, json: Dict) -> Response:
+        return self._request("POST", url, json=json)
+
+    def _request(self, method: str, url: str, json: Optional[Dict] = None) -> Response:
+        api_url = f"{self.transaction_service_url}/api/v1/{url}"
+        response = requests.request(method, api_url, json=json)
+        if not response.ok:
+            raise ClientResponseError(api_url, response)
+
+        return response
