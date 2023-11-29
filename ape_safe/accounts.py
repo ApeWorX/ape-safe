@@ -7,7 +7,7 @@ from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
 from ape.api.networks import LOCAL_NETWORK_NAME, ForkedNetworkAPI
 from ape.contracts import ContractInstance
-from ape.exceptions import ProviderNotConnectedError
+from ape.exceptions import ProviderNotConnectedError, SignatureError
 from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
 from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
@@ -169,6 +169,12 @@ def _safe_tx_exec_args(safe_tx: SafeTx) -> List:
     return list(safe_tx._body_["message"].values())
 
 
+def hash_transaction(safe_tx: SafeTx) -> str:
+    safe_tx.to = safe_tx.to or ZERO_ADDRESS
+    safe_tx.data = safe_tx.data or b""
+    return hash_eip712_message(safe_tx).hex()
+
+
 class SafeAccount(AccountAPI):
     account_file_path: Path  # NOTE: Cache any relevant data here
 
@@ -303,12 +309,13 @@ class SafeAccount(AccountAPI):
             "gasToken": ZERO_ADDRESS,
             "refundReceiver": ZERO_ADDRESS,
         }
+
         safe_tx = {**safe_tx, **{k: v for k, v in safe_tx_kwargs.items() if k in safe_tx}}
         return self.safe_tx_def(**safe_tx)
 
     def pending_transactions(self) -> Iterator[Tuple[SafeTx, List[SafeTxConfirmation]]]:
         for executed_tx in self.client.get_transactions(confirmed=False):
-            yield self.create_safe_tx(**executed_tx.dict()), executed_tx.confirmations
+            yield self.create_safe_tx(**executed_tx.dict(by_alias=True)), executed_tx.confirmations
 
     @property
     def local_signers(self) -> List[AccountAPI]:
@@ -457,12 +464,14 @@ class SafeAccount(AccountAPI):
         if impersonate:
             return self._impersonated_call(txn, **call_kwargs)
 
-        return super().call(txn, **call_kwargs)
+        try:
+            return super().call(txn, **call_kwargs)
+        except SignatureError:
+            # TODO: Create an intermediate receipt object
+            return None  # type: ignore
 
     def get_api_confirmations(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
-        # TODO: This signature is wrong.
-        safe_tx.to = safe_tx.to or ZERO_ADDRESS
-        safe_tx_hash = hash_eip712_message(safe_tx).hex()
+        safe_tx_hash = hash_transaction(safe_tx)
         try:
             client_confirmations = self.client.get_confirmations(safe_tx_hash)
         except SafeClientException:
@@ -487,6 +496,7 @@ class SafeAccount(AccountAPI):
 
     def _all_approvals(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
         approvals = self.get_api_confirmations(safe_tx)
+
         # NOTE: Do this last because it should take precedence
         approvals.update(self._contract_approvals(safe_tx))
         return approvals

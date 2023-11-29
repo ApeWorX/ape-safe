@@ -91,9 +91,12 @@ def remove(cli_ctx: SafeCliContext, safe):
     Stop tracking a locally-tracked Safe
     """
 
-    if click.confirm(f"Remove safe {safe.address} ({safe.alias})"):
-        cli_ctx.safes.delete_account(safe.alias)
-        cli_ctx.logger.success(f"Safe '{safe.address}' ({safe.alias}) removed.")
+    alias = safe.alias
+    address = safe.address
+
+    if click.confirm(f"Remove safe {address} ({alias})"):
+        cli_ctx.safes.delete_account(alias)
+        cli_ctx.logger.success(f"Safe '{address}' ({alias}) removed.")
 
 
 @click.command(cls=NetworkBoundCommand)

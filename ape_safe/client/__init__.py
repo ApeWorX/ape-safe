@@ -114,7 +114,7 @@ class SafeClient(BaseSafeClient):
             )
         )
         post_dict: Dict = {}
-        for key, value in tx_data.dict().items():
+        for key, value in tx_data.dict(by_alias=True).items():
             if isinstance(value, HexBytes):
                 post_dict[key] = value.hex()
             elif isinstance(value, OperationType):

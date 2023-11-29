@@ -1,7 +1,7 @@
 import click
 from ape import accounts
 from ape.cli import ApeCliContextObject, ape_cli_context
-from click import MissingParameter
+from click import MissingParameter, BadOptionUsage
 
 from ape_safe.accounts import SafeContainer
 
@@ -28,8 +28,11 @@ def _safe_callback(ctx, param, value):
         options = ", ".join(safes.aliases)
         raise MissingParameter(message=f"Must specify safe to use (one of '{options}').")
 
-    else:
+    elif value in safes.aliases:
         return accounts.load(value)
+
+    else:
+        raise BadOptionUsage("--safe", f"No safe with alias '{value}'")
 
 
 safe_option = click.option("--safe", callback=_safe_callback)

@@ -69,6 +69,18 @@ txn.add(vault.deposit, amount)
 txn(sender=safe)
 ```
 
+Propose a simple transaction by using `submit=False` as a transaction kwargs so it can await signatures from other signers:
+
+```python
+from ape import accounts
+
+safe = accounts.load("my-safe")
+other = accounts.load("other")
+safe.transfer(other, "1 wei", submit=False)
+```
+
+**NOTE**: It may error saying the transaction was not fully signed but that is ok.
+
 You can use the CLI extension to view and sign for pending transactions:
 
 ```bash

@@ -26,11 +26,11 @@ def _list(cli_ctx: SafeCliContext, network, safe) -> None:
     """
 
     _ = network  # Needed for NetworkBoundCommand
-    for safe_tx in safe.client.get_transactions(confirmed=False):
+    for tx in safe.client.get_transactions(confirmed=False):
         rich.print(
-            f"Transaction {safe_tx.nonce}: "
-            f"({len(safe_tx.confirmations)}/{safe.confirmations_required}) "
-            f"safe_tx_hash={safe_tx.safe_tx_hash}"
+            f"Transaction {tx.nonce}: "
+            f"({len(tx.confirmations)}/{safe.confirmations_required}) "
+            f"safe_tx_hash={tx.safe_tx_hash}"
         )
 
 
@@ -86,7 +86,7 @@ def approve(cli_ctx: SafeCliContext, network, safe, nonce, execute):
     if not txn:
         cli_ctx.abort(f"Pending transaction '{nonce}' not found.")
 
-    safe_tx = safe.create_safe_tx(**txn.dict())
+    safe_tx = safe.create_safe_tx(**txn.dict(by_alias=True))
     num_confirmations = len(txn.confirmations)
     signatures_added = {}
 
