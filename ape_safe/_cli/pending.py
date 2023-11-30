@@ -49,7 +49,20 @@ def _handle_execute_cli_arg(ctx, param, val):
         # Avoid this by always doing `--execute false`.
         return None
 
-    elif val in ctx.obj.account_manager.aliases:
+    elif submitter := _load_submitter(ctx, param, val):
+        return submitter
+
+    # Saying "no, do not execute", even if we could.
+    elif val.lower() in ("false", "f", "0"):
+        return False
+
+    raise BadOptionUsage(
+        "--execute", f"`--execute` value '{val}` not a boolean or account identifier."
+    )
+
+
+def _load_submitter(ctx, param, val):
+    if val in ctx.obj.account_manager.aliases:
         return ctx.obj.account_manager.load(val)
 
     # Account address - execute using this account.
@@ -64,13 +77,7 @@ def _handle_execute_cli_arg(ctx, param, val):
 
         return get_user_selected_account(account_type=safe.local_signers)
 
-    # Saying "no, do not execute", even if we could.
-    elif val.lower() in ("false", "f", "0"):
-        return False
-
-    raise BadOptionUsage(
-        "--execute", f"`--execute` value '{val}` not a boolean or account identifier."
-    )
+    return None
 
 
 @pending.command(cls=NetworkBoundCommand)
@@ -116,6 +123,26 @@ def approve(cli_ctx: SafeCliContext, network, safe, nonce, execute):
         signatures = {**signatures, **signatures_added}
         exc_tx = safe.create_execute_transaction(safe_tx, signatures)
         submitter.call(exc_tx)
+
+
+@pending.command(cls=NetworkBoundCommand)
+@safe_cli_ctx
+@network_option()
+@safe_option
+@click.argument("nonce", type=int)
+@click.option("--submitter", callback=_load_submitter)
+def execute(cli_ctx, network, safe, nonce, submitter):
+    """
+    Execute a transaction
+    """
+    txn = next(safe.client.get_transactions(confirmed=False, starting_nonce=nonce), None)
+    if not txn:
+        cli_ctx.abort(f"Pending transaction '{nonce}' not found.")
+
+    safe_tx = safe.create_safe_tx(**txn.dict(by_alias=True))
+    signatures = {c.owner: c.signature for c in txn.confirmations}
+    exc_tx = safe.create_execute_transaction(safe_tx, signatures)
+    submitter.call(exc_tx)
 
 
 @pending.command(cls=NetworkBoundCommand)

@@ -1,7 +1,7 @@
 import click
 from ape import accounts
 from ape.cli import ApeCliContextObject, ape_cli_context
-from click import MissingParameter, BadOptionUsage
+from click import BadOptionUsage, MissingParameter
 
 from ape_safe.accounts import SafeContainer
 

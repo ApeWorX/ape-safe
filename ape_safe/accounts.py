@@ -14,7 +14,6 @@ from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
-from eip712.messages import hash_eip712_message
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 
@@ -169,12 +168,6 @@ def _safe_tx_exec_args(safe_tx: SafeTx) -> List:
     return list(safe_tx._body_["message"].values())
 
 
-def hash_transaction(safe_tx: SafeTx) -> str:
-    safe_tx.to = safe_tx.to or ZERO_ADDRESS
-    safe_tx.data = safe_tx.data or b""
-    return hash_eip712_message(safe_tx).hex()
-
-
 class SafeAccount(AccountAPI):
     account_file_path: Path  # NOTE: Cache any relevant data here
 
@@ -301,7 +294,7 @@ class SafeAccount(AccountAPI):
         safe_tx = {
             "to": txn.receiver if txn else self.address,  # Self-call, e.g. rejection
             "value": txn.value if txn else 0,
-            "data": txn.data if txn else b"",
+            "data": (txn.data or b"") if txn else b"",
             "nonce": self.next_nonce,
             "operation": 0,
             "safeTxGas": 0,
@@ -309,8 +302,10 @@ class SafeAccount(AccountAPI):
             "gasToken": ZERO_ADDRESS,
             "refundReceiver": ZERO_ADDRESS,
         }
-
-        safe_tx = {**safe_tx, **{k: v for k, v in safe_tx_kwargs.items() if k in safe_tx}}
+        safe_tx = {
+            **safe_tx,
+            **{k: v for k, v in safe_tx_kwargs.items() if k in safe_tx and v is not None},
+        }
         return self.safe_tx_def(**safe_tx)
 
     def pending_transactions(self) -> Iterator[Tuple[SafeTx, List[SafeTxConfirmation]]]:
@@ -471,9 +466,9 @@ class SafeAccount(AccountAPI):
             return None  # type: ignore
 
     def get_api_confirmations(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
-        safe_tx_hash = hash_transaction(safe_tx)
+        safe_tx_id = get_safe_tx_hash(safe_tx)
         try:
-            client_confirmations = self.client.get_confirmations(safe_tx_hash)
+            client_confirmations = self.client.get_confirmations(safe_tx_id)
         except SafeClientException:
             return {}
 
@@ -688,3 +683,9 @@ class SafeAccount(AccountAPI):
                 signatures[signer.address] = signature
 
         return signatures
+
+
+def get_safe_tx_hash(safe_tx) -> SafeTxID:
+    return cast(
+        SafeTxID, HexBytes(keccak(b"".join([bytes.fromhex("19"), *safe_tx.signable_message])))
+    )

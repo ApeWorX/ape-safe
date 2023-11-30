@@ -88,6 +88,7 @@ ape safe pending list --network ethereum:goerli:alchemy
 ape safe pending show-confs 2 --network ethereum:goerli:alchemy
 ape safe pending approve 3 --network ethereum:goerli:alchemy
 ape safe pending reject 4 --network ethereum:goerli:alchemy
+ape safe pending execute 4 --network ethereum:goerli:alchemy --submitter metamask0
 ```
 
 ## Development

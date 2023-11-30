@@ -47,7 +47,7 @@ def _list(cli_ctx: SafeCliContext, network):
 
     finally:
         if network_ctx:
-            network_ctx.__exit__()
+            network_ctx.__exit__(None)
 
 
 @click.command(cls=NetworkBoundCommand)
