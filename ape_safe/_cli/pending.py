@@ -26,12 +26,16 @@ def _list(cli_ctx: SafeCliContext, network, safe) -> None:
     """
 
     _ = network  # Needed for NetworkBoundCommand
+    tx = None
     for tx in safe.client.get_transactions(confirmed=False):
         rich.print(
             f"Transaction {tx.nonce}: "
             f"({len(tx.confirmations)}/{safe.confirmations_required}) "
             f"safe_tx_hash={tx.safe_tx_hash}"
         )
+
+    if tx is None:
+        rich.print("There are no pending transactions.")
 
 
 # NOTE: The handling of the `--execute` flag in the `pending` CLI
