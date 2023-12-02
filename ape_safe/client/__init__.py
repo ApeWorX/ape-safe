@@ -2,13 +2,13 @@ from datetime import datetime
 from functools import reduce
 from typing import Dict, Iterator, Optional, Union
 
+from ape.exceptions import SignatureError
 from ape.types import AddressType, HexBytes, MessageSignature
 from eip712.common import SafeTxV1, SafeTxV2
-from eip712.messages import hash_eip712_message
 
 from ape_safe.client.base import BaseSafeClient
 from ape_safe.client.mock import MockSafeClient
-from ape_safe.client.models import (
+from ape_safe.client.types import (
     ExecutedTxData,
     OperationType,
     SafeApiTxData,
@@ -24,7 +24,7 @@ from ape_safe.exceptions import (
     ClientUnsupportedChainError,
     MultisigTransactionNotFoundError,
 )
-from ape_safe.utils import order_by_signer
+from ape_safe.utils import get_safe_tx_hash, order_by_signer
 
 TRANSACTION_SERVICE_URL = {
     # NOTE: If URLs need to be updated, a list of available service URLs can be found at
@@ -126,33 +126,37 @@ class SafeClient(BaseSafeClient):
                 post_dict[key] = value
 
         url = f"safes/{tx_data.safe}/multisig-transactions"
-        json_data = {"origin": "ApeWorX/ape-safe", **post_dict}
-        self._post(url, json=json_data)
+        self._post(url, json=post_dict)
 
-    def post_signature(
+    def post_signatures(
         self,
         safe_tx_or_hash: Union[SafeTx, SafeTxID],
-        signer: AddressType,
-        signature: MessageSignature,
+        signatures: Dict[AddressType, MessageSignature],
     ):
         if isinstance(safe_tx_or_hash, (SafeTxV1, SafeTxV2)):
             safe_tx = safe_tx_or_hash
-            safe_tx_hash = hash_eip712_message(safe_tx).hex()
+            safe_tx_hash = get_safe_tx_hash(safe_tx)
         else:
             safe_tx_hash = safe_tx_or_hash
 
-        if not isinstance(safe_tx_hash, str):
-            raise TypeError("Expecting str-like type for 'safe_tx_hash'.")
-
+        safe_tx_hash = HexBytes(safe_tx_hash).hex()
         url = f"multisig-transactions/{safe_tx_hash}/confirmations"
-        json_data = {"origin": "ApeWorX/ape-safe", "signature": signature.encode_rsv().hex()}
+        signature_bytes = HexBytes(
+            b"".join([x.encode_rsv() for x in order_by_signer(signatures)])
+        ).hex()
         try:
-            self._post(url, json=json_data)
+            result = self._post(url, json={"signature": signature_bytes})
         except ClientResponseError as err:
             if "The requested resource was not found on this server" in err.response.text:
                 raise MultisigTransactionNotFoundError(safe_tx_hash, url, err.response) from err
 
             raise  # The error from BaseClient we are already raising (no changes)
+
+        data = result.json()
+
+        result_signatures = [x["signature"] for x in data.get("results", [])]
+        if not all(s in result_signatures for s in signatures.values()):
+            raise SignatureError("Failed to add signature to safe transaction")
 
 
 __all__ = [
@@ -164,7 +168,6 @@ __all__ = [
     "SafeDetails",
     "SafeTx",
     "SafeTxConfirmation",
-    "SafeTxV2",
     "SignatureType",
     "UnexecutedTxData",
 ]

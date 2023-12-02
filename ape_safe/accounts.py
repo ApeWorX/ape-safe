@@ -1,4 +1,5 @@
 import json
+import os
 from itertools import islice
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union, cast
@@ -33,7 +34,7 @@ from ape_safe.exceptions import (
     SafeClientException,
     handle_safe_logic_error,
 )
-from ape_safe.utils import order_by_signer
+from ape_safe.utils import get_safe_tx_hash, order_by_signer
 
 
 class SafeContainer(AccountContainerAPI):
@@ -219,12 +220,15 @@ class SafeAccount(AccountAPI):
     @cached_property
     def client(self) -> BaseSafeClient:
         chain_id = self.provider.chain_id
+        override_url = os.environ.get("SAFE_TRANSACTION_SERVICE_URL")
 
         if self.provider.network.name == LOCAL_NETWORK_NAME:
             return MockSafeClient(contract=self.contract)
 
         elif chain_id in self.account_file["deployed_chain_ids"]:
-            return SafeClient(address=self.address, chain_id=self.provider.chain_id)
+            return SafeClient(
+                address=self.address, chain_id=self.provider.chain_id, override_url=override_url
+            )
 
         elif (
             self.provider.network.name.endswith("-fork")
@@ -232,7 +236,9 @@ class SafeAccount(AccountAPI):
             and self.provider.network.upstream_chain_id in self.account_file["deployed_chain_ids"]
         ):
             return SafeClient(
-                address=self.address, chain_id=self.provider.network.upstream_chain_id
+                address=self.address,
+                chain_id=self.provider.network.upstream_chain_id,
+                override_url=override_url,
             )
 
         elif self.provider.network.is_dev:
@@ -333,7 +339,7 @@ class SafeAccount(AccountAPI):
     def create_execute_transaction(
         self,
         safe_tx: SafeTx,
-        signatures: Mapping[AddressType, Union[MessageSignature, HexBytes]],
+        signatures: Mapping[AddressType, MessageSignature],
         **txn_options,
     ) -> TransactionAPI:
         exec_args = list(safe_tx._body_["message"].values())[:-1]  # NOTE: Skip `nonce`
@@ -659,7 +665,7 @@ class SafeAccount(AccountAPI):
 
     def add_signatures(
         self, safe_tx: SafeTx, confirmations: List[SafeTxConfirmation]
-    ) -> Dict[AddressType, Union[MessageSignature, HexBytes]]:
+    ) -> Dict[AddressType, MessageSignature]:
         if not self.local_signers:
             raise ApeSafeError("Cannot sign without local signers.")
 
@@ -668,24 +674,25 @@ class SafeAccount(AccountAPI):
             acc for acc in self.local_signers if acc.address not in [c.owner for c in confirmations]
         ][:amount_needed]
 
-        signatures: Dict[AddressType, Union[MessageSignature, HexBytes]] = {}
+        signatures: Dict[AddressType, MessageSignature] = {}
+        safe_tx_hash = _get_safe_tx_id(safe_tx, confirmations)
+
         for signer in signers:
-            if not (tx_hash_result := next((c.transaction_hash for c in confirmations), None)):
-                tx_hash_result = self.contract.getTransactionHash(*safe_tx)
-
-            if tx_hash_result is None:
-                raise ApeSafeError("Failed to get transaction hash.")
-
-            tx_hash = HexBytes(tx_hash_result).hex()
             signature = signer.sign_message(safe_tx.signable_message)
             if signature:
-                self.client.post_signature(cast(SafeTxID, tx_hash), signer.address, signature)
                 signatures[signer.address] = signature
+
+        if signatures:
+            self.client.post_signatures(safe_tx_hash, signatures)
 
         return signatures
 
 
-def get_safe_tx_hash(safe_tx) -> SafeTxID:
-    return cast(
-        SafeTxID, HexBytes(keccak(b"".join([bytes.fromhex("19"), *safe_tx.signable_message])))
-    )
+def _get_safe_tx_id(safe_tx: SafeTx, confirmations: List[SafeTxConfirmation]) -> SafeTxID:
+    if tx_hash_result := next((c.transaction_hash for c in confirmations), None):
+        return cast(SafeTxID, tx_hash_result)
+
+    elif value := get_safe_tx_hash(safe_tx):
+        return value
+
+    raise ApeSafeError("Failed to get transaction hash.")

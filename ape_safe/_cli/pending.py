@@ -5,6 +5,7 @@ import rich
 from ape.api import AccountAPI
 from ape.cli import NetworkBoundCommand, get_user_selected_account, network_option
 from click.exceptions import BadOptionUsage
+from hexbytes import HexBytes
 
 from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx, safe_option
 
@@ -103,12 +104,13 @@ def approve(cli_ctx: SafeCliContext, network, safe, nonce, execute):
 
     if num_confirmations < safe.confirmations_required:
         signatures_added = safe.add_signatures(safe_tx, txn.confirmations)
-        accounts_used_str = ", ".join(list(signatures_added.keys()))
-        cli_ctx.logger.success(
-            f"Signatures added to transaction '{safe_tx.nonce}' "
-            f"using accounts '{accounts_used_str}'."
-        )
-        num_confirmations += len(signatures_added)
+        if signatures_added:
+            accounts_used_str = ", ".join(list(signatures_added.keys()))
+            cli_ctx.logger.success(
+                f"Signatures added to transaction '{safe_tx.nonce}' "
+                f"using accounts '{accounts_used_str}'."
+            )
+            num_confirmations += len(signatures_added)
 
     if execute is None and submitter is None:
         # Check if we _can_ execute and ask the user.
@@ -188,5 +190,10 @@ def show_confs(cli_ctx, network, safe, nonce):
         cli_ctx.abort(f"Pending transaction '{nonce}' not found.")
 
     rich.print(f"Showing confirmations for transaction '{txn.nonce}'")
+    length = len(txn.confirmations)
     for idx, conf in enumerate(txn.confirmations):
-        rich.print(f"Confirmation {idx + 1} owner={conf.owner}")
+        rich.print(
+            f"Confirmation {idx + 1} owner={conf.owner} signature={HexBytes(conf.signature).hex()}"
+        )
+        if idx < length - 1:
+            click.echo()

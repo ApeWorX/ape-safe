@@ -5,7 +5,7 @@ import requests
 from ape.types import AddressType, MessageSignature
 from requests import Response
 
-from ape_safe.client.models import (
+from ape_safe.client.types import (
     ExecutedTxData,
     SafeApiTxData,
     SafeDetails,
@@ -45,11 +45,10 @@ class BaseSafeClient(ABC):
         ...
 
     @abstractmethod
-    def post_signature(
+    def post_signatures(
         self,
         safe_tx_or_hash: Union[SafeTx, SafeTxID],
-        signer: AddressType,
-        signature: MessageSignature,
+        signatures: Dict[AddressType, MessageSignature],
     ):
         ...
 
@@ -100,7 +99,11 @@ class BaseSafeClient(ABC):
     def _get(self, url: str) -> Response:
         return self._request("GET", url)
 
-    def _post(self, url: str, json: Dict) -> Response:
+    def _post(self, url: str, json: Optional[Dict] = None) -> Response:
+        json = json or {}
+        if "origin" not in json:
+            json["origin"] = "ApeWorX/ape-safe"
+
         return self._request("POST", url, json=json)
 
     def _request(self, method: str, url: str, json: Optional[Dict] = None) -> Response:

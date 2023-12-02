@@ -7,7 +7,7 @@ from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
 from eth_utils import keccak
 
 from ape_safe.client.base import BaseSafeClient
-from ape_safe.client.models import (
+from ape_safe.client.types import (
     SafeApiTxData,
     SafeDetails,
     SafeTx,
@@ -84,17 +84,17 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         else:
             self.transactions_by_nonce[safe_tx_data.nonce] = [safe_tx_data.safe_tx_hash]
 
-    def post_signature(
+    def post_signatures(
         self,
         safe_tx_or_hash: Union[SafeTx, SafeTxID],
-        signer: AddressType,
-        signature: MessageSignature,
+        signatures: Dict[AddressType, MessageSignature],
     ):
-        self.transactions[safe_tx_or_hash].confirmations.append(
-            SafeTxConfirmation(
-                owner=signer,
-                submissionDate=datetime.now(timezone.utc),
-                signature=signature.encode_rsv(),
-                signatureType=SignatureType.EOA,
+        for signer, signature in signatures.items():
+            self.transactions[safe_tx_or_hash].confirmations.append(
+                SafeTxConfirmation(
+                    owner=signer,
+                    submissionDate=datetime.now(timezone.utc),
+                    signature=signature.encode_rsv(),
+                    signatureType=SignatureType.EOA,
+                )
             )
-        )

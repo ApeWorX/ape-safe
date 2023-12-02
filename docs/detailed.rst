@@ -64,7 +64,7 @@ Play around the same way you would do with a normal account:
 
     # Post an additional confirmation to the transaction service
     >>> signature = safe.sign_transaction(safe_tx)
-    >>> safe.post_signature(safe_tx, signature)
+    >>> safe.post_signatures(safe_tx, signature)
 
     # Retrieve pending transactions from the transaction service
     >>> safe.pending_transactions
