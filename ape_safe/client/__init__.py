@@ -1,8 +1,7 @@
 from datetime import datetime
 from functools import reduce
-from typing import Dict, Iterator, Optional, Union
+from typing import Dict, Iterator, Optional, Union, cast
 
-from ape.exceptions import SignatureError
 from ape.types import AddressType, HexBytes, MessageSignature
 from eip712.common import SafeTxV1, SafeTxV2
 
@@ -139,24 +138,21 @@ class SafeClient(BaseSafeClient):
         else:
             safe_tx_hash = safe_tx_or_hash
 
-        safe_tx_hash = HexBytes(safe_tx_hash).hex()
+        safe_tx_hash = cast(SafeTxID, HexBytes(safe_tx_hash).hex())
         url = f"multisig-transactions/{safe_tx_hash}/confirmations"
-        signature_bytes = HexBytes(
-            b"".join([x.encode_rsv() for x in order_by_signer(signatures)])
-        ).hex()
+        signature = HexBytes(b"".join([x.encode_rsv() for x in order_by_signer(signatures)])).hex()
+
+        # from gnosis.safe.safe_signature import SafeSignature
+        # parsed_signatures = SafeSignature.parse_signature(signature, safe_tx_hash)
+        # breakpoint()
+
         try:
-            result = self._post(url, json={"signature": signature_bytes})
+            self._post(url, json={"signature": signature})
         except ClientResponseError as err:
             if "The requested resource was not found on this server" in err.response.text:
                 raise MultisigTransactionNotFoundError(safe_tx_hash, url, err.response) from err
 
             raise  # The error from BaseClient we are already raising (no changes)
-
-        data = result.json()
-
-        result_signatures = [x["signature"] for x in data.get("results", [])]
-        if not all(s in result_signatures for s in signatures.values()):
-            raise SignatureError("Failed to add signature to safe transaction")
 
 
 __all__ = [

@@ -116,6 +116,11 @@ class ClientUnsupportedChainError(SafeClientException):
         super().__init__(f"Unsupported Chain ID '{chain_id}'.")
 
 
+class ActionNotPerformedError(SafeClientException):
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 class ClientResponseError(SafeClientException):
     def __init__(self, endpoint_url: str, response: Response, message: Optional[str] = None):
         self.endpoint_url = endpoint_url

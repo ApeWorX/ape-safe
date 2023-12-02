@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from functools import cached_property
 from typing import Dict, Iterator, Optional, Set, Union
 
 import requests
@@ -14,7 +15,7 @@ from ape_safe.client.types import (
     SafeTxID,
     UnexecutedTxData,
 )
-from ape_safe.exceptions import ClientResponseError
+from ape_safe.exceptions import ActionNotPerformedError, ClientResponseError
 
 
 class BaseSafeClient(ABC):
@@ -96,20 +97,48 @@ class BaseSafeClient(ABC):
 
     """Request methods"""
 
+    @cached_property
+    def session(self) -> requests.Session:
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(
+            pool_connections=10,  # Doing all the connections to the same url
+            pool_maxsize=100,  # Number of concurrent connections
+            pool_block=False,
+        )
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        return session
+
     def _get(self, url: str) -> Response:
         return self._request("GET", url)
 
-    def _post(self, url: str, json: Optional[Dict] = None) -> Response:
+    def _post(self, url: str, json: Optional[Dict] = None, **kwargs) -> Response:
         json = json or {}
-        if "origin" not in json:
+        if "origin" not in json and isinstance(json, dict):
             json["origin"] = "ApeWorX/ape-safe"
 
-        return self._request("POST", url, json=json)
+        if "headers" not in kwargs:
+            kwargs["headers"] = {"Content-type": "application/json"}
 
-    def _request(self, method: str, url: str, json: Optional[Dict] = None) -> Response:
+        return self._request("POST", url, json=json, **kwargs)
+
+    def _request(self, method: str, url: str, json: Optional[Dict] = None, **kwargs) -> Response:
         api_url = f"{self.transaction_service_url}/api/v1/{url}"
-        response = requests.request(method, api_url, json=json)
-        if not response.ok:
+
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = 10
+
+        response = self.session.request(method, api_url, json=json, **kwargs)
+        do_fail = not kwargs.get("allow_failure", False)
+
+        if method != response.request.method and do_fail:
+            # Handle weird Safe API behavior where it doesn't do the right thing.
+            raise ActionNotPerformedError(
+                f"Was expecting {method} action but got {response.request.method}. "
+                "Likely, there was some server or request issue."
+            )
+
+        if not response.ok and do_fail:
             raise ClientResponseError(api_url, response)
 
         return response
