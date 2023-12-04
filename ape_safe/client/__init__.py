@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from functools import reduce
 from typing import Dict, Iterator, Optional, Union, cast
@@ -143,9 +142,8 @@ class SafeClient(BaseSafeClient):
         safe_tx_hash = cast(SafeTxID, HexBytes(safe_tx_hash).hex())
         url = f"multisig-transactions/{safe_tx_hash}/confirmations"
         signature = HexBytes(b"".join([x.encode_rsv() for x in order_by_signer(signatures)])).hex()
-        data_str = json.dumps({"signature": signature})
         try:
-            self._post(url, data=data_str)
+            self._post(url, json={"signature": signature})
         except ClientResponseError as err:
             if "The requested resource was not found on this server" in err.response.text:
                 raise MultisigTransactionNotFoundError(safe_tx_hash, url, err.response) from err

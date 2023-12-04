@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 from typing import Dict, Iterator, Optional, Set, Union
 
+import certifi
 import requests
+import urllib3
 from ape.types import AddressType, MessageSignature
 from requests import Response
 from requests.adapters import HTTPAdapter
@@ -16,9 +18,7 @@ from ape_safe.client.types import (
     SafeTxID,
     UnexecutedTxData,
 )
-from ape_safe.exceptions import ActionNotPerformedError, ClientResponseError
-
-# from requests import Response
+from ape_safe.exceptions import ClientResponseError
 
 
 class BaseSafeClient(ABC):
@@ -116,13 +116,17 @@ class BaseSafeClient(ABC):
         return self._request("GET", url)
 
     def _post(self, url: str, json: Optional[Dict] = None, **kwargs) -> Response:
-        if json is not None and "origin" not in json and isinstance(json, dict):
-            json["origin"] = "ApeWorX/ape-safe"
-
         return self._request("POST", url, json=json, **kwargs)
 
+    @cached_property
+    def _http(self):
+        return urllib3.PoolManager(ca_certs=certifi.where())
+
     def _request(self, method: str, url: str, json: Optional[Dict] = None, **kwargs) -> Response:
-        api_url = f"{self.transaction_service_url}/api/v1/{url}"
+        # **WARNING**: The trailing slash in the URL is CRITICAL!
+        # If you remove it, things will not work as expected.
+
+        api_url = f"{self.transaction_service_url}/api/v1/{url}/"
         do_fail = not kwargs.pop("allow_failure", False)
 
         if "timeout" not in kwargs:
@@ -137,13 +141,6 @@ class BaseSafeClient(ABC):
         }
         kwargs["headers"] = {**default_headers, **headers}
         response = self.session.request(method, api_url, json=json, **kwargs)
-
-        if method != response.request.method and do_fail:
-            # Handle weird Safe API behavior where it doesn't do the right thing.
-            raise ActionNotPerformedError(
-                f"Was expecting {method} action but got {response.request.method}. "
-                "Likely, there was some server or request issue."
-            )
 
         if not response.ok and do_fail:
             raise ClientResponseError(api_url, response)
