@@ -34,7 +34,7 @@ from ape_safe.exceptions import (
     SafeClientException,
     handle_safe_logic_error,
 )
-from ape_safe.utils import get_safe_tx_hash, order_by_signer
+from ape_safe.utils import get_safe_tx_hash, hash_message, order_by_signer
 
 
 class SafeContainer(AccountContainerAPI):
@@ -678,9 +678,11 @@ class SafeAccount(AccountAPI):
         safe_tx_hash = _get_safe_tx_id(safe_tx, confirmations)
 
         for signer in signers:
-            signature = signer.sign_message(safe_tx.signable_message)
+            data_hash = hash_message(safe_tx_hash)
+            signature = signer.sign_message(data_hash)  # type: ignore
             if signature:
-                signatures[signer.address] = signature
+                signature_adjusted = adjust_v_in_signature(signature)
+                signatures[signer.address] = signature_adjusted
 
         if signatures:
             self.client.post_signatures(safe_tx_hash, signatures)
@@ -696,3 +698,20 @@ def _get_safe_tx_id(safe_tx: SafeTx, confirmations: List[SafeTxConfirmation]) ->
         return value
 
     raise ApeSafeError("Failed to get transaction hash.")
+
+
+def adjust_v_in_signature(signature: MessageSignature) -> MessageSignature:
+    MIN_VALID_V_VALUE_FOR_SAFE_ECDSA = 27
+    v = signature.v
+
+    if v < MIN_VALID_V_VALUE_FOR_SAFE_ECDSA:
+        v += MIN_VALID_V_VALUE_FOR_SAFE_ECDSA
+
+    # Add 4 because we signed with the prefix.
+    v += 4
+
+    return MessageSignature(
+        v=v,
+        r=signature.r,
+        s=signature.s,
+    )
