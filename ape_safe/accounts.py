@@ -476,7 +476,8 @@ class SafeAccount(AccountAPI):
         safe_tx_id = get_safe_tx_hash(safe_tx)
         try:
             client_confirmations = self.client.get_confirmations(safe_tx_id)
-        except SafeClientException:
+        except SafeClientException as err:
+            logger.error(str(err))
             return {}
 
         return {

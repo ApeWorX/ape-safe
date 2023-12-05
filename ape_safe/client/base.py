@@ -58,27 +58,11 @@ class BaseSafeClient(ABC):
 
     """Shared methods"""
 
-    def get_transaction(
-        self,
-        nonce: int,
-        confirmed: Optional[bool] = None,
-        filter_by_ids: Optional[Set[SafeTxID]] = None,
-        filter_by_missing_signers: Optional[Set[AddressType]] = None,
-    ) -> Optional[SafeApiTxData]:
-        for tx in self.get_transactions(
-            confirmed=confirmed,
-            filter_by_ids=filter_by_ids,
-            filter_by_missing_signers=filter_by_missing_signers,
-        ):
-            if tx.nonce == nonce:
-                return tx
-
-        return None
-
     def get_transactions(
         self,
         confirmed: Optional[bool] = None,
         starting_nonce: int = 0,
+        ending_nonce: Optional[int] = None,
         filter_by_ids: Optional[Set[SafeTxID]] = None,
         filter_by_missing_signers: Optional[Set[AddressType]] = None,
     ) -> Iterator[SafeApiTxData]:
@@ -87,8 +71,13 @@ class BaseSafeClient(ABC):
         """
         next_nonce = self.get_next_nonce()
 
+        # NOTE: We loop backwards.
         for txn in self._all_transactions():
-            if txn.nonce < starting_nonce:
+            if ending_nonce is not None and txn.nonce > ending_nonce:
+                # NOTE: Skip all largest nonces first
+                continue
+
+            elif txn.nonce < starting_nonce:
                 break  # NOTE: order is largest nonce to smallest, so safe to break here
 
             is_confirmed = len(txn.confirmations) >= txn.confirmations_required
