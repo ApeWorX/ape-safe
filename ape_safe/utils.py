@@ -19,7 +19,8 @@ def order_by_signer(signatures: Mapping[AddressType, MessageSignature]) -> List[
 
 def get_safe_tx_hash(safe_tx) -> "SafeTxID":
     return cast(
-        "SafeTxID", HexBytes(keccak(b"".join([bytes.fromhex("19"), *safe_tx.signable_message])))
+        "SafeTxID",
+        HexBytes(keccak(b"".join([bytes.fromhex("19"), *safe_tx.signable_message]))).hex(),
     )
 
 

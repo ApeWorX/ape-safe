@@ -1,5 +1,6 @@
 import pytest
 from ape.exceptions import SignatureError
+from eth_utils import add_0x_prefix
 
 
 def test_init(safe, OWNERS, THRESHOLD, safe_contract):
@@ -20,7 +21,6 @@ def test_swap_owner(safe, accounts, OWNERS, mode):
     # NOTE: Since the signers are processed in order, we replace the last account
 
     prev_owner = safe.compute_prev_signer(old_owner)
-
     exec_transaction = lambda: safe.contract.swapOwner(  # noqa: E731
         prev_owner,
         old_owner,
@@ -34,16 +34,29 @@ def test_swap_owner(safe, accounts, OWNERS, mode):
         receipt = exec_transaction()
 
     else:
-        # Attempting to execute should emit a `SignatureError` and push `safe_tx` to mock client
+        # Attempting to execute should raise `SignatureError` and push `safe_tx` to mock client
         assert len(list(safe.client.get_transactions(confirmed=False))) == 0
+
         with pytest.raises(SignatureError):
             exec_transaction()
 
-        assert len(list(safe.client.get_transactions(confirmed=False))) == 1
+        pending_txns = list(safe.client.get_transactions(confirmed=False))
+        assert len(pending_txns) == 1
+        assert len(pending_txns[0].confirmations) >= 1
+        safe_tx_hash = add_0x_prefix(f"{pending_txns[0].safe_tx_hash}")
+
+        safe_tx_data = pending_txns[0]
+        safe_tx = safe.create_safe_tx(**safe_tx_data.dict(by_alias=True))
+
+        # Ensure client confirmations works
+        client_confs = list(safe.client.get_confirmations(safe_tx_hash))
+        assert len(client_confs) >= 1
+
+        # Ensure API confirmations work
+        api_confs = safe.get_api_confirmations(safe_tx)
+        assert len(api_confs) >= 1
 
         # `safe_tx` is in mock client, extract it and execute it successfully this time
-        safe_tx_data = next(safe.client.get_transactions(confirmed=False))
-        safe_tx = safe.create_safe_tx(**safe_tx_data.dict())
         receipt = safe.submit_safe_tx(safe_tx)
 
     assert receipt.events == [
@@ -85,7 +98,7 @@ def test_add_owner(safe, accounts, OWNERS, mode):
 
         # `safe_tx` is in mock client, extract it and execute it successfully this time
         safe_tx_data = next(safe.client.get_transactions(confirmed=False))
-        safe_tx = safe.create_safe_tx(**safe_tx_data.dict())
+        safe_tx = safe.create_safe_tx(**safe_tx_data.dict(by_alias=True))
         receipt = safe.submit_safe_tx(safe_tx)
 
     assert receipt.events == [
@@ -131,7 +144,7 @@ def test_remove_owner(safe, OWNERS, mode):
 
         # `safe_tx` is in mock client, extract it and execute it successfully this time
         safe_tx_data = next(safe.client.get_transactions(confirmed=False))
-        safe_tx = safe.create_safe_tx(**safe_tx_data.dict())
+        safe_tx = safe.create_safe_tx(**safe_tx_data.dict(by_alias=True))
         receipt = safe.submit_safe_tx(safe_tx)
 
     expected_events = [

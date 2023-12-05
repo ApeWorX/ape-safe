@@ -1,11 +1,14 @@
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Dict, List, NewType, Optional, Union
+from typing import Dict, List, NewType, Optional, Union, cast
 
 from ape.types import AddressType, HexBytes
 from eip712.common import SafeTxV1, SafeTxV2
-from eip712.messages import hash_eip712_message
+from eth_typing import HexStr
+from eth_utils import add_0x_prefix
 from pydantic import BaseModel, Field
+
+from ape_safe.utils import get_safe_tx_hash
 
 SafeTx = Union[SafeTxV1, SafeTxV2]
 SafeTxID = NewType("SafeTxID", str)
@@ -69,7 +72,7 @@ class UnexecutedTxData(BaseModel):
             submissionDate=datetime.now(timezone.utc),
             modified=datetime.now(timezone.utc),
             confirmationsRequired=confirmations_required,
-            safeTxHash=hash_eip712_message(safe_tx).hex(),
+            safeTxHash=get_safe_tx_hash(safe_tx),
             **safe_tx._body_["message"],
         )
 
@@ -100,7 +103,7 @@ class UnexecutedTxData(BaseModel):
    from: {self.safe}
      to: {self.to}
   value: {self.value / 1e18} ether
-   data: 0x{data_hex}
+   data: {add_0x_prefix(cast(HexStr, data_hex))}
 """
 
 

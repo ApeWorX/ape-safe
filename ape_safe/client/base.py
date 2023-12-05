@@ -58,6 +58,23 @@ class BaseSafeClient(ABC):
 
     """Shared methods"""
 
+    def get_transaction(
+        self,
+        nonce: int,
+        confirmed: Optional[bool] = None,
+        filter_by_ids: Optional[Set[SafeTxID]] = None,
+        filter_by_missing_signers: Optional[Set[AddressType]] = None,
+    ) -> Optional[SafeApiTxData]:
+        for tx in self.get_transactions(
+            confirmed=confirmed,
+            filter_by_ids=filter_by_ids,
+            filter_by_missing_signers=filter_by_missing_signers,
+        ):
+            if tx.nonce == nonce:
+                return tx
+
+        return None
+
     def get_transactions(
         self,
         confirmed: Optional[bool] = None,

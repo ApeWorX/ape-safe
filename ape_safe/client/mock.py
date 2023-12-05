@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
-from typing import Dict, Iterator, List, Union
+from typing import Dict, Iterator, List, Union, cast
 
 from ape.contracts import ContractInstance
 from ape.types import AddressType, MessageSignature
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
 from eth_utils import keccak
+from hexbytes import HexBytes
 
 from ape_safe.client.base import BaseSafeClient
 from ape_safe.client.types import (
@@ -16,12 +17,13 @@ from ape_safe.client.types import (
     SignatureType,
     UnexecutedTxData,
 )
+from ape_safe.utils import get_safe_tx_hash
 
 
 class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
     def __init__(self, contract: ContractInstance):
         self.contract = contract
-        self.transactions: Dict[Union[SafeTx, SafeTxID], SafeApiTxData] = {}
+        self.transactions: Dict[SafeTxID, SafeApiTxData] = {}
         self.transactions_by_nonce: Dict[int, List[SafeTxID]] = {}
 
     @property
@@ -63,7 +65,8 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             yield from map(self.transactions.get, self.transactions_by_nonce[nonce])
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
-        if safe_tx_data := self.transactions.get(safe_tx_hash):
+        tx_hash = cast(SafeTxID, HexBytes(safe_tx_hash).hex())
+        if safe_tx_data := self.transactions.get(tx_hash):
             yield from safe_tx_data.confirmations
 
     def post_transaction(self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature]):
@@ -77,12 +80,13 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             )
             for signer, sig in sigs.items()
         )
-        self.transactions[safe_tx_data.safe_tx_hash] = safe_tx_data
+        tx_id = cast(SafeTxID, HexBytes(safe_tx_data.safe_tx_hash).hex())
+        self.transactions[tx_id] = safe_tx_data
 
         if safe_tx_data.nonce in self.transactions_by_nonce:
-            self.transactions_by_nonce[safe_tx_data.nonce].append(safe_tx_data.safe_tx_hash)
+            self.transactions_by_nonce[safe_tx_data.nonce].append(tx_id)
         else:
-            self.transactions_by_nonce[safe_tx_data.nonce] = [safe_tx_data.safe_tx_hash]
+            self.transactions_by_nonce[safe_tx_data.nonce] = [tx_id]
 
     def post_signatures(
         self,
@@ -90,7 +94,13 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         signatures: Dict[AddressType, MessageSignature],
     ):
         for signer, signature in signatures.items():
-            self.transactions[safe_tx_or_hash].confirmations.append(
+            safe_tx_id = (
+                safe_tx_or_hash
+                if isinstance(safe_tx_or_hash, (str, bytes, int))
+                else get_safe_tx_hash(safe_tx_or_hash)
+            )
+            tx_id = cast(SafeTxID, HexBytes(safe_tx_id).hex())
+            self.transactions[tx_id].confirmations.append(
                 SafeTxConfirmation(
                     owner=signer,
                     submissionDate=datetime.now(timezone.utc),

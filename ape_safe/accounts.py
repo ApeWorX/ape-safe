@@ -1,6 +1,5 @@
 import json
 import os
-from itertools import islice
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union, cast
 
@@ -8,7 +7,7 @@ from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
 from ape.api.networks import LOCAL_NETWORK_NAME, ForkedNetworkAPI
 from ape.contracts import ContractInstance
-from ape.exceptions import ProviderNotConnectedError, SignatureError
+from ape.exceptions import ProviderNotConnectedError
 from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
 from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
@@ -157,12 +156,18 @@ class SafeContainer(AccountContainerAPI):
 
 
 def get_signatures(
-    safe_tx: SafeTx,
+    safe_tx_hash: str,
     signers: Iterable[AccountAPI],
-) -> Iterator[Tuple[AddressType, MessageSignature]]:
+) -> Dict[AddressType, MessageSignature]:
+    data_hash = hash_message(safe_tx_hash)
+    signatures: Dict[AddressType, MessageSignature] = {}
     for signer in signers:
-        if sig := signer.sign_message(safe_tx.signable_message):
-            yield signer.address, sig
+        signature = signer.sign_message(HexBytes(data_hash))  # type: ignore
+        if signature:
+            signature_adjusted = adjust_v_in_signature(signature)
+            signatures[signer.address] = signature_adjusted
+
+    return signatures
 
 
 def _safe_tx_exec_args(safe_tx: SafeTx) -> List:
@@ -465,11 +470,7 @@ class SafeAccount(AccountAPI):
         if impersonate:
             return self._impersonated_call(txn, **call_kwargs)
 
-        try:
-            return super().call(txn, **call_kwargs)
-        except SignatureError:
-            # TODO: Create an intermediate receipt object
-            return None  # type: ignore
+        return super().call(txn, **call_kwargs)
 
     def get_api_confirmations(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
         safe_tx_id = get_safe_tx_hash(safe_tx)
@@ -604,14 +605,11 @@ class SafeAccount(AccountAPI):
 
         # Attempt to fetch just enough signatures to satisfy the amount we need
         # NOTE: It is okay to have less signatures, but it never should fetch more than needed
-        sigs_by_signer.update(
-            dict(
-                islice(
-                    get_signatures(safe_tx, available_signers),
-                    signatures_required - len(sigs_by_signer),
-                )
-            )
-        )
+        signers = [x for x in self.local_signers if x.address not in sigs_by_signer]
+        if signers:
+            safe_tx_hash = get_safe_tx_hash(safe_tx)
+            new_signatures = get_signatures(safe_tx_hash, signers)
+            sigs_by_signer = {**sigs_by_signer, **new_signatures}
 
         if (
             submit  # NOTE: `submitter` should be set if `submit=True`
@@ -648,8 +646,8 @@ class SafeAccount(AccountAPI):
         elif submitter and submitter.address in self.signers:
             # Not enough signatures were gathered to submit, but submitter also didn't sign yet,
             # so might as well get one more sig from them before publishing confirmations to API.
-            if sig := submitter.sign_message(safe_tx.signable_message):
-                sigs_by_signer[submitter.address] = sig
+            signatures = get_signatures(get_safe_tx_hash(safe_tx), [submitter])
+            sigs_by_signer = {**sigs_by_signer, **signatures}
 
         # NOTE: Not enough signatures were obtained to publish on-chain
         logger.info(
@@ -674,16 +672,8 @@ class SafeAccount(AccountAPI):
             acc for acc in self.local_signers if acc.address not in [c.owner for c in confirmations]
         ][:amount_needed]
 
-        signatures: Dict[AddressType, MessageSignature] = {}
         safe_tx_hash = _get_safe_tx_id(safe_tx, confirmations)
-
-        for signer in signers:
-            data_hash = hash_message(safe_tx_hash)
-            signature = signer.sign_message(data_hash)  # type: ignore
-            if signature:
-                signature_adjusted = adjust_v_in_signature(signature)
-                signatures[signer.address] = signature_adjusted
-
+        signatures = get_signatures(safe_tx_hash, signers)
         if signatures:
             self.client.post_signatures(safe_tx_hash, signatures)
 

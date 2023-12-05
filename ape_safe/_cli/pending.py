@@ -94,8 +94,7 @@ def _load_submitter(ctx, param, val):
 def approve(cli_ctx: SafeCliContext, network, safe, nonce, execute):
     _ = network  # Needed for NetworkBoundCommand
     submitter: Optional[AccountAPI] = execute if isinstance(execute, AccountAPI) else None
-    txn = next(safe.client.get_transactions(confirmed=False, starting_nonce=nonce), None)
-    if not txn:
+    if not (txn := safe.client.get_transaction(nonce, confirmed=False)):
         cli_ctx.abort(f"Pending transaction '{nonce}' not found.")
 
     safe_tx = safe.create_safe_tx(**txn.dict(by_alias=True))
@@ -141,8 +140,7 @@ def execute(cli_ctx, network, safe, nonce, submitter):
     """
     Execute a transaction
     """
-    txn = next(safe.client.get_transactions(confirmed=False, starting_nonce=nonce), None)
-    if not txn:
+    if not (txn := safe.client.get_transaction(nonce, confirmed=False)):
         cli_ctx.abort(f"Pending transaction '{nonce}' not found.")
 
     safe_tx = safe.create_safe_tx(**txn.dict(by_alias=True))
@@ -162,7 +160,7 @@ def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
     """
 
     _ = network  # Needed for NetworkBoundCommand
-    pending_transactions = safe.client.get_transactions(starting_nonce=safe.next_nonce)
+    pending_transactions = safe.client.get_transaction(confirmed=False, nonce=safe.next_nonce)
 
     for txn_id in txn_ids:
         try:
@@ -185,8 +183,7 @@ def show_confs(cli_ctx, network, safe, nonce):
     Show existing confirmations
     """
     _ = network  # Needed for NetworkBoundCommand
-    txn = next(safe.client.get_transactions(confirmed=False, starting_nonce=nonce), None)
-    if not txn:
+    if not (txn := safe.client.get_transaction(nonce, confirmed=False)):
         cli_ctx.abort(f"Pending transaction '{nonce}' not found.")
 
     rich.print(f"Showing confirmations for transaction '{txn.nonce}'")
