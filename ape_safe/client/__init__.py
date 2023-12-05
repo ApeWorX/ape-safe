@@ -96,7 +96,7 @@ class SafeClient(BaseSafeClient):
             url = data.get("next")
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
-        url = f"multisig-transactions/{str(safe_tx_hash.replace('8', '0'))}/confirmations"
+        url = f"multisig-transactions/{str(safe_tx_hash)}/confirmations"
         while url:
             response = self._get(url)
             data = response.json()
