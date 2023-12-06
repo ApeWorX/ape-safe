@@ -118,26 +118,24 @@ def _load_submitter(ctx, param, val):
 @safe_cli_ctx
 @network_option()
 @safe_option
-@click.argument("txn_id")
+@click.argument("txn_ids")
 @click.option("--execute", callback=_handle_execute_cli_arg)
-def approve(cli_ctx: SafeCliContext, network, safe, txn_id, execute):
+def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
     _ = network  # Needed for NetworkBoundCommand
     submitter: Optional[AccountAPI] = execute if isinstance(execute, AccountAPI) else None
+    pending_transactions = safe.client.get_transactions(
+        confirmed=False, starting_nonce=safe.next_nonce
+    )
 
-    if txn_id.isnumeric():
-        nonce = int(txn_id)
+    txn_ids = [int(x) if x.isnumeric() else x for x in txn_ids if x]
 
-        # NOTE: May be more than one if there's a conflicting nonce.
-        txns = list(
-            safe.client.get_transactions(starting_nonce=nonce, ending_nonce=nonce, confirmed=False)
-        )
-    else:
-        txns = list(safe.client.get_transactions(filter_by_ids=txn_id, confirmed=False))
+    if not txn_ids:
+        cli_ctx.abort(f"Pending transaction(s) '{', '.join(txn_ids)}' not found.")
 
-    if not txns:
-        cli_ctx.abort(f"Pending transaction '{txn_id}' not found.")
+    for txn in pending_transactions:
+        if txn.nonce not in txn_ids and txn.safe_tx_hash not in txn_ids:
+            continue
 
-    for txn in txns:
         safe_tx = safe.create_safe_tx(**txn.dict(by_alias=True))
         num_confirmations = len(txn.confirmations)
         signatures_added = {}
@@ -229,7 +227,9 @@ def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
         if txn_id.isnumeric():
             txn_id = int(txn_id)
 
-        if txn := next((txn for txn in pending_transactions if txn_id in (txn.nonce, txn.safe_tx_hash)), None):
+        if txn := next(
+            (txn for txn in pending_transactions if txn_id in (txn.nonce, txn.safe_tx_hash)), None
+        ):
             if click.confirm(f"{txn}\nCancel Transaction?"):
                 safe.transfer(safe, "0 ether", nonce=txn_id, submit_transaction=False)
 
