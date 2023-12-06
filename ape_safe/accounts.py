@@ -576,6 +576,9 @@ class SafeAccount(AccountAPI):
                 "`submitter` should be either `AccountAPI` or we are not submitting here."
             )
 
+        # For mypy
+        assert isinstance(submitter, AccountAPI)
+
         # Garner either M or M - 1 signatures, depending on if we are submitting
         # and whether the submitter is also a signer (both must be true to submit M - 1).
         # NOTE: Will skip or reorder signers based on config

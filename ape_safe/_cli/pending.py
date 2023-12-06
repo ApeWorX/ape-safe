@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Sequence, Union, cast
 
 import click
 import rich
@@ -6,6 +6,8 @@ from ape.api import AccountAPI
 from ape.cli import NetworkBoundCommand, get_user_selected_account, network_option
 from ape.exceptions import SignatureError
 from click.exceptions import BadOptionUsage
+from eth_typing import Hash32
+from eth_utils import humanize_hash
 from hexbytes import HexBytes
 
 from ape_safe import SafeAccount
@@ -24,8 +26,8 @@ def pending():
 @safe_cli_ctx
 @network_option()
 @safe_option
-@click.option("--show-confs", is_flag=True)
-def _list(cli_ctx: SafeCliContext, network, safe, show_confs) -> None:
+@click.option("--verbose", is_flag=True)
+def _list(cli_ctx: SafeCliContext, network, safe, verbose) -> None:
     """
     View pending transactions for a Safe
     """
@@ -63,8 +65,31 @@ def _list(cli_ctx: SafeCliContext, network, safe, show_confs) -> None:
                 f"safe_tx_hash={tx.safe_tx_hash}"
             )
 
-            if show_confs:
-                _show_confs(tx.confirmations, extra_line=False)
+            if verbose:
+                fields = ("to", "value", "data", "base_gas", "gas_price")
+                data = {}
+                for field_name, value in tx.dict().items():
+                    if field_name not in fields:
+                        continue
+
+                    if field_name in ("data",) and not value:
+                        value = "0x"
+                    elif not value:
+                        value = "0"
+
+                    if isinstance(value, bytes):
+                        value_str = HexBytes(value).hex()
+                    else:
+                        value_str = f"{value}"
+
+                    if len(value_str) > 42:
+                        value_str = humanize_hash(cast(Hash32, HexBytes(value_str)))
+
+                    data[field_name] = value_str
+
+                data_str = ", ".join([f"{k}={v}" for k, v in data.items()])
+                rich.print(f"\t{data_str}")
+                _show_confs(tx.confirmations, extra_line=False, prefix="\t")
                 if root_idx < total_items - 1 or idx < tx_len - 1:
                     click.echo()
 
@@ -293,12 +318,12 @@ def show_confs(cli_ctx, network, safe, txn_id):
             click.echo()
 
 
-def _show_confs(confs, extra_line: bool = True):
+def _show_confs(confs, extra_line: bool = True, prefix: Optional[str] = None):
+    prefix = prefix or ""
     length = len(confs)
     for idx, conf in enumerate(confs):
-        rich.print(
-            f"Confirmation {idx + 1} owner={conf.owner} signature={HexBytes(conf.signature).hex()}"
-        )
+        signature_str = f"[default]{humanize_hash(conf.signature)}[/default]"
+        rich.print(f"{prefix}Confirmation {idx + 1} owner={conf.owner} signature='{signature_str}'")
         if extra_line and idx < length - 1:
             click.echo()
 
