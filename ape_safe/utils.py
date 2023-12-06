@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, List, Mapping, cast
 
 from ape.types import AddressType, MessageSignature
+from eip712.messages import calculate_hash
 from eth_typing import HexStr
 from eth_utils import add_0x_prefix, keccak, to_int
 from hexbytes import HexBytes
@@ -18,10 +19,8 @@ def order_by_signer(signatures: Mapping[AddressType, MessageSignature]) -> List[
 
 
 def get_safe_tx_hash(safe_tx) -> "SafeTxID":
-    return cast(
-        "SafeTxID",
-        HexBytes(keccak(b"".join([bytes.fromhex("19"), *safe_tx.signable_message]))).hex(),
-    )
+    message_hash = calculate_hash(safe_tx.signable_message)
+    return cast("SafeTxID", message_hash.hex())
 
 
 def to_int_array(value) -> List[int]:
