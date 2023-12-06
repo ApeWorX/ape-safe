@@ -51,9 +51,7 @@ def _list(cli_ctx: SafeCliContext, network, safe, show_confs) -> None:
             is_rejection = not tx.value and not tx.data and tx.to == tx.safe
             operation_name = tx.operation.name if tx.data else "transfer"
             if is_rejection:
-                title = f"{title} (rejection)"
-            elif len(tx_list) > 1 and idx > 0:
-                title = f"{title} {operation_name} (replacement #{idx})"
+                title = f"{title} rejection"
             else:
                 title = f"{title} {operation_name}"
 
@@ -244,9 +242,7 @@ def show_confs(cli_ctx, network, safe, nonce):
         operation_name = txn.operation.name if txn.data else "transfer"
         is_rejection = not txn.value and not txn.data and txn.to == txn.safe
         if is_rejection:
-            header = f"{header} - (rejection)"
-        elif num_txns > 1 and root_idx > 0:
-            header = f"{header} {operation_name} - (replacement #{root_idx})"
+            header = f"{header} rejection"
         else:
             header = f"{header} {operation_name}"
 
