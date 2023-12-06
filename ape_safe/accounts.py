@@ -564,13 +564,13 @@ class SafeAccount(AccountAPI):
         if not submit and submitter:
             raise ValueError("Cannot specify a submitter if not submitting.")
 
-        elif not isinstance(submitter, AccountAPI):
+        elif submit and not isinstance(submitter, AccountAPI):
             submitter_not_specified = submitter is None
             submitter = self.load_submitter(submitter)
             if submitter_not_specified:
                 logger.info(f"No submitter specified, so using: '{submitter.address}'.")
 
-        if not isinstance(submitter, AccountAPI) or not submitter:
+        if submit and (not isinstance(submitter, AccountAPI) or not submitter):
             # Invariant
             raise ValueError(
                 "`submitter` should be either `AccountAPI` or we are not submitting here."
@@ -658,7 +658,8 @@ class SafeAccount(AccountAPI):
         )
 
         # NOTE: Signatures don't have to be in order for Safe API post
-        self.client.post_transaction(safe_tx, sigs_by_signer)
+        if submit:
+            self.client.post_transaction(safe_tx, sigs_by_signer)
 
         # Return None so that Ape does not try to submit the transaction.
         return None

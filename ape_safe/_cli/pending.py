@@ -1,9 +1,10 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence, Union
 
 import click
 import rich
 from ape.api import AccountAPI
 from ape.cli import NetworkBoundCommand, get_user_selected_account, network_option
+from ape.exceptions import SignatureError
 from click.exceptions import BadOptionUsage
 from hexbytes import HexBytes
 
@@ -128,18 +129,10 @@ def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
     )
     for txn in pending_transactions:
         # Figure out which given ID(s) we are handling.
-        found = False
-        if txn.nonce in txn_ids:
-            found = True
-            txn_ids = [x for x in txn_ids if x != txn.nonce]
-
-        # Handle if given nonce and hash for same txn.
-        if txn.safe_tx_hash in txn_ids:
-            found = True
-            txn_ids = [x for x in txn_ids if x != txn.nonce]
-
-        if not found:
-            # Not a txn the user said to approve.
+        length_before = len(txn_ids)
+        txn_ids = _check_tx_ids(txn_ids, txn)
+        if len(txn_ids) == length_before:
+            # Not a specified txn.
             continue
 
         safe_tx = safe.create_safe_tx(**txn.dict(by_alias=True))
@@ -194,18 +187,10 @@ def execute(cli_ctx, network, safe, txn_ids, submitter):
     )
     for txn in pending_transactions:
         # Figure out which given ID(s) we are handling.
-        found = False
-        if txn.nonce in txn_ids:
-            found = True
-            txn_ids = [x for x in txn_ids if x != txn.nonce]
-
-        # Handle if given nonce and hash for same txn.
-        if txn.safe_tx_hash in txn_ids:
-            found = True
-            txn_ids = [x for x in txn_ids if x != txn.nonce]
-
-        if not found:
-            # Not a txn the user said to approve.
+        length_before = len(txn_ids)
+        txn_ids = _check_tx_ids(txn_ids, txn)
+        if len(txn_ids) == length_before:
+            # Not a specified txn.
             continue
 
         _execute(safe, txn, submitter)
@@ -229,7 +214,7 @@ def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI):
 @safe_cli_ctx
 @network_option()
 @safe_option
-@click.argument("txn-ids", nargs=-1)
+@txn_ids_argument
 def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
     """
     Reject one or more pending transactions
@@ -240,15 +225,32 @@ def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
         confirmed=False, starting_nonce=safe.next_nonce
     )
 
-    for txn_id in txn_ids:
-        if txn_id.isnumeric():
-            txn_id = int(txn_id)
+    for txn in pending_transactions:
+        # Figure out which given ID(s) we are handling.
+        length_before = len(txn_ids)
+        txn_ids = _check_tx_ids(txn_ids, txn)
+        if len(txn_ids) == length_before:
+            # Not a specified txn.
+            continue
 
-        if txn := next(
-            (txn for txn in pending_transactions if txn_id in (txn.nonce, txn.safe_tx_hash)), None
-        ):
-            if click.confirm(f"{txn}\nCancel Transaction?"):
-                safe.transfer(safe, "0 ether", nonce=txn_id, submit_transaction=False)
+        is_rejection = not txn.value and not txn.data and txn.to == txn.safe
+        if is_rejection:
+            click.echo(f"Transaction '{txn.safe_tx_hash}' already canceled!")
+            continue
+
+        elif click.confirm(f"{txn}\nCancel Transaction?"):
+            try:
+                safe.transfer(safe, "0 ether", nonce=txn.nonce, submit_transaction=False)
+            except SignatureError:
+                # These are expected because of how the plugin works
+                # when not submitting
+                pass
+
+            cli_ctx.logger.success(f"Canceled transaction '{txn.safe_tx_hash}'.")
+
+    # If any txn_ids remain, they were not handled.
+    if txn_ids:
+        cli_ctx.abort_txns_not_found(txn_ids)
 
 
 @pending.command(cls=NetworkBoundCommand)
@@ -299,3 +301,16 @@ def _show_confs(confs, extra_line: bool = True):
         )
         if extra_line and idx < length - 1:
             click.echo()
+
+
+def _check_tx_ids(
+    txn_ids: Sequence[Union[int, str]], txn: UnexecutedTxData
+) -> Sequence[Union[int, str]]:
+    if txn.nonce in txn_ids:
+        return [x for x in txn_ids if x != txn.nonce]
+
+    # Handle if given nonce and hash for same txn.
+    if txn.safe_tx_hash in txn_ids:
+        return [x for x in txn_ids if x != txn.nonce]
+
+    return txn_ids
