@@ -14,6 +14,7 @@ from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
+from eth_account.messages import encode_defunct
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 
@@ -33,7 +34,7 @@ from ape_safe.exceptions import (
     SafeClientException,
     handle_safe_logic_error,
 )
-from ape_safe.utils import get_safe_tx_hash, hash_message, order_by_signer
+from ape_safe.utils import get_safe_tx_hash, order_by_signer
 
 
 class SafeContainer(AccountContainerAPI):
@@ -159,10 +160,10 @@ def get_signatures(
     safe_tx_hash: str,
     signers: Iterable[AccountAPI],
 ) -> Dict[AddressType, MessageSignature]:
-    data_hash = hash_message(safe_tx_hash)
     signatures: Dict[AddressType, MessageSignature] = {}
     for signer in signers:
-        signature = signer.sign_message(HexBytes(data_hash))  # type: ignore
+        message = encode_defunct(hexstr=safe_tx_hash)
+        signature = signer.sign_message(message)
         if signature:
             signature_adjusted = adjust_v_in_signature(signature)
             signatures[signer.address] = signature_adjusted

@@ -118,13 +118,13 @@ def _load_submitter(ctx, param, val):
 @safe_cli_ctx
 @network_option()
 @safe_option
-@click.argument("txn_ids")
+@click.argument("txn_ids", nargs=-1)
 @click.option("--execute", callback=_handle_execute_cli_arg)
 def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
     _ = network  # Needed for NetworkBoundCommand
     submitter: Optional[AccountAPI] = execute if isinstance(execute, AccountAPI) else None
-    pending_transactions = safe.client.get_transactions(
-        confirmed=False, starting_nonce=safe.next_nonce
+    pending_transactions = list(
+        safe.client.get_transactions(confirmed=False, starting_nonce=safe.next_nonce)
     )
 
     txn_ids = [int(x) if x.isnumeric() else x for x in txn_ids if x]
