@@ -8,7 +8,7 @@ from click.exceptions import BadOptionUsage
 from hexbytes import HexBytes
 
 from ape_safe import SafeAccount
-from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx, safe_option
+from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx, safe_option, txn_ids_argument
 from ape_safe.client import UnexecutedTxData
 
 
@@ -118,7 +118,7 @@ def _load_submitter(ctx, param, val):
 @safe_cli_ctx
 @network_option()
 @safe_option
-@click.argument("txn_ids", nargs=-1)
+@txn_ids_argument
 @click.option("--execute", callback=_handle_execute_cli_arg)
 def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
     _ = network  # Needed for NetworkBoundCommand
@@ -126,14 +126,20 @@ def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
     pending_transactions = list(
         safe.client.get_transactions(confirmed=False, starting_nonce=safe.next_nonce)
     )
-
-    txn_ids = [int(x) if x.isnumeric() else x for x in txn_ids if x]
-
-    if not txn_ids:
-        cli_ctx.abort(f"Pending transaction(s) '{', '.join(txn_ids)}' not found.")
-
     for txn in pending_transactions:
-        if txn.nonce not in txn_ids and txn.safe_tx_hash not in txn_ids:
+        # Figure out which given ID(s) we are handling.
+        found = False
+        if txn.nonce in txn_ids:
+            found = True
+            txn_ids = [x for x in txn_ids if x != txn.nonce]
+
+        # Handle if given nonce and hash for same txn.
+        if txn.safe_tx_hash in txn_ids:
+            found = True
+            txn_ids = [x for x in txn_ids if x != txn.nonce]
+
+        if not found:
+            # Not a txn the user said to approve.
             continue
 
         safe_tx = safe.create_safe_tx(**txn.dict(by_alias=True))
@@ -168,34 +174,45 @@ def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
             exc_tx = safe.create_execute_transaction(safe_tx, signatures)
             submitter.call(exc_tx)
 
+    # If any txn_ids remain, they were not handled.
+    if txn_ids:
+        cli_ctx.abort_txns_not_found(txn_ids)
+
 
 @pending.command(cls=NetworkBoundCommand)
 @safe_cli_ctx
 @network_option()
 @safe_option
-@click.argument("txn_id")
+@txn_ids_argument
 @click.option("--submitter", callback=_load_submitter)
-def execute(cli_ctx, network, safe, txn_id, submitter):
+def execute(cli_ctx, network, safe, txn_ids, submitter):
     """
     Execute a transaction
     """
+    pending_transactions = list(
+        safe.client.get_transactions(confirmed=False, starting_nonce=safe.next_nonce)
+    )
+    for txn in pending_transactions:
+        # Figure out which given ID(s) we are handling.
+        found = False
+        if txn.nonce in txn_ids:
+            found = True
+            txn_ids = [x for x in txn_ids if x != txn.nonce]
 
-    if txn_id.isnumeric():
-        nonce = int(txn_id)
+        # Handle if given nonce and hash for same txn.
+        if txn.safe_tx_hash in txn_ids:
+            found = True
+            txn_ids = [x for x in txn_ids if x != txn.nonce]
 
-        # NOTE: May be more than 1 if there are conflicting transactions.
-        txns = list(
-            safe.client.get_transactions(starting_nonce=nonce, ending_nonce=nonce, confirmed=False)
-        )
+        if not found:
+            # Not a txn the user said to approve.
+            continue
 
-    else:
-        txns = list(safe.client.get_transactions(filter_by_ids=txn_id, confirmed=False))
-
-    if not txns:
-        cli_ctx.abort(f"Pending transaction '{txn_id}' not found.")
-
-    for txn in txns:
         _execute(safe, txn, submitter)
+
+    # If any txn_ids remain, they were not handled.
+    if txn_ids:
+        cli_ctx.abort_txns_not_found(txn_ids)
 
 
 def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI):
@@ -256,7 +273,7 @@ def show_confs(cli_ctx, network, safe, txn_id):
         txns = list(safe.client.get_transactions(filter_by_ids=txn_id, confirmed=False))
 
     if not txns:
-        cli_ctx.abort(f"Pending transaction '{txn_id}' not found.")
+        cli_ctx.abort_txns_not_found([txn_id])
 
     num_txns = len(txns)
     for root_idx, txn in enumerate(txns):
