@@ -118,18 +118,24 @@ def _load_submitter(ctx, param, val):
 @safe_cli_ctx
 @network_option()
 @safe_option
-@click.argument("nonce", type=int)
+@click.argument("txn_id")
 @click.option("--execute", callback=_handle_execute_cli_arg)
-def approve(cli_ctx: SafeCliContext, network, safe, nonce, execute):
+def approve(cli_ctx: SafeCliContext, network, safe, txn_id, execute):
     _ = network  # Needed for NetworkBoundCommand
     submitter: Optional[AccountAPI] = execute if isinstance(execute, AccountAPI) else None
 
-    # NOTE: May be more than one if there's a conflicting nonce.
-    txns = list(
-        safe.client.get_transactions(starting_nonce=nonce, ending_nonce=nonce, confirmed=False)
-    )
+    if txn_id.isnumeric():
+        nonce = int(txn_id)
+
+        # NOTE: May be more than one if there's a conflicting nonce.
+        txns = list(
+            safe.client.get_transactions(starting_nonce=nonce, ending_nonce=nonce, confirmed=False)
+        )
+    else:
+        txns = list(safe.client.get_transactions(filter_by_ids=txn_id, confirmed=False))
+
     if not txns:
-        cli_ctx.abort(f"Pending transaction '{nonce}' not found.")
+        cli_ctx.abort(f"Pending transaction '{txn_id}' not found.")
 
     for txn in txns:
         safe_tx = safe.create_safe_tx(**txn.dict(by_alias=True))
@@ -169,19 +175,26 @@ def approve(cli_ctx: SafeCliContext, network, safe, nonce, execute):
 @safe_cli_ctx
 @network_option()
 @safe_option
-@click.argument("nonce", type=int)
+@click.argument("txn_id")
 @click.option("--submitter", callback=_load_submitter)
-def execute(cli_ctx, network, safe, nonce, submitter):
+def execute(cli_ctx, network, safe, txn_id, submitter):
     """
     Execute a transaction
     """
 
-    # NOTE: May be more than 1 if there are conflicting transactions.
-    txns = list(
-        safe.client.get_transactions(starting_nonce=nonce, ending_nonce=nonce, confirmed=False)
-    )
+    if txn_id.isnumeric():
+        nonce = int(txn_id)
+
+        # NOTE: May be more than 1 if there are conflicting transactions.
+        txns = list(
+            safe.client.get_transactions(starting_nonce=nonce, ending_nonce=nonce, confirmed=False)
+        )
+
+    else:
+        txns = list(safe.client.get_transactions(filter_by_ids=txn_id, confirmed=False))
+
     if not txns:
-        cli_ctx.abort(f"Pending transaction '{nonce}' not found.")
+        cli_ctx.abort(f"Pending transaction '{txn_id}' not found.")
 
     for txn in txns:
         _execute(safe, txn, submitter)
@@ -201,7 +214,7 @@ def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI):
 @safe_cli_ctx
 @network_option()
 @safe_option
-@click.argument("txn-ids", type=int, nargs=-1)
+@click.argument("txn-ids", nargs=-1)
 def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
     """
     Reject one or more pending transactions
@@ -213,7 +226,10 @@ def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
     )
 
     for txn_id in txn_ids:
-        if txn := next((txn for txn in pending_transactions if txn_id == txn.nonce), None):
+        if txn_id.isnumeric():
+            txn_id = int(txn_id)
+
+        if txn := next((txn for txn in pending_transactions if txn_id in (txn.nonce, txn.safe_tx_hash)), None):
             if click.confirm(f"{txn}\nCancel Transaction?"):
                 safe.transfer(safe, "0 ether", nonce=txn_id, submit_transaction=False)
 
@@ -222,19 +238,25 @@ def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
 @safe_cli_ctx
 @network_option()
 @safe_option
-@click.argument("nonce", type=int)
-def show_confs(cli_ctx, network, safe, nonce):
+@click.argument("txn_id")
+def show_confs(cli_ctx, network, safe, txn_id):
     """
     Show existing confirmations
     """
     _ = network  # Needed for NetworkBoundCommand
 
-    # NOTE: May be more than 1 if conflicting transactions
-    txns = list(
-        safe.client.get_transactions(starting_nonce=nonce, ending_nonce=nonce, confirmed=False)
-    )
+    if txn_id.isnumeric():
+        nonce = int(txn_id)
+
+        # NOTE: May be more than 1 if conflicting transactions
+        txns = list(
+            safe.client.get_transactions(starting_nonce=nonce, ending_nonce=nonce, confirmed=False)
+        )
+    else:
+        txns = list(safe.client.get_transactions(filter_by_ids=txn_id, confirmed=False))
+
     if not txns:
-        cli_ctx.abort(f"Pending transaction '{nonce}' not found.")
+        cli_ctx.abort(f"Pending transaction '{txn_id}' not found.")
 
     num_txns = len(txns)
     for root_idx, txn in enumerate(txns):
