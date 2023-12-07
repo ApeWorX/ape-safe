@@ -5,6 +5,7 @@ import rich
 from ape.api import AccountAPI
 from ape.cli import NetworkBoundCommand, get_user_selected_account, network_option
 from ape.exceptions import SignatureError
+from ape.types import AddressType
 from click.exceptions import BadOptionUsage
 from eth_typing import Hash32
 from eth_utils import humanize_hash
@@ -12,7 +13,9 @@ from hexbytes import HexBytes
 
 from ape_safe import SafeAccount
 from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx, safe_option, txn_ids_argument
+from ape_safe.accounts import get_signatures
 from ape_safe.client import UnexecutedTxData
+from ape_safe.utils import get_safe_tx_hash
 
 
 @click.group()
@@ -121,6 +124,59 @@ def _handle_execute_cli_arg(ctx, param, val):
     )
 
 
+@pending.command(cls=NetworkBoundCommand)
+@safe_cli_ctx
+@network_option()
+@safe_option
+@click.option("--data", type=HexBytes, help="Transaction data", default=HexBytes(0))
+@click.option("--gas-price", type=int, help="Transaction gas price")
+@click.option("--value", type=int, help="Transaction value", default=0)
+@click.option("--to", "receiver", type=AddressType, help="Transaction receiver")
+@click.option("--nonce", type=int, help="Transaction nonce")
+@click.option("--execute", callback=_handle_execute_cli_arg)
+def propose(cli_ctx, network, safe, data, gas_price, value, receiver, nonce, execute):
+    """
+    Create a new transaction
+    """
+    _ = network  # Needed for NetworkBoundCommand
+    ecosystem = cli_ctx.chain_manager.provider.network.ecosystem
+    nonce = safe.next_nonce if nonce is None else nonce
+    txn = ecosystem.create_transaction(
+        value=value, data=data, gas_price=gas_price, nonce=nonce, receiver=receiver
+    )
+    safe_tx = safe.create_safe_tx(txn)
+    safe_tx_hash = get_safe_tx_hash(safe_tx)
+    signatures = get_signatures(safe_tx_hash, safe.local_signers)
+    safe.client.post_transaction(safe_tx, signatures)
+
+    num_confirmations = len(txn.confirmations)
+    submitter = execute if isinstance(execute, AccountAPI) else None
+    if execute is None and submitter is None:
+        # Check if we _can_ execute and ask the user.
+        do_execute = (
+            len(safe.local_signers) > 0
+            and num_confirmations >= safe.confirmations_required
+            and click.confirm(f"Submit transaction '{safe_tx.nonce}'")
+        )
+        if do_execute:
+            # The user did provider a value for `--execute` however we are able to
+            # So we prompt them.
+            submitter = get_user_selected_account(account_type=safe.local_signers)
+
+    # Ensure we can get the transaction from the API
+    new_tx = next(
+        safe.client.get_transactions(
+            starting_nonce=nonce, ending_nonce=nonce, confirmed=False, filter_by_ids=[safe_tx_hash]
+        ),
+        None,
+    )
+    if not new_tx:
+        cli_ctx.abort("Failed to propose transaction.")
+
+    if submitter:
+        _execute(safe, new_tx, submitter)
+
+
 def _load_submitter(ctx, param, val):
     if val in ctx.obj.account_manager.aliases:
         return ctx.obj.account_manager.load(val)
@@ -165,7 +221,7 @@ def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
         signatures_added = {}
 
         if num_confirmations < safe.confirmations_required:
-            signatures_added = safe.add_signatures(safe_tx, txn.confirmations)
+            signatures_added = safe.add_signatures(safe_tx, confirmations=txn.confirmations)
             if signatures_added:
                 accounts_used_str = ", ".join(list(signatures_added.keys()))
                 cli_ctx.logger.success(
@@ -187,10 +243,8 @@ def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
                 submitter = get_user_selected_account(account_type=safe.local_signers)
 
         if submitter:
-            signatures = {c.owner: c.signature for c in txn.confirmations}
-            signatures = {**signatures, **signatures_added}
-            exc_tx = safe.create_execute_transaction(safe_tx, signatures)
-            submitter.call(exc_tx)
+            txn.confirmations = {**txn.confirmations, **signatures_added}
+            _execute(safe, txn, submitter)
 
     # If any txn_ids remain, they were not handled.
     if txn_ids:
@@ -202,6 +256,7 @@ def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
 @network_option()
 @safe_option
 @txn_ids_argument
+# NOTE: Doesn't use --execute because we don't need BOOL values.
 @click.option("--submitter", callback=_load_submitter)
 def execute(cli_ctx, network, safe, txn_ids, submitter):
     """

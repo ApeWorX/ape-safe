@@ -48,4 +48,6 @@ def _txn_ids_callback(ctx, param, value):
     return [int(x) if x.isnumeric() else x for x in value_ls if x]
 
 
-txn_ids_argument = click.argument("txn_ids", nargs=-1, callback=_txn_ids_callback)
+txn_ids_argument = click.argument(
+    "txn_ids", nargs=-1, callback=_txn_ids_callback, metavar="NONCE_OR_SAFE_TX_HASH(s)"
+)

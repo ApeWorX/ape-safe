@@ -662,15 +662,15 @@ class SafeAccount(AccountAPI):
         )
 
         # NOTE: Signatures don't have to be in order for Safe API post
-        if submit:
-            self.client.post_transaction(safe_tx, sigs_by_signer)
+        self.client.post_transaction(safe_tx, sigs_by_signer)
 
         # Return None so that Ape does not try to submit the transaction.
         return None
 
     def add_signatures(
-        self, safe_tx: SafeTx, confirmations: List[SafeTxConfirmation]
+        self, safe_tx: SafeTx, confirmations: Optional[List[SafeTxConfirmation]] = None
     ) -> Dict[AddressType, MessageSignature]:
+        confirmations = confirmations or []
         if not self.local_signers:
             raise ApeSafeError("Cannot sign without local signers.")
 
