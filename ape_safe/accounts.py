@@ -577,7 +577,7 @@ class SafeAccount(AccountAPI):
             )
 
         # For mypy
-        assert isinstance(submitter, AccountAPI)
+        assert submitter is None or isinstance(submitter, AccountAPI)
 
         # Garner either M or M - 1 signatures, depending on if we are submitting
         # and whether the submitter is also a signer (both must be true to submit M - 1).
@@ -621,6 +621,7 @@ class SafeAccount(AccountAPI):
             # We have enough signatures to commit the transaction,
             # and a non-signer will submit it as their own transaction
             and len(sigs_by_signer) >= signatures_required
+            and submitter is not None
         ):
             # We need to encode the submitter's address for Safe to decode
             if submitter.address in self.signers:
