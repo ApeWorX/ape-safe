@@ -69,7 +69,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         if safe_tx_data := self.transactions.get(tx_hash):
             yield from safe_tx_data.confirmations
 
-    def post_transaction(self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature]):
+    def post_transaction(self, safe_tx: SafeTx, signaures: Dict[AddressType, MessageSignature]):
         safe_tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
         safe_tx_data.confirmations.extend(
             SafeTxConfirmation(
@@ -78,7 +78,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
                 signature=sig.encode_rsv(),
                 signatureType=SignatureType.EOA,
             )
-            for signer, sig in sigs.items()
+            for signer, sig in signaures.items()
         )
         tx_id = cast(SafeTxID, HexBytes(safe_tx_data.safe_tx_hash).hex())
         self.transactions[tx_id] = safe_tx_data

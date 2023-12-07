@@ -128,7 +128,7 @@ def _handle_execute_cli_arg(ctx, param, val):
 @safe_cli_ctx
 @network_option()
 @safe_option
-@click.option("--data", type=HexBytes, help="Transaction data", default=HexBytes(0))
+@click.option("--data", type=HexBytes, help="Transaction data", default=HexBytes(""))
 @click.option("--gas-price", type=int, help="Transaction gas price")
 @click.option("--value", type=int, help="Transaction value", default=0)
 @click.option("--to", "receiver", type=AddressType, help="Transaction receiver")
@@ -164,16 +164,16 @@ def propose(cli_ctx, network, safe, data, gas_price, value, receiver, nonce, exe
                 prompt_message="Select a submitter", account_type=safe.local_signers
             )
 
-    sender = (
+    owner = (
         submitter
         if isinstance(submitter, AccountAPI)
         else get_user_selected_account(
-            prompt_message="Select a `sender`", account_type=safe.local_signers
+            prompt_message="Select an `owner`", account_type=safe.local_signers
         )
     )
 
     safe.client.post_transaction(
-        safe_tx, signatures, sender=sender.address, contractTransactionHash=safe_tx_hash
+        safe_tx, signatures, sender=owner.address, contractTransactionHash=safe_tx_hash
     )
 
     # Wait for new transaction to appear

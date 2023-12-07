@@ -104,18 +104,19 @@ class SafeClient(BaseSafeClient):
             url = data.get("next")
 
     def post_transaction(
-        self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature], **kwargs
+        self, safe_tx: SafeTx, signatures: Dict[AddressType, MessageSignature], **kwargs
     ):
         tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
-        tx_data.signatures = HexBytes(
+        signature = HexBytes(
             reduce(
                 lambda raw_sig, next_sig: raw_sig
                 + (next_sig.encode_rsv() if isinstance(next_sig, MessageSignature) else next_sig),
-                order_by_signer(sigs),
+                order_by_signer(signatures),
                 b"",
             )
         )
-        post_dict: Dict = {}
+        post_dict: Dict = {"signature": signature.hex()}
+
         for key, value in tx_data.dict(by_alias=True).items():
             if isinstance(value, HexBytes):
                 post_dict[key] = value.hex()
@@ -128,6 +129,11 @@ class SafeClient(BaseSafeClient):
                 post_dict[key] = value
 
         post_dict = {**post_dict, **kwargs}
+
+        if "signatures" in post_dict:
+            # Signature handled above.
+            post_dict.pop("signatures")
+
         url = f"safes/{tx_data.safe}/multisig-transactions"
         response = self._post(url, json=post_dict)
         return response
