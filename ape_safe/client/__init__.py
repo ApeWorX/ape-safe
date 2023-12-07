@@ -103,7 +103,9 @@ class SafeClient(BaseSafeClient):
             yield from map(SafeTxConfirmation.parse_obj, data.get("results"))
             url = data.get("next")
 
-    def post_transaction(self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature]):
+    def post_transaction(
+        self, safe_tx: SafeTx, sigs: Dict[AddressType, MessageSignature], **kwargs
+    ):
         tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
         tx_data.signatures = HexBytes(
             reduce(
@@ -125,8 +127,10 @@ class SafeClient(BaseSafeClient):
             else:
                 post_dict[key] = value
 
+        post_dict = {**post_dict, **kwargs}
         url = f"safes/{tx_data.safe}/multisig-transactions"
-        self._post(url, json=post_dict)
+        response = self._post(url, json=post_dict)
+        return response
 
     def post_signatures(
         self,

@@ -20,6 +20,11 @@ from ape_safe.client.types import (
 )
 from ape_safe.exceptions import ClientResponseError
 
+DEFAULT_HEADERS = {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+}
+
 
 class BaseSafeClient(ABC):
     def __init__(self, transaction_service_url: str):
@@ -135,17 +140,12 @@ class BaseSafeClient(ABC):
         api_url = f"{self.transaction_service_url}/api/v1/{url}/"
         do_fail = not kwargs.pop("allow_failure", False)
 
-        if "timeout" not in kwargs:
-            kwargs["timeout"] = 10
-
-        headers = kwargs.get("headers", {})
+        # Use `or 10` to handle when None is explicit.
+        kwargs["timeout"] = kwargs.get("timeout") or 10
 
         # Add default headers
-        default_headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
-        kwargs["headers"] = {**default_headers, **headers}
+        headers = kwargs.get("headers", {})
+        kwargs["headers"] = {**DEFAULT_HEADERS, **headers}
         response = self.session.request(method, api_url, json=json, **kwargs)
 
         if not response.ok and do_fail:

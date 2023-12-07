@@ -276,10 +276,31 @@ class SafeAccount(AccountAPI):
 
     @property
     def next_nonce(self) -> int:
+        """
+        The next nonce for on-chain. If you have multiple transactions
+        are in the queue but not published on chain, the next nonce
+        refers to the earliest nonce in that queue.
+        """
         try:
             return self.client.get_next_nonce()
         except Exception:
             return self.contract._view_methods_["nonce"]()
+
+    @property
+    def new_nonce(self):
+        """
+        The next unused nonce in the system. This is different
+        than ``.next_nonce`` because it includes all nonces the
+        transaction service is aware of and not just the next
+        on-chain nonce.
+        """
+
+        # NOTE: Transaction and returned greatest nonce first.
+        if latest_tx := next(self.client.get_transactions(confirmed=False), None):
+            return latest_tx.nonce + 1
+
+        # No pending transactions. Use next on-chain nonce.
+        return self.next_nonce
 
     def sign_message(self, msg: SignableMessage) -> Optional[MessageSignature]:
         raise NotImplementedError("Safe accounts do not support message signing!")
@@ -307,7 +328,7 @@ class SafeAccount(AccountAPI):
             "to": txn.receiver if txn else self.address,  # Self-call, e.g. rejection
             "value": txn.value if txn else 0,
             "data": (txn.data or b"") if txn else b"",
-            "nonce": self.next_nonce,
+            "nonce": self.new_nonce if txn is None or txn.nonce is None else txn.nonce,
             "operation": 0,
             "safeTxGas": 0,
             "gasPrice": 0,

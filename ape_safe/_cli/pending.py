@@ -36,7 +36,7 @@ def _list(cli_ctx: SafeCliContext, network, safe, verbose) -> None:
     """
 
     _ = network  # Needed for NetworkBoundCommand
-    txns = list(safe.client.get_transactions(confirmed=False))
+    txns = list(safe.client.get_transactions(starting_nonce=safe.next_nonce, confirmed=False))
     if not txns:
         rich.print("There are no pending transactions.")
         return
@@ -140,16 +140,15 @@ def propose(cli_ctx, network, safe, data, gas_price, value, receiver, nonce, exe
     """
     _ = network  # Needed for NetworkBoundCommand
     ecosystem = cli_ctx.chain_manager.provider.network.ecosystem
-    nonce = safe.next_nonce if nonce is None else nonce
+    nonce = safe.new_nonce if nonce is None else nonce
     txn = ecosystem.create_transaction(
         value=value, data=data, gas_price=gas_price, nonce=nonce, receiver=receiver
     )
     safe_tx = safe.create_safe_tx(txn)
     safe_tx_hash = get_safe_tx_hash(safe_tx)
     signatures = get_signatures(safe_tx_hash, safe.local_signers)
-    safe.client.post_transaction(safe_tx, signatures)
 
-    num_confirmations = len(txn.confirmations)
+    num_confirmations = 0
     submitter = execute if isinstance(execute, AccountAPI) else None
     if execute is None and submitter is None:
         # Check if we _can_ execute and ask the user.
@@ -161,15 +160,35 @@ def propose(cli_ctx, network, safe, data, gas_price, value, receiver, nonce, exe
         if do_execute:
             # The user did provider a value for `--execute` however we are able to
             # So we prompt them.
-            submitter = get_user_selected_account(account_type=safe.local_signers)
+            submitter = get_user_selected_account(
+                prompt_message="Select a submitter", account_type=safe.local_signers
+            )
 
-    # Ensure we can get the transaction from the API
-    new_tx = next(
-        safe.client.get_transactions(
-            starting_nonce=nonce, ending_nonce=nonce, confirmed=False, filter_by_ids=[safe_tx_hash]
-        ),
-        None,
+    sender = (
+        submitter
+        if isinstance(submitter, AccountAPI)
+        else get_user_selected_account(
+            prompt_message="Select a `sender`", account_type=safe.local_signers
+        )
     )
+
+    safe.client.post_transaction(
+        safe_tx, signatures, sender=sender.address, contractTransactionHash=safe_tx_hash
+    )
+
+    # Wait for new transaction to appear
+    timeout = 3
+    new_tx = None
+
+    while new_tx is None and timeout > 0:
+        new_tx = next(
+            safe.client.get_transactions(
+                starting_nonce=safe.next_nonce, confirmed=False, filter_by_ids=[safe_tx_hash]
+            ),
+            None,
+        )
+        timeout -= 1
+
     if not new_tx:
         cli_ctx.abort("Failed to propose transaction.")
 
@@ -352,7 +371,11 @@ def show_confs(cli_ctx, network, safe, txn_id):
             safe.client.get_transactions(starting_nonce=nonce, ending_nonce=nonce, confirmed=False)
         )
     else:
-        txns = list(safe.client.get_transactions(filter_by_ids=txn_id, confirmed=False))
+        txns = list(
+            safe.client.get_transactions(
+                starting_nonce=safe.next_nonce, filter_by_ids=txn_id, confirmed=False
+            )
+        )
 
     if not txns:
         cli_ctx.abort_txns_not_found([txn_id])
