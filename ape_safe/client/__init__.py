@@ -87,6 +87,8 @@ class SafeClient(BaseSafeClient):
             data = response.json()
 
             for txn in data.get("results"):
+                # TODO: Replace with `model_validate()` after ape 0.7.
+                # NOTE: Using construct because of pydantic v2 back import validation error.
                 if "isExecuted" in txn and txn["isExecuted"]:
                     yield ExecutedTxData.parse_obj(txn)
 

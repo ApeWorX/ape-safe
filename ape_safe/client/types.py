@@ -67,9 +67,7 @@ class UnexecutedTxData(BaseModel):
 
     @classmethod
     def from_safe_tx(cls, safe_tx: SafeTx, confirmations_required: int) -> "UnexecutedTxData":
-        # NOTE: Using construct because of a HexBytes issue with pydantic v1 back imports.
-        # TODO: Switch to model_construct during v2 upgrade.
-        return cls.construct(
+        return cls(
             safe=safe_tx._verifyingContract_,
             submissionDate=datetime.now(timezone.utc),
             modified=datetime.now(timezone.utc),

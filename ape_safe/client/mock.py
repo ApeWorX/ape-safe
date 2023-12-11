@@ -74,7 +74,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
 
         # NOTE: Using `construct` to avoid HexBytes pydantic v1 backimports issue.
         safe_tx_data.confirmations.extend(
-            SafeTxConfirmation.construct(
+            SafeTxConfirmation(
                 owner=signer,
                 submissionDate=datetime.now(timezone.utc),
                 signature=sig.encode_rsv(),
