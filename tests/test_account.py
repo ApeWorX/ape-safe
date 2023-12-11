@@ -121,15 +121,17 @@ def test_remove_owner(safe, OWNERS, mode):
     threshold_changed = new_threshold != safe.confirmations_required
 
     prev_owner = safe.compute_prev_signer(old_owner)
-    exec_transaction = lambda: safe.contract.removeOwner(  # noqa: E731
-        prev_owner,
-        old_owner,
-        # Can't set the threshold to zero or more than the number of owners after removal
-        new_threshold,
-        sender=safe,
-        impersonate=impersonate,
-        submit=submit,
-    )
+
+    def exec_transaction():
+        return safe.contract.removeOwner(
+            prev_owner,
+            old_owner,
+            # Can't set the threshold to zero or more than the number of owners after removal
+            new_threshold,
+            sender=safe,
+            impersonate=impersonate,
+            submit=submit,
+        )
 
     if submit:
         receipt = exec_transaction()
