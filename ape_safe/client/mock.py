@@ -71,8 +71,10 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
 
     def post_transaction(self, safe_tx: SafeTx, signaures: Dict[AddressType, MessageSignature]):
         safe_tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
+
+        # NOTE: Using `construct` to avoid HexBytes pydantic v1 backimports issue.
         safe_tx_data.confirmations.extend(
-            SafeTxConfirmation(
+            SafeTxConfirmation.construct(
                 owner=signer,
                 submissionDate=datetime.now(timezone.utc),
                 signature=sig.encode_rsv(),
