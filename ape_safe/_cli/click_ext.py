@@ -1,4 +1,4 @@
-from typing import NoReturn, Sequence, Union
+from typing import NoReturn, Sequence, Union, cast
 
 import click
 from ape import accounts
@@ -13,7 +13,8 @@ class SafeCliContext(ApeCliContextObject):
     def safes(self) -> SafeContainer:
         # NOTE: Would only happen in local development of this plugin.
         assert "safe" in self.account_manager.containers, "Are all API methods implemented?"
-        return self.account_manager.containers["safe"]
+        safe_container = self.account_manager.containers["safe"]
+        return cast(SafeContainer, safe_container)
 
     def abort_txns_not_found(self, txn_ids: Sequence[Union[int, str]]) -> NoReturn:
         self.abort(f"Pending transaction(s) '{', '.join([f'{x}' for x in txn_ids])}' not found.")

@@ -60,14 +60,16 @@ class SafeContainer(AccountContainerAPI):
     def __len__(self) -> int:
         return len([*self._account_files])
 
-    def __setitem__(self, alias: str, address: str):
+    def __setitem__(self, alias: str, address: str):  # type: ignore[override]
         self.save_account(alias, address)
 
     def __delitem__(self, alias: str):
         self.delete_account(alias)
 
-    def __iter__(self) -> Iterator["SafeAccount"]:
-        yield from self.accounts
+    def __iter__(self) -> Iterator["SafeAccount"]:  # type: ignore[override]
+        # NOTE: We know our accounts are SafeAccounts, hence the type ignore.s
+        safe_accounts = cast(Iterator["SafeAccount"], self.accounts)
+        yield from safe_accounts
 
     def __contains__(self, item: Union[str, "SafeAccount"]) -> bool:
         if item is None:
