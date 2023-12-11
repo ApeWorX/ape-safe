@@ -15,7 +15,7 @@ from ape_safe import SafeAccount
 from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx, safe_option, txn_ids_argument
 from ape_safe.accounts import get_signatures
 from ape_safe.client import UnexecutedTxData
-from ape_safe.utils import get_safe_tx_hash
+from ape_safe.utils import _rsv_to_message_signature, get_safe_tx_hash
 
 
 @click.group()
@@ -301,10 +301,10 @@ def execute(cli_ctx, network, safe, txn_ids, submitter):
 
 def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI):
     safe_tx = safe.create_safe_tx(**txn.dict(by_alias=True))
-    signatures = {c.owner: c.signature for c in txn.confirmations}
+    signatures = {c.owner: _rsv_to_message_signature(c.signature) for c in txn.confirmations}
 
     # NOTE: We have a hack that allows bytes in the mapping, hence type ignore
-    exc_tx = safe.create_execute_transaction(safe_tx, signatures)  # type: ignore
+    exc_tx = safe.create_execute_transaction(safe_tx, signatures)
 
     submitter.call(exc_tx)
 

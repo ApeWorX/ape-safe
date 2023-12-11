@@ -399,7 +399,7 @@ class SafeAccount(AccountAPI):
             return signers[index - 1]
 
         # NOTE: SENTINEL_OWNERS is the "previous" address to index 0
-        return AddressType("0x0000000000000000000000000000000000000001")  # type: ignore[arg-type]
+        return cast(AddressType, "0x0000000000000000000000000000000000000001")
 
     def load_submitter(
         self,

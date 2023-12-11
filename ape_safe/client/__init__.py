@@ -61,7 +61,7 @@ class SafeClient(BaseSafeClient):
             if chain_id not in TRANSACTION_SERVICE_URL:
                 raise ClientUnsupportedChainError(chain_id)
 
-            tx_service_url = TRANSACTION_SERVICE_URL.get(chain_id)  # type: ignore[assignment]
+            tx_service_url = TRANSACTION_SERVICE_URL[chain_id]
 
         else:
             raise ValueError("Must provide one of chain_id or override_url.")
