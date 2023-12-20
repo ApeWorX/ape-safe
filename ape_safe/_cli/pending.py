@@ -29,7 +29,7 @@ def pending():
 @safe_cli_ctx
 @safe_option
 @click.option("--verbose", is_flag=True)
-def _list(cli_ctx: SafeCliContext, safe, verbose) -> None:
+def _list(cli_ctx, safe, verbose) -> None:
     """
     View pending transactions for a Safe
     """
@@ -59,7 +59,7 @@ def _list(cli_ctx: SafeCliContext, safe, verbose) -> None:
                 operation_name = "rejection"
 
             # Add spacing (unless verbose) so columns are aligned.
-            spaces = (max(0, max_op_len - len(operation_name))) * " " if verbose else ""
+            spaces = "" if verbose else (max(0, max_op_len - len(operation_name))) * " "
             title = f"{title} {operation_name}{spaces}"
             confirmations = tx.confirmations
             rich.print(
