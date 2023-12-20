@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Sequence, Union, cast
 import click
 import rich
 from ape.api import AccountAPI
-from ape.cli import ConnectedProviderCommand, network_option, select_account
+from ape.cli import ConnectedProviderCommand
 from ape.exceptions import SignatureError
 from ape.types import AddressType, MessageSignature
 from click.exceptions import BadOptionUsage
@@ -157,13 +157,9 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, e
         if do_execute:
             # The user did provider a value for `--execute` however we are able to
             # So we prompt them.
-            submitter = select_account(prompt_message="Select a submitter", key=safe.local_signers)
+            submitter = safe.select_signer(for_="submitter")
 
-    owner = (
-        submitter
-        if isinstance(submitter, AccountAPI)
-        else select_account(prompt_message="Select an `owner`", key=safe.local_signers)
-    )
+    owner = submitter if isinstance(submitter, AccountAPI) else safe.select_signer(for_="owner")
 
     safe.client.post_transaction(
         safe_tx, signatures, sender=owner.address, contractTransactionHash=safe_tx_hash
@@ -206,7 +202,7 @@ def _load_submitter(ctx, param, val):
         if not safe.local_signers:
             ctx.obj.abort("Cannot use `--execute TRUE` without a local signer.")
 
-        return select_account(key=safe.local_signers)
+        return safe.select_signer(for_="submitter")
 
     return None
 
@@ -253,7 +249,7 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
             if do_execute:
                 # The user did provider a value for `--execute` however we are able to
                 # So we prompt them.
-                submitter = select_account(key=safe.local_signers)
+                submitter = safe.select_signer(for_="submitter")
 
         if submitter:
             txn.confirmations = {**txn.confirmations, **signatures_added}
@@ -279,7 +275,7 @@ def execute(cli_ctx, safe, txn_ids, submitter):
     )
 
     if not submitter:
-        submitter = select_account("Select a submitter", key=safe.local_signers)
+        submitter = safe.select_signer(for_="submitter")
 
     for txn in pending_transactions:
         # Figure out which given ID(s) we are handling.
@@ -317,8 +313,11 @@ def reject(cli_ctx: SafeCliContext, safe, txn_ids, execute):
     """
     Reject one or more pending transactions
     """
-    submit = False if execute is False else True
+    submit = False if execute in (False, None) else True
     submitter = execute if isinstance(execute, AccountAPI) else None
+    if submitter is None and submit:
+        submitter = safe.select_signer(for_="submitter")
+
     pending_transactions = safe.client.get_transactions(
         confirmed=False, starting_nonce=safe.next_nonce
     )

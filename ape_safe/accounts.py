@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
 from ape.api.networks import LOCAL_NETWORK_NAME, ForkedNetworkAPI
+from ape.cli import select_account
 from ape.contracts import ContractInstance
 from ape.exceptions import ProviderNotConnectedError
 from ape.logging import logger
@@ -705,6 +706,10 @@ class SafeAccount(AccountAPI):
             self.client.post_signatures(safe_tx_hash, signatures)
 
         return signatures
+
+    def select_signer(self, for_: str = None) -> AccountAPI:
+        for_ = for_ or "submitter"
+        return select_account(prompt_message=f"Select a {for_}", key=self.local_signers)
 
 
 def _get_safe_tx_id(safe_tx: SafeTx, confirmations: List[SafeTxConfirmation]) -> SafeTxID:
