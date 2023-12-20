@@ -5,7 +5,7 @@ import rich
 from ape.api import AccountAPI
 from ape.cli import ConnectedProviderCommand, get_user_selected_account, network_option
 from ape.exceptions import SignatureError
-from ape.types import AddressType
+from ape.types import AddressType, MessageSignature
 from click.exceptions import BadOptionUsage
 from eth_typing import Hash32
 from eth_utils import humanize_hash
@@ -15,7 +15,7 @@ from ape_safe import SafeAccount
 from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx, safe_option, txn_ids_argument
 from ape_safe.accounts import get_signatures
 from ape_safe.client import UnexecutedTxData
-from ape_safe.utils import _rsv_to_message_signature, get_safe_tx_hash
+from ape_safe.utils import get_safe_tx_hash
 
 
 @click.group()
@@ -296,11 +296,13 @@ def execute(cli_ctx, safe, txn_ids, submitter):
 
 def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI):
     safe_tx = safe.create_safe_tx(**txn.model_dump(mode="json", by_alias=True))
-    signatures = {c.owner: _rsv_to_message_signature(c.signature) for c in txn.confirmations}
 
-    # NOTE: We have a hack that allows bytes in the mapping, hence type ignore
+    # TODO: Can remove type ignore after Ape 0.7.1
+    signatures: Dict[AddressType, MessageSignature] = {
+        c.owner: MessageSignature.from_rsv(c.signature) for c in txn.confirmations  # type: ignore
+    }
+
     exc_tx = safe.create_execute_transaction(safe_tx, signatures)
-
     submitter.call(exc_tx)
 
 
