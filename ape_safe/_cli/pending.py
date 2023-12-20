@@ -100,7 +100,7 @@ def _list(cli_ctx, safe, verbose) -> None:
 # NOTE: The handling of the `--execute` flag in the `pending` CLI
 #    all happens here EXCEPT if a pending tx is executable and no
 #    value of `--execute` was provided.
-def _handle_execute_cli_arg(ctx, param, val):
+def _handle_execute_cli_arg(ctx, param, val) -> Optional[Union[AccountAPI, bool]]:
     """
     Either returns the account or ``False`` meaning don't execute
     """
@@ -190,7 +190,10 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, e
 
 
 def _load_submitter(ctx, param, val):
-    if val in ctx.obj.account_manager.aliases:
+    if val is None:
+        return None
+
+    elif val in ctx.obj.account_manager.aliases:
         return ctx.obj.account_manager.load(val)
 
     # Account address - execute using this account.
@@ -221,7 +224,7 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
     for txn in pending_transactions:
         # Figure out which given ID(s) we are handling.
         length_before = len(txn_ids)
-        txn_ids = _check_tx_ids(txn_ids, txn)
+        txn_ids = _filter_tx_from_ids(txn_ids, txn)
         if len(txn_ids) == length_before:
             # Not a specified txn.
             continue
@@ -263,7 +266,6 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
 
 @pending.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx
-@network_option()
 @safe_option
 @txn_ids_argument
 # NOTE: Doesn't use --execute because we don't need BOOL values.
@@ -275,10 +277,14 @@ def execute(cli_ctx, safe, txn_ids, submitter):
     pending_transactions = list(
         safe.client.get_transactions(confirmed=False, starting_nonce=safe.next_nonce)
     )
+
+    if not submitter:
+        submitter = select_account("Select a submitter", key=safe.local_signers)
+
     for txn in pending_transactions:
         # Figure out which given ID(s) we are handling.
         length_before = len(txn_ids)
-        txn_ids = _check_tx_ids(txn_ids, txn)
+        txn_ids = _filter_tx_from_ids(txn_ids, txn)
         if len(txn_ids) == length_before:
             # Not a specified txn.
             continue
@@ -306,11 +312,13 @@ def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI):
 @safe_cli_ctx
 @safe_option
 @txn_ids_argument
-def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
+@click.option("--execute", callback=_handle_execute_cli_arg)
+def reject(cli_ctx: SafeCliContext, safe, txn_ids, execute):
     """
     Reject one or more pending transactions
     """
-
+    submit = False if execute is False else True
+    submitter = execute if isinstance(execute, AccountAPI) else None
     pending_transactions = safe.client.get_transactions(
         confirmed=False, starting_nonce=safe.next_nonce
     )
@@ -318,7 +326,7 @@ def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
     for txn in pending_transactions:
         # Figure out which given ID(s) we are handling.
         length_before = len(txn_ids)
-        txn_ids = _check_tx_ids(txn_ids, txn)
+        txn_ids = _filter_tx_from_ids(txn_ids, txn)
         if len(txn_ids) == length_before:
             # Not a specified txn.
             continue
@@ -330,7 +338,9 @@ def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
 
         elif click.confirm(f"{txn}\nCancel Transaction?"):
             try:
-                safe.transfer(safe, "0 ether", nonce=txn.nonce, submit_transaction=False)
+                safe.transfer(
+                    safe, "0 ether", nonce=txn.nonce, submit_transaction=submit, submitter=submitter
+                )
             except SignatureError:
                 # These are expected because of how the plugin works
                 # when not submitting
@@ -395,14 +405,16 @@ def _show_confs(confs, extra_line: bool = True, prefix: Optional[str] = None):
             click.echo()
 
 
-def _check_tx_ids(
+# Helper method for handling transactions in a loop.
+def _filter_tx_from_ids(
     txn_ids: Sequence[Union[int, str]], txn: UnexecutedTxData
 ) -> Sequence[Union[int, str]]:
     if txn.nonce in txn_ids:
+        # Filter out all transactions with the same nonce
         return [x for x in txn_ids if x != txn.nonce]
 
     # Handle if given nonce and hash for same txn.
     if txn.safe_tx_hash in txn_ids:
-        return [x for x in txn_ids if x != txn.nonce]
+        return [x for x in txn_ids if x != txn.safe_tx_hash]
 
     return txn_ids

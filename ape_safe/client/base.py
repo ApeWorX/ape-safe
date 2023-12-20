@@ -50,7 +50,9 @@ class BaseSafeClient(ABC):
         ...
 
     @abstractmethod
-    def post_transaction(self, safe_tx: SafeTx, signatures: Dict[AddressType, MessageSignature]):
+    def post_transaction(
+        self, safe_tx: SafeTx, signatures: Dict[AddressType, MessageSignature], **kwargs
+    ):
         ...
 
     @abstractmethod
