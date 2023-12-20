@@ -157,16 +157,12 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, e
         if do_execute:
             # The user did provider a value for `--execute` however we are able to
             # So we prompt them.
-            submitter = select_account(
-                prompt_message="Select a submitter", key=safe.local_signers
-            )
+            submitter = select_account(prompt_message="Select a submitter", key=safe.local_signers)
 
     owner = (
         submitter
         if isinstance(submitter, AccountAPI)
-        else select_account(
-            prompt_message="Select an `owner`", key=safe.local_signers
-        )
+        else select_account(prompt_message="Select an `owner`", key=safe.local_signers)
     )
 
     safe.client.post_transaction(

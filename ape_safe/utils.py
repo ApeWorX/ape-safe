@@ -10,10 +10,7 @@ if TYPE_CHECKING:
 
 def order_by_signer(signatures: Mapping[AddressType, MessageSignature]) -> List[MessageSignature]:
     # NOTE: Must order signatures in ascending order of signer address (converted to int)
-    def addr_to_int(a: AddressType) -> int:
-        return to_int(hexstr=a)
-
-    return list(signatures[signer] for signer in sorted(signatures, key=addr_to_int))
+    return list(signatures[signer] for signer in sorted(signatures, key=lambda a: to_int(hexstr=a)))
 
 
 def get_safe_tx_hash(safe_tx) -> "SafeTxID":
