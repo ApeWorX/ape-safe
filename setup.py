@@ -59,10 +59,10 @@ setup(
     include_package_data=True,
     install_requires=[
         "eth-ape>=0.6.27,<0.7.0",
-        "eip712>=0.2.2,<0.3.0",
         "requests>=2.31.0,<3",
+        "eip712",  # Use same version as eth-ape
         "click",  # Use same version as eth-ape
-        "pydantic<2",  # TODO: Rm constraint on Ape 0.7.
+        "pydantic",  # Use same version as eth-ape
         "eth-utils",  # Use same version as eth-ape
     ],
     entry_points={

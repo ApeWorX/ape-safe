@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Sequence, Union, cast
 import click
 import rich
 from ape.api import AccountAPI
-from ape.cli import NetworkBoundCommand, get_user_selected_account, network_option
+from ape.cli import ConnectedProviderCommand, get_user_selected_account, network_option
 from ape.exceptions import SignatureError
 from ape.types import AddressType
 from click.exceptions import BadOptionUsage
@@ -25,17 +25,15 @@ def pending():
     """
 
 
-@pending.command("list", cls=NetworkBoundCommand)
+@pending.command("list", cls=ConnectedProviderCommand)
 @safe_cli_ctx
-@network_option()
 @safe_option
 @click.option("--verbose", is_flag=True)
-def _list(cli_ctx: SafeCliContext, network, safe, verbose) -> None:
+def _list(cli_ctx: SafeCliContext, safe, verbose) -> None:
     """
     View pending transactions for a Safe
     """
 
-    _ = network  # Needed for NetworkBoundCommand
     txns = list(safe.client.get_transactions(starting_nonce=safe.next_nonce, confirmed=False))
     if not txns:
         rich.print("There are no pending transactions.")
@@ -50,6 +48,7 @@ def _list(cli_ctx: SafeCliContext, network, safe, verbose) -> None:
 
     all_items = txns_by_nonce.items()
     total_items = len(all_items)
+    max_op_len = len("rejection")
     for root_idx, (nonce, tx_list) in enumerate(all_items):
         tx_len = len(tx_list)
         for idx, tx in enumerate(tx_list):
@@ -57,10 +56,11 @@ def _list(cli_ctx: SafeCliContext, network, safe, verbose) -> None:
             is_rejection = not tx.value and not tx.data and tx.to == tx.safe
             operation_name = tx.operation.name if tx.data else "transfer"
             if is_rejection:
-                title = f"{title} rejection"
-            else:
-                title = f"{title} {operation_name}"
+                operation_name = "rejection"
 
+            # Add spacing (unless verbose) so columns are aligned.
+            spaces = (max(0, max_op_len - len(operation_name))) * " " if verbose else ""
+            title = f"{title} {operation_name}{spaces}"
             confirmations = tx.confirmations
             rich.print(
                 f"{title} "
@@ -71,7 +71,7 @@ def _list(cli_ctx: SafeCliContext, network, safe, verbose) -> None:
             if verbose:
                 fields = ("to", "value", "data", "base_gas", "gas_price")
                 data = {}
-                for field_name, value in tx.dict().items():
+                for field_name, value in tx.model_dump(by_alias=True, mode="json").items():
                     if field_name not in fields:
                         continue
 
@@ -124,9 +124,8 @@ def _handle_execute_cli_arg(ctx, param, val):
     )
 
 
-@pending.command(cls=NetworkBoundCommand)
+@pending.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx
-@network_option()
 @safe_option
 @click.option("--data", type=HexBytes, help="Transaction data", default=HexBytes(""))
 @click.option("--gas-price", type=int, help="Transaction gas price")
@@ -134,12 +133,10 @@ def _handle_execute_cli_arg(ctx, param, val):
 @click.option("--to", "receiver", type=AddressType, help="Transaction receiver")
 @click.option("--nonce", type=int, help="Transaction nonce")
 @click.option("--execute", callback=_handle_execute_cli_arg)
-def propose(cli_ctx, network, safe, data, gas_price, value, receiver, nonce, execute):
+def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, execute):
     """
     Create a new transaction
     """
-    _ = network  # Needed for NetworkBoundCommand
-    ecosystem = cli_ctx.chain_manager.provider.network.ecosystem
     nonce = safe.new_nonce if nonce is None else nonce
     txn = ecosystem.create_transaction(
         value=value, data=data, gas_price=gas_price, nonce=nonce, receiver=receiver
@@ -215,14 +212,12 @@ def _load_submitter(ctx, param, val):
     return None
 
 
-@pending.command(cls=NetworkBoundCommand)
+@pending.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx
-@network_option()
 @safe_option
 @txn_ids_argument
 @click.option("--execute", callback=_handle_execute_cli_arg)
-def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
-    _ = network  # Needed for NetworkBoundCommand
+def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
     submitter: Optional[AccountAPI] = execute if isinstance(execute, AccountAPI) else None
     pending_transactions = list(
         safe.client.get_transactions(confirmed=False, starting_nonce=safe.next_nonce)
@@ -235,7 +230,7 @@ def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
             # Not a specified txn.
             continue
 
-        safe_tx = safe.create_safe_tx(**txn.dict(by_alias=True))
+        safe_tx = safe.create_safe_tx(**txn.model_dump(by_alias=True, mode="json"))
         num_confirmations = len(txn.confirmations)
         signatures_added = {}
 
@@ -270,14 +265,14 @@ def approve(cli_ctx: SafeCliContext, network, safe, txn_ids, execute):
         cli_ctx.abort_txns_not_found(txn_ids)
 
 
-@pending.command(cls=NetworkBoundCommand)
+@pending.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx
 @network_option()
 @safe_option
 @txn_ids_argument
 # NOTE: Doesn't use --execute because we don't need BOOL values.
 @click.option("--submitter", callback=_load_submitter)
-def execute(cli_ctx, network, safe, txn_ids, submitter):
+def execute(cli_ctx, safe, txn_ids, submitter):
     """
     Execute a transaction
     """
@@ -300,7 +295,7 @@ def execute(cli_ctx, network, safe, txn_ids, submitter):
 
 
 def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI):
-    safe_tx = safe.create_safe_tx(**txn.dict(by_alias=True))
+    safe_tx = safe.create_safe_tx(**txn.model_dump(mode="json", by_alias=True))
     signatures = {c.owner: _rsv_to_message_signature(c.signature) for c in txn.confirmations}
 
     # NOTE: We have a hack that allows bytes in the mapping, hence type ignore
@@ -309,9 +304,8 @@ def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI):
     submitter.call(exc_tx)
 
 
-@pending.command(cls=NetworkBoundCommand)
+@pending.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx
-@network_option()
 @safe_option
 @txn_ids_argument
 def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
@@ -319,7 +313,6 @@ def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
     Reject one or more pending transactions
     """
 
-    _ = network  # Needed for NetworkBoundCommand
     pending_transactions = safe.client.get_transactions(
         confirmed=False, starting_nonce=safe.next_nonce
     )
@@ -352,16 +345,14 @@ def reject(cli_ctx: SafeCliContext, network, safe, txn_ids):
         cli_ctx.abort_txns_not_found(txn_ids)
 
 
-@pending.command(cls=NetworkBoundCommand)
+@pending.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx
-@network_option()
 @safe_option
 @click.argument("txn_id")
-def show_confs(cli_ctx, network, safe, txn_id):
+def show_confs(cli_ctx, safe, txn_id):
     """
     Show existing confirmations
     """
-    _ = network  # Needed for NetworkBoundCommand
 
     if txn_id.isnumeric():
         nonce = int(txn_id)

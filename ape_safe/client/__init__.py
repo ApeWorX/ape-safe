@@ -71,7 +71,7 @@ class SafeClient(BaseSafeClient):
     @property
     def safe_details(self) -> SafeDetails:
         response = self._get(f"safes/{self.address}")
-        return SafeDetails.parse_obj(response.json())
+        return SafeDetails.model_validate(response.json())
 
     def get_next_nonce(self) -> int:
         return self.safe_details.nonce
@@ -90,10 +90,10 @@ class SafeClient(BaseSafeClient):
                 # TODO: Replace with `model_validate()` after ape 0.7.
                 # NOTE: Using construct because of pydantic v2 back import validation error.
                 if "isExecuted" in txn and txn["isExecuted"]:
-                    yield ExecutedTxData.parse_obj(txn)
+                    yield ExecutedTxData.model_validate(txn)
 
                 else:
-                    yield UnexecutedTxData.parse_obj(txn)
+                    yield UnexecutedTxData.model_validate(txn)
 
             url = data.get("next")
 
@@ -102,7 +102,7 @@ class SafeClient(BaseSafeClient):
         while url:
             response = self._get(url)
             data = response.json()
-            yield from map(SafeTxConfirmation.parse_obj, data.get("results"))
+            yield from map(SafeTxConfirmation.model_validate, data.get("results"))
             url = data.get("next")
 
     def post_transaction(
@@ -119,7 +119,7 @@ class SafeClient(BaseSafeClient):
         )
         post_dict: Dict = {"signature": signature.hex()}
 
-        for key, value in tx_data.dict(by_alias=True).items():
+        for key, value in tx_data.model_dump(by_alias=True, mode="json").items():
             if isinstance(value, HexBytes):
                 post_dict[key] = value.hex()
             elif isinstance(value, OperationType):

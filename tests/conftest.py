@@ -104,13 +104,15 @@ def safe(safe_data_file):
 
 @pytest.fixture
 def token(deployer: SafeAccount):
-    contract = ContractType.parse_file(contracts_directory / "Token.json")
+    text = (contracts_directory / "Token.json").read_text()
+    contract = ContractType.model_validate_json(text)
     return deployer.deploy(ContractContainer(contract))
 
 
 @pytest.fixture
 def vault(deployer: SafeAccount, token):
-    vault = ContractContainer(ContractType.parse_file(contracts_directory / "VyperVault.json"))
+    text = (contracts_directory / "VyperVault.json").read_text()
+    vault = ContractContainer(ContractType.model_validate_json(text))
     return deployer.deploy(vault, token)
 
 

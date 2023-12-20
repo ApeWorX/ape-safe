@@ -29,7 +29,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
     @property
     def safe_details(self) -> SafeDetails:
         slot = keccak(text="fallback_manager.handler.address")
-        value = self.provider.get_storage_at(self.contract.address, slot)
+        value = self.provider.get_storage(self.contract.address, slot)
         fallback_address = self.network_manager.ecosystem.decode_address(value[-20:])
 
         return SafeDetails(

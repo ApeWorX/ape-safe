@@ -46,7 +46,7 @@ def test_swap_owner(safe, accounts, OWNERS, mode):
         safe_tx_hash = add_0x_prefix(f"{pending_txns[0].safe_tx_hash}")
 
         safe_tx_data = pending_txns[0]
-        safe_tx = safe.create_safe_tx(**safe_tx_data.dict(by_alias=True))
+        safe_tx = safe.create_safe_tx(**safe_tx_data.model_dump(by_alias=True, mode="json"))
 
         # Ensure client confirmations works
         client_confs = list(safe.client.get_confirmations(safe_tx_hash))
@@ -98,7 +98,7 @@ def test_add_owner(safe, accounts, OWNERS, mode):
 
         # `safe_tx` is in mock client, extract it and execute it successfully this time
         safe_tx_data = next(safe.client.get_transactions(confirmed=False))
-        safe_tx = safe.create_safe_tx(**safe_tx_data.dict(by_alias=True))
+        safe_tx = safe.create_safe_tx(**safe_tx_data.model_dump(by_alias=True, mode="json"))
         receipt = safe.submit_safe_tx(safe_tx)
 
     assert receipt.events == [
@@ -146,7 +146,7 @@ def test_remove_owner(safe, OWNERS, mode):
 
         # `safe_tx` is in mock client, extract it and execute it successfully this time
         safe_tx_data = next(safe.client.get_transactions(confirmed=False))
-        safe_tx = safe.create_safe_tx(**safe_tx_data.dict(by_alias=True))
+        safe_tx = safe.create_safe_tx(**safe_tx_data.model_dump(by_alias=True, mode="json"))
         receipt = safe.submit_safe_tx(safe_tx)
 
     expected_events = [

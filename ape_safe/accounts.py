@@ -1,7 +1,7 @@
 import json
 import os
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union, cast
+from typing import Any, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union, cast
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
@@ -10,7 +10,7 @@ from ape.contracts import ContractInstance
 from ape.exceptions import ProviderNotConnectedError
 from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
-from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
+from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
@@ -206,11 +206,13 @@ class SafeAccount(AccountAPI):
             if fallback_signatures < contract_signatures:
                 return safe_contract  # for some reason this never gets hit
 
-            contract_type = safe_contract.contract_type.dict()
-            fallback_type = self.fallback_handler.contract_type.dict()
+            contract_type = safe_contract.contract_type.model_dump(by_alias=True, mode="json")
+            fallback_type = self.fallback_handler.contract_type.model_dump(
+                by_alias=True, mode="json"
+            )
             contract_type["abi"].extend(fallback_type["abi"])
             return self.chain_manager.contracts.instance_at(
-                self.address, contract_type=ContractType.parse_obj(contract_type)
+                self.address, contract_type=ContractType.model_validate(contract_type)
             )
 
         else:
@@ -219,7 +221,7 @@ class SafeAccount(AccountAPI):
     @cached_property
     def fallback_handler(self) -> Optional[ContractInstance]:
         slot = keccak(text="fallback_manager.handler.address")
-        value = self.provider.get_storage_at(self.address, slot)
+        value = self.provider.get_storage(self.address, slot)
         address = self.network_manager.ecosystem.decode_address(value[-20:])
         return (
             self.chain_manager.contracts.instance_at(address) if address != ZERO_ADDRESS else None
@@ -304,7 +306,7 @@ class SafeAccount(AccountAPI):
         # No pending transactions. Use next on-chain nonce.
         return self.next_nonce
 
-    def sign_message(self, msg: SignableMessage) -> Optional[MessageSignature]:
+    def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
         raise NotImplementedError("Safe accounts do not support message signing!")
 
     @property
@@ -345,7 +347,9 @@ class SafeAccount(AccountAPI):
 
     def pending_transactions(self) -> Iterator[Tuple[SafeTx, List[SafeTxConfirmation]]]:
         for executed_tx in self.client.get_transactions(confirmed=False):
-            yield self.create_safe_tx(**executed_tx.dict(by_alias=True)), executed_tx.confirmations
+            yield self.create_safe_tx(
+                **executed_tx.model_dump(mode="json", by_alias=True)
+            ), executed_tx.confirmations
 
     @property
     def local_signers(self) -> List[AccountAPI]:

@@ -129,7 +129,7 @@ class MultiSend(ManagerAccessMixin):
         # All versions have this ABI
         contract = self.chain_manager.contracts.instance_at(
             multisend_address,
-            contract_type=ContractType.parse_obj(MULTISEND_CONTRACT_TYPE),
+            contract_type=ContractType.model_validate(MULTISEND_CONTRACT_TYPE),
         )
 
         if contract.code != MULTISEND_CODE:
