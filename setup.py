@@ -58,7 +58,7 @@ setup(
     url="https://github.com/ApeWorX/ape-safe",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.6.27,<0.7.0",
+        "eth-ape>=0.7.0,<0.8",
         "requests>=2.31.0,<3",
         "eip712",  # Use same version as eth-ape
         "click",  # Use same version as eth-ape
