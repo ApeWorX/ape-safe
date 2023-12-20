@@ -1,5 +1,7 @@
 import pytest
+from ape.api import AccountAPI
 from ape.exceptions import SignatureError
+from ape.types import AddressType
 from eth_utils import add_0x_prefix
 
 
@@ -158,3 +160,18 @@ def test_remove_owner(safe, OWNERS, mode):
     assert receipt.events == expected_events
 
     assert old_owner not in safe.signers
+
+
+def test_account_type(safe):
+    actual = type(safe)
+    assert issubclass(actual, AccountAPI)
+
+
+def test_safe_account_convert(safe):
+    """
+    We had a bug where converting safe accounts to AddressType
+    would fail.
+    """
+    convert = safe.conversion_manager.convert
+    actual = convert(safe, AddressType)
+    assert actual == safe.address
