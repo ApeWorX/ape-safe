@@ -1,8 +1,15 @@
+from pathlib import Path
+
 import pytest
 from ape.api import AccountAPI
 from ape.exceptions import SignatureError
 from ape.types import AddressType
 from eth_utils import add_0x_prefix
+
+
+def test_data_folder(safes, config):
+    assert Path.home() not in safes.data_folder.parents
+    assert safes.data_folder == config.DATA_FOLDER / "safe"
 
 
 def test_init(safe, OWNERS, THRESHOLD, safe_contract):

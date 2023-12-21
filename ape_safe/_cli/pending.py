@@ -26,7 +26,7 @@ def pending():
 
 
 @pending.command("list", cls=ConnectedProviderCommand)
-@safe_cli_ctx
+@safe_cli_ctx()
 @safe_option
 @click.option("--verbose", is_flag=True)
 def _list(cli_ctx, safe, verbose) -> None:
@@ -125,7 +125,7 @@ def _handle_execute_cli_arg(ctx, param, val) -> Optional[Union[AccountAPI, bool]
 
 
 @pending.command(cls=ConnectedProviderCommand)
-@safe_cli_ctx
+@safe_cli_ctx()
 @safe_option
 @click.option("--data", type=HexBytes, help="Transaction data", default=HexBytes(""))
 @click.option("--gas-price", type=int, help="Transaction gas price")
@@ -208,7 +208,7 @@ def _load_submitter(ctx, param, val):
 
 
 @pending.command(cls=ConnectedProviderCommand)
-@safe_cli_ctx
+@safe_cli_ctx()
 @safe_option
 @txn_ids_argument
 @click.option("--execute", callback=_handle_execute_cli_arg)
@@ -261,7 +261,7 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
 
 
 @pending.command(cls=ConnectedProviderCommand)
-@safe_cli_ctx
+@safe_cli_ctx()
 @safe_option
 @txn_ids_argument
 # NOTE: Doesn't use --execute because we don't need BOOL values.
@@ -306,7 +306,7 @@ def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI, **
 
 
 @pending.command(cls=ConnectedProviderCommand)
-@safe_cli_ctx
+@safe_cli_ctx()
 @safe_option
 @txn_ids_argument
 @click.option("--execute", callback=_handle_execute_cli_arg)
@@ -354,7 +354,7 @@ def reject(cli_ctx: SafeCliContext, safe, txn_ids, execute):
 
 
 @pending.command(cls=ConnectedProviderCommand)
-@safe_cli_ctx
+@safe_cli_ctx()
 @safe_option
 @click.argument("txn_id")
 def show_confs(cli_ctx, safe, txn_id):

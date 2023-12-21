@@ -13,6 +13,7 @@ class SafeCliContext(ApeCliContextObject):
     def safes(self) -> SafeContainer:
         # NOTE: Would only happen in local development of this plugin.
         assert "safe" in self.account_manager.containers, "Are all API methods implemented?"
+
         safe_container = self.account_manager.containers["safe"]
         return cast(SafeContainer, safe_container)
 
@@ -20,7 +21,8 @@ class SafeCliContext(ApeCliContextObject):
         self.abort(f"Pending transaction(s) '{', '.join([f'{x}' for x in txn_ids])}' not found.")
 
 
-safe_cli_ctx = ape_cli_context(obj_type=SafeCliContext)
+def safe_cli_ctx():
+    return ape_cli_context(obj_type=SafeCliContext)
 
 
 def _safe_callback(ctx, param, value):

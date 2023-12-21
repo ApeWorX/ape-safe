@@ -104,6 +104,7 @@ class SafeContainer(AccountContainerAPI):
         if path.is_file():
             raise ApeSafeError(f"Safe with alias '{alias}' already exists.")
 
+        path.parent.mkdir(exist_ok=True, parents=True)
         path.write_text(json.dumps(account_data))
 
     def load_account(self, alias: str) -> "SafeAccount":

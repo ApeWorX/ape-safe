@@ -8,7 +8,7 @@ from ape_safe.client import ExecutedTxData
 
 
 @click.command(name="list")
-@safe_cli_ctx
+@safe_cli_ctx()
 @network_option(default=None)
 def _list(cli_ctx: SafeCliContext, network):
     """
@@ -51,7 +51,7 @@ def _list(cli_ctx: SafeCliContext, network):
 
 
 @click.command(cls=ConnectedProviderCommand)
-@safe_cli_ctx
+@safe_cli_ctx()
 @click.argument("address", type=AddressType)
 @non_existing_alias_argument()
 def add(cli_ctx: SafeCliContext, ecosystem, network, address, alias):
@@ -82,7 +82,7 @@ def add(cli_ctx: SafeCliContext, ecosystem, network, address, alias):
 
 
 @click.command()
-@safe_cli_ctx
+@safe_cli_ctx()
 @safe_option
 def remove(cli_ctx: SafeCliContext, safe):
     """
@@ -98,7 +98,7 @@ def remove(cli_ctx: SafeCliContext, safe):
 
 
 @click.command(cls=ConnectedProviderCommand)
-@safe_cli_ctx
+@safe_cli_ctx()
 @click.argument("address", type=AddressType)
 @click.option("--confirmed", is_flag=True, default=None)
 def all_txns(cli_ctx: SafeCliContext, address, confirmed):

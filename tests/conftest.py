@@ -2,6 +2,7 @@ import json
 import tempfile
 from pathlib import Path
 
+import ape
 import pytest
 from ape.contracts import ContractContainer
 from ape.utils import ZERO_ADDRESS
@@ -12,6 +13,18 @@ from ape_safe.accounts import SafeAccount
 
 contracts_directory = Path(__file__).parent / "contracts"
 TESTS_DIR = Path(__file__).parent.absolute()
+DATA_FOLDER = Path(tempfile.mkdtemp()).resolve()
+ape.config.DATA_FOLDER = DATA_FOLDER
+
+
+@pytest.fixture(scope="session")
+def config():
+    return ape.config
+
+
+@pytest.fixture
+def data_folder(config):
+    return config.DATA_FOLDER / "safe"
 
 
 @pytest.fixture(scope="session")
@@ -100,6 +113,11 @@ def safe_data_file(chain, safe_contract):
 @pytest.fixture
 def safe(safe_data_file):
     return SafeAccount(account_file_path=safe_data_file)
+
+
+@pytest.fixture
+def safes():
+    return ape.accounts.containers["safe"]
 
 
 @pytest.fixture
