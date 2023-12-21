@@ -7,7 +7,7 @@ from ape.cli import ConnectedProviderCommand
 from ape.exceptions import SignatureError
 from ape.types import AddressType, MessageSignature
 from click.exceptions import BadOptionUsage
-from eth_typing import Hash32
+from eth_typing import ChecksumAddress, Hash32
 from eth_utils import humanize_hash
 from hexbytes import HexBytes
 
@@ -130,7 +130,7 @@ def _handle_execute_cli_arg(ctx, param, val) -> Optional[Union[AccountAPI, bool]
 @click.option("--data", type=HexBytes, help="Transaction data", default=HexBytes(""))
 @click.option("--gas-price", type=int, help="Transaction gas price")
 @click.option("--value", type=int, help="Transaction value", default=0)
-@click.option("--to", "receiver", type=AddressType, help="Transaction receiver")
+@click.option("--to", "receiver", type=ChecksumAddress, help="Transaction receiver")
 @click.option("--nonce", type=int, help="Transaction nonce")
 @click.option("--execute", callback=_handle_execute_cli_arg)
 def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, execute):

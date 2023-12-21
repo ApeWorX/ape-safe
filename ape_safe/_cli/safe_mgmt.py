@@ -2,6 +2,7 @@ import click
 from ape.cli import ConnectedProviderCommand, network_option, non_existing_alias_argument
 from ape.exceptions import ChainError, ProviderNotConnectedError
 from ape.types import AddressType
+from eth_typing import ChecksumAddress
 
 from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx, safe_option
 from ape_safe.client import ExecutedTxData
@@ -52,7 +53,7 @@ def _list(cli_ctx: SafeCliContext, network):
 
 @click.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx()
-@click.argument("address", type=AddressType)
+@click.argument("address", type=ChecksumAddress)
 @non_existing_alias_argument()
 def add(cli_ctx: SafeCliContext, ecosystem, network, address, alias):
     """
@@ -99,7 +100,7 @@ def remove(cli_ctx: SafeCliContext, safe):
 
 @click.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx()
-@click.argument("address", type=AddressType)
+@click.argument("address", type=ChecksumAddress)
 @click.option("--confirmed", is_flag=True, default=None)
 def all_txns(cli_ctx: SafeCliContext, address, confirmed):
     """
