@@ -707,8 +707,7 @@ class SafeAccount(AccountAPI):
 
         return signatures
 
-    def select_signer(self, for_: str = None) -> AccountAPI:
-        for_ = for_ or "submitter"
+    def select_signer(self, for_: str = "submitter") -> AccountAPI:
         return select_account(prompt_message=f"Select a {for_}", key=self.local_signers)
 
 

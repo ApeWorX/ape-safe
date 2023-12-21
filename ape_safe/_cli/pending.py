@@ -265,8 +265,9 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
 @safe_option
 @txn_ids_argument
 # NOTE: Doesn't use --execute because we don't need BOOL values.
-@click.option("--submitter", callback=_load_submitter)
-def execute(cli_ctx, safe, txn_ids, submitter):
+@click.option("--submitter", help="Account to execute", callback=_load_submitter)
+@click.option("--nonce", help="Submitter nonce")
+def execute(cli_ctx, safe, txn_ids, submitter, nonce):
     """
     Execute a transaction
     """
@@ -285,14 +286,14 @@ def execute(cli_ctx, safe, txn_ids, submitter):
             # Not a specified txn.
             continue
 
-        _execute(safe, txn, submitter)
+        _execute(safe, txn, submitter, nonce=nonce)
 
     # If any txn_ids remain, they were not handled.
     if txn_ids:
         cli_ctx.abort_txns_not_found(txn_ids)
 
 
-def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI):
+def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI, **tx_kwargs):
     safe_tx = safe.create_safe_tx(**txn.model_dump(mode="json", by_alias=True))
 
     # TODO: Can remove type ignore after Ape 0.7.1
@@ -300,7 +301,7 @@ def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI):
         c.owner: MessageSignature.from_rsv(c.signature) for c in txn.confirmations  # type: ignore
     }
 
-    exc_tx = safe.create_execute_transaction(safe_tx, signatures)
+    exc_tx = safe.create_execute_transaction(safe_tx, signatures, **tx_kwargs)
     submitter.call(exc_tx)
 
 
