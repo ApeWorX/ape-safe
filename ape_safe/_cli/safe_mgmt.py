@@ -1,5 +1,10 @@
 import click
-from ape.cli import ConnectedProviderCommand, network_option, non_existing_alias_argument
+from ape.cli import (
+    ConnectedProviderCommand,
+    network_option,
+    non_existing_alias_argument,
+    skip_confirmation_option,
+)
 from ape.exceptions import ChainError, ProviderNotConnectedError
 from ape.types import AddressType
 from eth_typing import ChecksumAddress
@@ -85,7 +90,8 @@ def add(cli_ctx: SafeCliContext, ecosystem, network, address, alias):
 @click.command()
 @safe_cli_ctx()
 @safe_argument
-def remove(cli_ctx: SafeCliContext, safe):
+@skip_confirmation_option()
+def remove(cli_ctx: SafeCliContext, safe, skip_confirmation):
     """
     Stop tracking a locally-tracked Safe
     """
@@ -93,7 +99,7 @@ def remove(cli_ctx: SafeCliContext, safe):
     alias = safe.alias
     address = safe.address
 
-    if click.confirm(f"Remove safe {address} ({alias})"):
+    if skip_confirmation or click.confirm(f"Remove safe {address} ({alias})"):
         cli_ctx.safes.delete_account(alias)
         cli_ctx.logger.success(f"Safe '{address}' ({alias}) removed.")
 

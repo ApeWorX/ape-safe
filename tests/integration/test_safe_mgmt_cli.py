@@ -23,3 +23,9 @@ def test_remove_safe(runner, cli, one_safe, safe):
     result = runner.invoke(cli, ["remove", safe.alias], catch_exceptions=False, input="y\n")
     assert result.exit_code == 0, result.output
     assert "SUCCESS" in result.output, result.output
+
+
+def test_remove_safe_skip_confirmation(runner, cli, one_safe, safe):
+    result = runner.invoke(cli, ["remove", safe.alias, "--yes"], catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+    assert "SUCCESS" in result.output, result.output
