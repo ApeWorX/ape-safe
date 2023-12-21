@@ -50,6 +50,7 @@ def _safe_callback(ctx, param, value):
 
 
 safe_option = click.option("--safe", callback=_safe_callback)
+safe_argument = click.argument("safe", callback=_safe_callback)
 
 
 def _txn_ids_callback(ctx, param, value):

@@ -4,7 +4,7 @@ from ape.exceptions import ChainError, ProviderNotConnectedError
 from ape.types import AddressType
 from eth_typing import ChecksumAddress
 
-from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx, safe_option
+from ape_safe._cli.click_ext import SafeCliContext, safe_argument, safe_cli_ctx
 from ape_safe.client import ExecutedTxData
 
 
@@ -84,7 +84,7 @@ def add(cli_ctx: SafeCliContext, ecosystem, network, address, alias):
 
 @click.command()
 @safe_cli_ctx()
-@safe_option
+@safe_argument
 def remove(cli_ctx: SafeCliContext, safe):
     """
     Stop tracking a locally-tracked Safe
