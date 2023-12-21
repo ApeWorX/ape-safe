@@ -6,6 +6,7 @@ from ape.cli import ApeCliContextObject, ape_cli_context
 from click import BadOptionUsage, MissingParameter
 
 from ape_safe.accounts import SafeContainer
+from ape.exceptions import Abort
 
 
 class SafeCliContext(ApeCliContextObject):
@@ -39,8 +40,11 @@ def _safe_callback(ctx, param, value):
         elif len(safes) == 1:
             return next(safes.accounts)
 
+        elif len(safes) == 0:
+            raise Abort("First, add a safe account using command:\n\t`ape safe add`")
+
         options = ", ".join(safes.aliases)
-        raise MissingParameter(message=f"Must specify safe to use (one of '{options}').")
+        raise MissingParameter(message=f"Must specify one of '{options}').")
 
     elif value in safes.aliases:
         return accounts.load(value)

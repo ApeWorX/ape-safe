@@ -1,3 +1,8 @@
+def test_help(runner, cli):
+    result = runner.invoke(cli, ["--help"], catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+
 def test_list_no_safes(runner, cli, no_safes):
     result = runner.invoke(cli, ["list"], catch_exceptions=False)
     assert result.exit_code == 0, result.output
