@@ -1,7 +1,7 @@
 from typing import NoReturn, Sequence, Union, cast
 
 import click
-from ape import accounts
+from ape import accounts, config
 from ape.cli import ApeCliContextObject, ape_cli_context
 from click import BadOptionUsage, MissingParameter
 
@@ -29,8 +29,14 @@ def _safe_callback(ctx, param, value):
     # NOTE: For some reason, the Cli CTX object is not the SafeCliCtx yet at this point.
     safes = accounts.containers["safe"]
     if value is None:
+        # First, check config for a default. If one is there,
+        # we must use that.
+        safe_config = config.get_config("safe")
+        if alias := safe_config.default_safe:
+            return accounts.load(alias)
+
         # If there is only 1 safe, just use that.
-        if len(safes) == 1:
+        elif len(safes) == 1:
             return next(safes.accounts)
 
         options = ", ".join(safes.aliases)
