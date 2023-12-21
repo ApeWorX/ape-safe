@@ -16,6 +16,26 @@ def test_list_one_safe(runner, cli, one_safe):
     assert "0x5FbDB2315678afecb367f032d93F642f64180aa3" in result.output
 
 
+def test_list_network_not_connected(runner, cli, one_safe):
+    result = runner.invoke(
+        cli, ["list", "--network", "ethereum:local:test"], catch_exceptions=False
+    )
+    assert result.exit_code == 0, result.output
+    assert "Found 1 Safe" in result.output
+    assert "0x5FbDB2315678afecb367f032d93F642f64180aa3" in result.output
+    assert "not connected" in result.output
+
+
+def test_list_network_connected(runner, cli, one_safe):
+    result = runner.invoke(
+        cli, ["list", "--network", "ethereum:local:foundry"], catch_exceptions=False
+    )
+    assert result.exit_code == 0, result.output
+    assert "Found 1 Safe" in result.output
+    assert "0x5FbDB2315678afecb367f032d93F642f64180aa3" in result.output
+    assert "not connected" not in result.output
+
+
 def test_add_safe(runner, cli, no_safes, safe):
     result = runner.invoke(
         cli, ["add", safe.address, safe.alias], catch_exceptions=False, input="y\n"

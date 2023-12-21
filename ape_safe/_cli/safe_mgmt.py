@@ -1,4 +1,5 @@
 import click
+import rich
 from ape.cli import (
     ConnectedProviderCommand,
     network_option,
@@ -16,14 +17,17 @@ from ape_safe.client import ExecutedTxData
 @click.command(name="list")
 @safe_cli_ctx()
 @network_option(default=None)
-def _list(cli_ctx: SafeCliContext, network):
+@click.option("--verbose", help="Show verbose info about each safe", is_flag=True)
+def _list(cli_ctx: SafeCliContext, network, provider, verbose):
     """
     Show locally-tracked Safes
     """
+    if verbose and network is None:
+        cli_ctx.abort("Must use '--network' with '--verbose'.")
 
     network_ctx = None
     if network is not None:
-        network_ctx = cli_ctx.network_manager.parse_network_choice(network)
+        network_ctx = network.use_provider(provider.name)
         network_ctx.__enter__()
 
     try:
@@ -36,20 +40,42 @@ def _list(cli_ctx: SafeCliContext, network):
         header = f"Found {number_of_safes} Safe"
         header += "s:" if number_of_safes > 1 else ":"
         click.echo(header)
+        total = len(cli_ctx.safes)
 
-        for account in cli_ctx.safes:
+        for idx, safe in enumerate(cli_ctx.safes):
             extras = []
-            if account.alias:
-                extras.append(f"alias: '{account.alias}'")
+            if safe.alias:
+                extras.append(f"alias: '{safe.alias}'")
 
+            output: str = ""
             try:
-                extras.append(f"version: '{account.version}'")
+                extras.append(f"version: '{safe.version}'")
             except (ChainError, ProviderNotConnectedError):
                 # Not connected to the network where safe is deployed
                 extras.append("version: (not connected)")
 
-            extras_display = f" ({', '.join(extras)})" if extras else ""
-            click.echo(f"  {account.address}{extras_display}")
+            else:
+                # NOTE: Only handle verbose if we are connected.
+
+                if verbose:
+                    local_signers = safe.local_signers or []
+                    if local_signers:
+                        local_signers_str = ", ".join([x.alias for x in local_signers if x.alias])
+                        if local_signers_str:
+                            extras.append(f"\n  local signers: '{local_signers_str}'")
+
+                    extras.append(f"next nonce: '{safe.next_nonce}'")
+                    extras_joined = ", ".join(extras)
+                    extras_display = f"  {extras_joined}" if extras else ""
+                    output = f"  {safe.address}{extras_display}"
+                    if idx < total - 1:
+                        output = f"{output}\n"
+
+            if not output:
+                extras_display = f" ({', '.join(extras)})" if extras else ""
+                output = f"  {safe.address}{extras_display}"
+
+            rich.print(output)
 
     finally:
         if network_ctx:

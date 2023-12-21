@@ -5,10 +5,10 @@ from typing import Any, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
-from ape.api.networks import LOCAL_NETWORK_NAME, ForkedNetworkAPI
+from ape.api.networks import ForkedNetworkAPI
 from ape.cli import select_account
 from ape.contracts import ContractInstance
-from ape.exceptions import ProviderNotConnectedError
+from ape.exceptions import ContractNotFoundError, ProviderNotConnectedError
 from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
 from ape.types import AddressType, HexBytes, MessageSignature
@@ -234,7 +234,7 @@ class SafeAccount(AccountAPI):
         chain_id = self.provider.chain_id
         override_url = os.environ.get("SAFE_TRANSACTION_SERVICE_URL")
 
-        if self.provider.network.name == LOCAL_NETWORK_NAME:
+        if self.provider.network.is_local:
             return MockSafeClient(contract=self.contract)
 
         elif chain_id in self.account_file["deployed_chain_ids"]:
@@ -359,14 +359,17 @@ class SafeAccount(AccountAPI):
         # TODO: Skip per user config
         # TODO: Order per user config
         container: Union[AccountManager, TestAccountManager]
-        if (
-            self.network_manager.active_provider
-            and self.provider.network.name == LOCAL_NETWORK_NAME
-            or self.provider.network.name.endswith("-fork")
-        ):
+        if self.network_manager.active_provider and self.provider.network.is_dev:
             container = self.account_manager.test_accounts
         else:
             container = self.account_manager
+
+        # Ensure the contract is available before continuing.
+        # Else, return an empty list
+        try:
+            _ = self.contract
+        except ContractNotFoundError:
+            return []
 
         return list(container[address] for address in self.signers if address in container)
 

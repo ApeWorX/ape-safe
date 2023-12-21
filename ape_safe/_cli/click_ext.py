@@ -3,10 +3,10 @@ from typing import NoReturn, Sequence, Union, cast
 import click
 from ape import accounts, config
 from ape.cli import ApeCliContextObject, ape_cli_context
+from ape.exceptions import Abort
 from click import BadOptionUsage, MissingParameter
 
 from ape_safe.accounts import SafeContainer
-from ape.exceptions import Abort
 
 
 class SafeCliContext(ApeCliContextObject):
