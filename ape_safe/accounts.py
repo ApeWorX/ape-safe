@@ -1,32 +1,44 @@
 import json
-from itertools import islice
+import os
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union, cast
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
-from ape.api.networks import LOCAL_NETWORK_NAME
+from ape.api.networks import ForkedNetworkAPI
+from ape.cli import select_account
 from ape.contracts import ContractInstance
+from ape.exceptions import ContractNotFoundError, ProviderNotConnectedError
 from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
-from ape.types import AddressType, HexBytes, MessageSignature, SignableMessage
+from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
+from eth_account.messages import encode_defunct
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 
-from ape_safe.client import SafeClient, SafeTx
+from ape_safe.client import (
+    BaseSafeClient,
+    MockSafeClient,
+    SafeClient,
+    SafeTx,
+    SafeTxConfirmation,
+    SafeTxID,
+)
 from ape_safe.exceptions import (
-    ClientUnavailable,
+    ApeSafeError,
     NoLocalSigners,
     NotASigner,
     NotEnoughSignatures,
+    SafeClientException,
     handle_safe_logic_error,
 )
+from ape_safe.utils import get_safe_tx_hash, order_by_signer
 
 
-class AccountContainer(AccountContainerAPI):
+class SafeContainer(AccountContainerAPI):
     @property
     def _account_files(self) -> Iterator[Path]:
         yield from self.data_folder.glob("*.json")
@@ -36,32 +48,135 @@ class AccountContainer(AccountContainerAPI):
         for p in self._account_files:
             yield p.stem
 
-    def __len__(self) -> int:
-        return len([*self._account_files])
+    @property
+    def addresses(self) -> Iterator[str]:
+        for safe in self.accounts:
+            yield safe.address
 
     @property
     def accounts(self) -> Iterator[AccountAPI]:
         for account_file in self._account_files:
-            yield SafeAccount(account_file_path=account_file)  # type: ignore
+            yield SafeAccount(account_file_path=account_file)
+
+    def __len__(self) -> int:
+        return len([*self._account_files])
+
+    def __setitem__(self, alias: str, address: str):  # type: ignore[override]
+        self.save_account(alias, address)
+
+    def __delitem__(self, alias: str):
+        self.delete_account(alias)
+
+    def __iter__(self) -> Iterator["SafeAccount"]:  # type: ignore[override]
+        # NOTE: We know our accounts are SafeAccounts, hence the type ignore.s
+        safe_accounts = cast(Iterator["SafeAccount"], self.accounts)
+        yield from safe_accounts
+
+    def __contains__(self, item: Union[str, "SafeAccount"]) -> bool:
+        if item is None:
+            return False
+
+        if isinstance(item, str):
+            return item in self.aliases or item in self.addresses
+
+        # Is account object
+        for account in self.accounts:
+            if account.address == item.address:
+                return True
+
+        return False
 
     def save_account(self, alias: str, address: str):
         """
         Save a new Safe to your ape configuration.
+
+        Raises:
+            :class:`~ape_safe.exceptions.ApeSafeError`: When the alias
+              already exists.
+
+        Args:
+            alias (str): The alias to save the Safe under.
+            address (str): The address of the Safe account.
         """
         chain_id = self.provider.chain_id
         account_data = {"address": address, "deployed_chain_ids": [chain_id]}
-        path = self.data_folder.joinpath(f"{alias}.json")
+        path = self._get_path(alias)
+        if path.is_file():
+            raise ApeSafeError(f"Safe with alias '{alias}' already exists.")
+
+        path.parent.mkdir(exist_ok=True, parents=True)
         path.write_text(json.dumps(account_data))
 
     def load_account(self, alias: str) -> "SafeAccount":
-        account_path = self.data_folder.joinpath(f"{alias}.json")
+        """
+        Load the Safe account.
+
+        Raises:
+            :class:`~ape_safe.exceptions.ApeSafeError`: When the alias does
+              not exist.
+
+        Args:
+            alias (str): The alias the Safe account is saved under.
+
+        Returns:
+            :class:`~ape_safe.accounts.SafeAccount`: The Safe account loaded.
+        """
+        account_path = self._get_path(alias)
+        if not account_path.is_file():
+            raise ApeSafeError(f"Safe with '{alias}' does not exist")
+
         return SafeAccount(account_file_path=account_path)
 
     def delete_account(self, alias: str):
-        path = self.data_folder.joinpath(f"{alias}.json")
+        """
+        Delete the local Safe account.
+        **NOTE**: If the account does not exist, nothing happens.
 
-        if path.exists():
-            path.unlink()
+        Args:
+            alias (str): The alias the Safe account is saved under.
+        """
+        self._get_path(alias).unlink(missing_ok=True)
+
+    def create_client(self, key: str) -> BaseSafeClient:
+        if key in self.aliases:
+            safe = self.load_account(key)
+            return safe.client
+
+        elif key in self.addresses:
+            return self[cast(AddressType, key)].client
+
+        elif key in self.aliases:
+            return self.load_account(key).client
+
+        else:
+            address = self.conversion_manager.convert(key, AddressType)
+            if address in self.addresses:
+                return self[cast(AddressType, key)].client
+
+            # Is not locally managed.
+            return SafeClient(address=address, chain_id=self.chain_manager.provider.chain_id)
+
+    def _get_path(self, alias: str) -> Path:
+        return self.data_folder.joinpath(f"{alias}.json")
+
+
+def get_signatures(
+    safe_tx_hash: str,
+    signers: Iterable[AccountAPI],
+) -> Dict[AddressType, MessageSignature]:
+    signatures: Dict[AddressType, MessageSignature] = {}
+    for signer in signers:
+        message = encode_defunct(hexstr=safe_tx_hash)
+        signature = signer.sign_message(message)
+        if signature:
+            signature_adjusted = adjust_v_in_signature(signature)
+            signatures[signer.address] = signature_adjusted
+
+    return signatures
+
+
+def _safe_tx_exec_args(safe_tx: SafeTx) -> List:
+    return list(safe_tx._body_["message"].values())
 
 
 class SafeAccount(AccountAPI):
@@ -77,7 +192,12 @@ class SafeAccount(AccountAPI):
 
     @property
     def address(self) -> AddressType:
-        return self.network_manager.ethereum.decode_address(self.account_file["address"])
+        try:
+            ecosystem = self.provider.network.ecosystem
+        except ProviderNotConnectedError:
+            ecosystem = self.network_manager.ethereum
+
+        return ecosystem.decode_address(self.account_file["address"])
 
     @cached_property
     def contract(self) -> ContractInstance:
@@ -88,11 +208,13 @@ class SafeAccount(AccountAPI):
             if fallback_signatures < contract_signatures:
                 return safe_contract  # for some reason this never gets hit
 
-            contract_type = safe_contract.contract_type.dict()
-            fallback_type = self.fallback_handler.contract_type.dict()
+            contract_type = safe_contract.contract_type.model_dump(by_alias=True, mode="json")
+            fallback_type = self.fallback_handler.contract_type.model_dump(
+                by_alias=True, mode="json"
+            )
             contract_type["abi"].extend(fallback_type["abi"])
             return self.chain_manager.contracts.instance_at(
-                self.address, contract_type=ContractType.parse_obj(contract_type)
+                self.address, contract_type=ContractType.model_validate(contract_type)
             )
 
         else:
@@ -101,18 +223,38 @@ class SafeAccount(AccountAPI):
     @cached_property
     def fallback_handler(self) -> Optional[ContractInstance]:
         slot = keccak(text="fallback_manager.handler.address")
-        value = self.provider.get_storage_at(self.address, slot)
+        value = self.provider.get_storage(self.address, slot)
         address = self.network_manager.ecosystem.decode_address(value[-20:])
-        if address != ZERO_ADDRESS:
-            return self.chain_manager.contracts.instance_at(address)
-        else:
-            return None
+        return (
+            self.chain_manager.contracts.instance_at(address) if address != ZERO_ADDRESS else None
+        )
 
     @cached_property
-    def client(self) -> SafeClient:
+    def client(self) -> BaseSafeClient:
         chain_id = self.provider.chain_id
-        if chain_id not in self.account_file["deployed_chain_ids"]:
-            raise ClientUnavailable(f"Safe client not valid on chain '{chain_id}'.")
+        override_url = os.environ.get("SAFE_TRANSACTION_SERVICE_URL")
+
+        if self.provider.network.is_local:
+            return MockSafeClient(contract=self.contract)
+
+        elif chain_id in self.account_file["deployed_chain_ids"]:
+            return SafeClient(
+                address=self.address, chain_id=self.provider.chain_id, override_url=override_url
+            )
+
+        elif (
+            self.provider.network.name.endswith("-fork")
+            and isinstance(self.provider.network, ForkedNetworkAPI)
+            and self.provider.network.upstream_chain_id in self.account_file["deployed_chain_ids"]
+        ):
+            return SafeClient(
+                address=self.address,
+                chain_id=self.provider.network.upstream_chain_id,
+                override_url=override_url,
+            )
+
+        elif self.provider.network.is_dev:
+            return MockSafeClient(contract=self.contract)
 
         return SafeClient(address=self.address, chain_id=self.provider.chain_id)
 
@@ -140,12 +282,33 @@ class SafeAccount(AccountAPI):
 
     @property
     def next_nonce(self) -> int:
+        """
+        The next nonce for on-chain. If you have multiple transactions
+        are in the queue but not published on chain, the next nonce
+        refers to the earliest nonce in that queue.
+        """
         try:
             return self.client.get_next_nonce()
         except Exception:
             return self.contract._view_methods_["nonce"]()
 
-    def sign_message(self, msg: SignableMessage) -> Optional[MessageSignature]:
+    @property
+    def new_nonce(self):
+        """
+        The next unused nonce in the system. This is different
+        than ``.next_nonce`` because it includes all nonces the
+        transaction service is aware of and not just the next
+        on-chain nonce.
+        """
+
+        # NOTE: Transaction and returned greatest nonce first.
+        if latest_tx := next(self.client.get_transactions(confirmed=False), None):
+            return latest_tx.nonce + 1
+
+        # No pending transactions. Use next on-chain nonce.
+        return self.next_nonce
+
+    def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
         raise NotImplementedError("Safe accounts do not support message signing!")
 
     @property
@@ -157,28 +320,38 @@ class SafeAccount(AccountAPI):
         )
 
     def create_safe_tx(self, txn: Optional[TransactionAPI] = None, **safe_tx_kwargs) -> SafeTx:
-        safe_tx = {}
-        safe_tx["to"] = safe_tx_kwargs.get(
-            "to", txn.receiver if txn else self.address  # Self-call, e.g. rejection
-        )
-        safe_tx["value"] = safe_tx_kwargs.get("value", txn.value if txn else 0)
-        safe_tx["data"] = safe_tx_kwargs.get("data", txn.data if txn else b"")
-        safe_tx["nonce"] = safe_tx_kwargs.get(
-            "nonce", self.next_nonce
-        )  # NOTE: Caution do NOT use self.nonce
-        safe_tx["operation"] = safe_tx_kwargs.get("operation", 0)
+        """
+        Create the Safe transaction.
 
-        safe_tx["safeTxGas"] = safe_tx_kwargs.get("safeTxGas", 0)
-        safe_tx["baseGas"] = safe_tx_kwargs.get("baseGas", 0)
-        safe_tx["gasPrice"] = safe_tx_kwargs.get("gasPrice", 0)
-        safe_tx["gasToken"] = safe_tx_kwargs.get(
-            "gasToken", "0x0000000000000000000000000000000000000000"
-        )
-        safe_tx["refundReceiver"] = safe_tx_kwargs.get(
-            "refundReceiver", "0x0000000000000000000000000000000000000000"
-        )
+        Args:
+            txn (Optional[``TransactionAPI``]): The transaction
+            **safe_tx_kwargs: The safe transactions specifications, such as ``submitter``.
 
+        Returns:
+            :class:`~ape_safe.client.SafeTx`: The Safe Transaction to be used.
+        """
+        safe_tx = {
+            "to": txn.receiver if txn else self.address,  # Self-call, e.g. rejection
+            "value": txn.value if txn else 0,
+            "data": (txn.data or b"") if txn else b"",
+            "nonce": self.new_nonce if txn is None or txn.nonce is None else txn.nonce,
+            "operation": 0,
+            "safeTxGas": 0,
+            "gasPrice": 0,
+            "gasToken": ZERO_ADDRESS,
+            "refundReceiver": ZERO_ADDRESS,
+        }
+        safe_tx = {
+            **safe_tx,
+            **{k: v for k, v in safe_tx_kwargs.items() if k in safe_tx and v is not None},
+        }
         return self.safe_tx_def(**safe_tx)
+
+    def pending_transactions(self) -> Iterator[Tuple[SafeTx, List[SafeTxConfirmation]]]:
+        for executed_tx in self.client.get_transactions(confirmed=False):
+            yield self.create_safe_tx(
+                **executed_tx.model_dump(mode="json", by_alias=True)
+            ), executed_tx.confirmations
 
     @property
     def local_signers(self) -> List[AccountAPI]:
@@ -186,35 +359,34 @@ class SafeAccount(AccountAPI):
         # TODO: Skip per user config
         # TODO: Order per user config
         container: Union[AccountManager, TestAccountManager]
-        if (
-            self.network_manager.active_provider
-            and self.provider.network.name == LOCAL_NETWORK_NAME
-            or self.provider.network.name.endswith("-fork")
-        ):
+        if self.network_manager.active_provider and self.provider.network.is_dev:
             container = self.account_manager.test_accounts
         else:
             container = self.account_manager
 
-        return list(container[address] for address in self.signers if address in container)
+        # Ensure the contract is available before continuing.
+        # Else, return an empty list
+        try:
+            _ = self.contract
+        except ContractNotFoundError:
+            return []
 
-    def get_signatures(
-        self,
-        safe_tx: SafeTx,
-        signers: Iterable[AccountAPI],
-    ) -> Iterator[Tuple[AddressType, MessageSignature]]:
-        for signer in signers:
-            if sig := signer.sign_message(safe_tx.signable_message):
-                yield signer.address, sig
+        return list(container[address] for address in self.signers if address in container)
 
     @handle_safe_logic_error()
     def create_execute_transaction(
         self,
         safe_tx: SafeTx,
-        signatures: Dict[AddressType, MessageSignature],
+        signatures: Mapping[AddressType, MessageSignature],
         **txn_options,
     ) -> TransactionAPI:
         exec_args = list(safe_tx._body_["message"].values())[:-1]  # NOTE: Skip `nonce`
-        encoded_signatures = self._encode_signatures(signatures)
+        encoded_signatures = HexBytes(
+            b"".join(
+                sig.encode_rsv() if isinstance(sig, MessageSignature) else sig
+                for sig in order_by_signer(signatures)
+            )
+        )
 
         # NOTE: executes a `ProviderAPI.prepare_transaction`, which may produce `ContractLogicError`
         return self.contract.execTransaction.as_transaction(
@@ -236,25 +408,33 @@ class SafeAccount(AccountAPI):
             return signers[index - 1]
 
         # NOTE: SENTINEL_OWNERS is the "previous" address to index 0
-        return AddressType("0x0000000000000000000000000000000000000001")  # type: ignore[arg-type]
+        return cast(AddressType, "0x0000000000000000000000000000000000000001")
+
+    def load_submitter(
+        self,
+        submitter: Union[AddressType, str, None] = None,
+    ) -> AccountAPI:
+        if submitter is None:
+            if len(self.local_signers) == 0:
+                raise NoLocalSigners()
+
+            return self.local_signers[0]
+
+        elif (
+            submitter_address := self.conversion_manager.convert(submitter, AddressType)
+            in self.account_manager
+        ):
+            return self.account_manager[submitter_address]
+
+        elif isinstance(submitter, str) and submitter in self.account_manager.aliases:
+            return self.account_manager.load(submitter)
+
+        else:
+            raise ValueError(f"Cannot handle {submitter}={type(submitter)}")
 
     def prepare_transaction(self, txn: TransactionAPI) -> TransactionAPI:
         # NOTE: Need to override `AccountAPI` behavior for balance checks
         return self.provider.prepare_transaction(txn)
-
-    def _encode_signatures(self, signatures: Dict[AddressType, MessageSignature]) -> HexBytes:
-        # NOTE: Must order signatures in ascending order of signer address (converted to int)
-        def addr_to_int(a: AddressType) -> int:
-            return to_int(hexstr=a)
-
-        return HexBytes(
-            b"".join(
-                signatures[signer].encode_rsv() for signer in sorted(signatures, key=addr_to_int)
-            )
-        )
-
-    def _safe_tx_exec_args(self, safe_tx: SafeTx) -> List:
-        return list(safe_tx._body_["message"].values())
 
     def _preapproved_signature(
         self, signer: Union[AddressType, BaseAddress, str]
@@ -271,12 +451,13 @@ class SafeAccount(AccountAPI):
     @handle_safe_logic_error()
     def _impersonated_call(self, txn: TransactionAPI, **safe_tx_and_call_kwargs) -> ReceiptAPI:
         safe_tx = self.create_safe_tx(txn, **safe_tx_and_call_kwargs)
-        safe_tx_exec_args = self._safe_tx_exec_args(safe_tx)
+        safe_tx_exec_args = _safe_tx_exec_args(safe_tx)
         signatures = {}
 
         # Bypass signature collection logic and attempt to submit by impersonation
         # NOTE: Only works for fork and local network providers that support `set_storage`
         safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
+        signer_address = None
         for signer_address in self.signers[: self.confirmations_required]:
             # NOTE: `approvedHashes` is `address => safe_tx_hash => num_confs` @ slot 8
             # TODO: Use native ape slot indexing, once available
@@ -296,7 +477,12 @@ class SafeAccount(AccountAPI):
         )
         return self.contract.execTransaction(
             *safe_tx_exec_args[:-1],  # NOTE: Skip nonce
-            self._encode_signatures(signatures),
+            HexBytes(
+                b"".join(
+                    sig.encode_rsv() if isinstance(sig, MessageSignature) else sig
+                    for sig in order_by_signer(signatures)
+                )
+            ),
             **safe_tx_and_call_kwargs,
         )
 
@@ -307,13 +493,35 @@ class SafeAccount(AccountAPI):
         impersonate: bool = False,
         **call_kwargs,
     ) -> ReceiptAPI:
+        # NOTE: This handles if given `submit=None'.
+        default_submit = not impersonate
+        submit = (
+            call_kwargs.pop("submit_transaction", call_kwargs.pop("submit", default_submit))
+            or not default_submit
+        )
+        call_kwargs["submit"] = submit
         if impersonate:
             return self._impersonated_call(txn, **call_kwargs)
 
         return super().call(txn, **call_kwargs)
 
-    def _contract_approvals(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
-        safe_tx_exec_args = self._safe_tx_exec_args(safe_tx)
+    def get_api_confirmations(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
+        safe_tx_id = get_safe_tx_hash(safe_tx)
+        try:
+            client_confirmations = self.client.get_confirmations(safe_tx_id)
+        except SafeClientException as err:
+            logger.error(str(err))
+            return {}
+
+        return {
+            conf.owner: MessageSignature(
+                r=conf.signature[:32], s=conf.signature[32:64], v=conf.signature[64]
+            )
+            for conf in client_confirmations
+        }
+
+    def _contract_approvals(self, safe_tx: SafeTx) -> Mapping[AddressType, MessageSignature]:
+        safe_tx_exec_args = _safe_tx_exec_args(safe_tx)
         safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
 
         return {
@@ -323,8 +531,36 @@ class SafeAccount(AccountAPI):
         }
 
     def _all_approvals(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
-        # TODO: Combine with approvals from SafeAPI
-        return self._contract_approvals(safe_tx)
+        approvals = self.get_api_confirmations(safe_tx)
+
+        # NOTE: Do this last because it should take precedence
+        approvals.update(self._contract_approvals(safe_tx))
+        return approvals
+
+    def submit_safe_tx(
+        self,
+        safe_tx: SafeTx,
+        submitter: Union[AccountAPI, AddressType, str, None] = None,
+        **txn_options,
+    ) -> ReceiptAPI:
+        """
+        Submit the safe transaction using the submitter after all signatures have been collected.
+
+        Args:
+            safe_tx (``SafeTX``): The safe transaction to submit.
+            submitter (Union[``AccountAPI``, ``AddressType``, str, ``None``]):
+                The submitter to use for the transaction. Defaults to ``None``.
+
+        Returns:
+            ``ReceiptAPI``
+        """
+        signatures = self._all_approvals(safe_tx)
+        txn = self.create_execute_transaction(safe_tx, signatures, **txn_options)
+
+        if not isinstance(submitter, AccountAPI):
+            submitter = self.load_submitter(submitter)
+
+        return submitter.call(txn)
 
     def sign_transaction(
         self,
@@ -335,35 +571,38 @@ class SafeAccount(AccountAPI):
         signatures_required: Optional[int] = None,  # NOTE: Required if increasing threshold
         **signer_options,
     ) -> Optional[TransactionAPI]:
-        # TODO: Docstring (override AccountAPI)
-        safe_tx = self.create_safe_tx(txn, **signer_options)
+        """
+        Sign the created safe transaction for the safe client to post.
+        **NOTE** ``signatures_required`` is required if the transaction is increasting the
+        threshold.
 
-        # Determine who is submitting the transaction (if enough signatures are gathered)
+        Args:
+            txn (``TransactionAPI``): The contract transaction.
+            submit (bool): The option to submit the transaction. Defaults to ``True``.
+            submitter (Union[``AccountAPI``, ``AddressType``, str, None]):
+                Determine who is submitting the transaction. Defaults to ``None``.
+            skip (Optional[List[Union[``AccountAPI, `AddressType``, str]]]):
+                Allow bypassing any specified signer. Defaults to ``None``.
+            signatures_required (Optional[int]):
+                The amount of signers required to confirm the transaction. Defaults to ``None``.
+            **signer_options: Other signer options.
+
+        Returns:
+            Optional[``TransactionAPI``]: Returns ``None`` if the transaction is successful.
+        """
+
         if not submit and submitter:
             raise ValueError("Cannot specify a submitter if not submitting.")
 
-        elif submit and not submitter:
-            if len(self.local_signers) == 0:
-                raise NoLocalSigners()
+        safe_tx = self.create_safe_tx(txn, **signer_options)
 
-            submitter = self.local_signers[0]
-            logger.info(f"No submitter specified, so using: {submitter}")
-
-        # NOTE: Works whether `submit` is set or not below here
-        elif (
-            submitter_address := self.conversion_manager.convert(submitter, AddressType)
-            in self.account_manager
-        ):
-            submitter = self.account_manager[submitter_address]
-
-        elif isinstance(submitter, str) and submitter in self.account_manager.aliases:
-            submitter = self.account_manager.load(submitter)
-
-        elif not isinstance(submitter, AccountAPI):
-            raise TypeError(f"Cannot handle 'submitter={type(submitter)}'.")
-
-        # Invariant: `submitter` should be either `AccountAPI` or we are not submitting here
-        assert isinstance(submitter, AccountAPI) or not submit
+        # Determine who is submitting the transaction (if enough signatures are gathered)
+        # NOTE: This is needed even if not submitting right now.
+        submitter_account: AccountAPI = (
+            self.load_submitter(submitter)
+            if submitter is None or not isinstance(submitter, AccountAPI)
+            else submitter
+        )
 
         # Garner either M or M - 1 signatures, depending on if we are submitting
         # and whether the submitter is also a signer (both must be true to submit M - 1).
@@ -372,13 +611,13 @@ class SafeAccount(AccountAPI):
 
         # If number of signatures required not specified, figure out how many are needed
         if not signatures_required:
-            if submitter and submitter.address in self.signers:
+            if submit and submitter_account.address in self.signers:
                 # Sender doesn't have to sign
                 signatures_required = self.confirmations_required - 1
                 # NOTE: Adjust signers to sign with by skipping submitter
-                available_signers = filter(lambda s: s != submitter, available_signers)
+                available_signers = filter(lambda s: s != submitter_account, available_signers)
 
-            else:  # NOTE: `submitter` is `None` if `submit` is False
+            else:
                 # Not submitting, or submitter isn't a signer, so we need all confirmations
                 signatures_required = self.confirmations_required
 
@@ -393,34 +632,32 @@ class SafeAccount(AccountAPI):
 
         # Check if transaction has existing tracked signatures
         sigs_by_signer = self._all_approvals(safe_tx)
+        safe_tx_hash = get_safe_tx_hash(safe_tx)
 
         # Attempt to fetch just enough signatures to satisfy the amount we need
         # NOTE: It is okay to have less signatures, but it never should fetch more than needed
-        sigs_by_signer.update(
-            dict(
-                islice(
-                    self.get_signatures(safe_tx, available_signers),
-                    signatures_required - len(sigs_by_signer),
-                )
-            )
-        )
+        signers = [x for x in available_signers if x.address not in sigs_by_signer]
+        if signers:
+            new_signatures = get_signatures(safe_tx_hash, signers)
+            sigs_by_signer = {**sigs_by_signer, **new_signatures}
 
         if (
-            submit  # NOTE: `submitter` should be set if `submit=True`
+            submit
             # We have enough signatures to commit the transaction,
             # and a non-signer will submit it as their own transaction
             and len(sigs_by_signer) >= signatures_required
         ):
             # We need to encode the submitter's address for Safe to decode
-            # NOTE: Should only be triggered if the `submitter` is also a signer
-            if len(sigs_by_signer) < self.confirmations_required:
-                sigs_by_signer[submitter.address] = self._preapproved_signature(submitter)
+            if submitter_account.address in self.signers:
+                sigs_by_signer[submitter_account.address] = self._preapproved_signature(
+                    submitter_account
+                )
 
             # Inherit gas args from safe_tx, if set
             gas_args = {"gas_limit": txn.gas_limit}
 
             if txn.type == TransactionType.STATIC:
-                gas_args["gas_price"] = txn.gas_price  # type: ignore[attr-defined]
+                gas_args["gas_price"] = txn.gas_price
 
             else:
                 gas_args["max_fee"] = txn.max_fee
@@ -430,24 +667,76 @@ class SafeAccount(AccountAPI):
                 safe_tx,
                 sigs_by_signer,
                 **gas_args,
-                nonce=submitter.nonce,  # NOTE: Required to correctly set nonce in encoded txn
+                nonce=submitter_account.nonce,
             )
-            return submitter.sign_transaction(exec_transaction, **signer_options)
+            return submitter_account.sign_transaction(exec_transaction, **signer_options)
 
         elif submit:
             # NOTE: User wanted to submit transaction, but we can't, so don't publish to API
             raise NotEnoughSignatures(signatures_required, len(sigs_by_signer))
-
-        elif submitter and submitter.address in self.signers:
-            # Not enough signatures were gathered to submit, but submitter also didn't sign yet,
-            # so might as well get one more sig from them before publishing confirmations to API.
-            if sig := submitter.sign_message(safe_tx.signable_message):
-                sigs_by_signer[submitter.address] = sig
 
         # NOTE: Not enough signatures were obtained to publish on-chain
         logger.info(
             f"Collected {len(sigs_by_signer)}/{self.confirmations_required} signatures "
             f"for Safe {self.address}#{safe_tx.nonce}"  # TODO: put URI
         )
-        # TODO: Submit safe_tx and sigs to Safe API
+
+        # NOTE: Signatures don't have to be in order for Safe API post
+        self.client.post_transaction(
+            safe_tx,
+            sigs_by_signer,
+            contractTransactionHash=safe_tx_hash,
+            sender=submitter_account.address,
+        )
+
+        # Return None so that Ape does not try to submit the transaction.
         return None
+
+    def add_signatures(
+        self, safe_tx: SafeTx, confirmations: Optional[List[SafeTxConfirmation]] = None
+    ) -> Dict[AddressType, MessageSignature]:
+        confirmations = confirmations or []
+        if not self.local_signers:
+            raise ApeSafeError("Cannot sign without local signers.")
+
+        amount_needed = self.confirmations_required - len(confirmations)
+        signers = [
+            acc for acc in self.local_signers if acc.address not in [c.owner for c in confirmations]
+        ][:amount_needed]
+
+        safe_tx_hash = _get_safe_tx_id(safe_tx, confirmations)
+        signatures = get_signatures(safe_tx_hash, signers)
+        if signatures:
+            self.client.post_signatures(safe_tx_hash, signatures)
+
+        return signatures
+
+    def select_signer(self, for_: str = "submitter") -> AccountAPI:
+        return select_account(prompt_message=f"Select a {for_}", key=self.local_signers)
+
+
+def _get_safe_tx_id(safe_tx: SafeTx, confirmations: List[SafeTxConfirmation]) -> SafeTxID:
+    if tx_hash_result := next((c.transaction_hash for c in confirmations), None):
+        return cast(SafeTxID, tx_hash_result)
+
+    elif value := get_safe_tx_hash(safe_tx):
+        return value
+
+    raise ApeSafeError("Failed to get transaction hash.")
+
+
+def adjust_v_in_signature(signature: MessageSignature) -> MessageSignature:
+    MIN_VALID_V_VALUE_FOR_SAFE_ECDSA = 27
+    v = signature.v
+
+    if v < MIN_VALID_V_VALUE_FOR_SAFE_ECDSA:
+        v += MIN_VALID_V_VALUE_FOR_SAFE_ECDSA
+
+    # Add 4 because we signed with the prefix.
+    v += 4
+
+    return MessageSignature(
+        v=v,
+        r=signature.r,
+        s=signature.s,
+    )

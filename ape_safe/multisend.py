@@ -6,7 +6,7 @@ from ape.types import ContractType, HexBytes
 from ape.utils import ManagerAccessMixin, cached_property
 from eth_abi.packed import encode_packed
 
-from .exceptions import UnsupportedChainError, ValueRequired
+from ape_safe.exceptions import UnsupportedChainError, ValueRequired
 
 MULTISEND_CODE = HexBytes(
     "0x60806040526004361061001e5760003560e01c80638d80ff0a14610023575b600080fd5b6100dc6004803603602"
@@ -129,7 +129,7 @@ class MultiSend(ManagerAccessMixin):
         # All versions have this ABI
         contract = self.chain_manager.contracts.instance_at(
             multisend_address,
-            contract_type=ContractType.parse_obj(MULTISEND_CONTRACT_TYPE),
+            contract_type=ContractType.model_validate(MULTISEND_CONTRACT_TYPE),
         )
 
         if contract.code != MULTISEND_CODE:
@@ -214,6 +214,8 @@ class MultiSend(ManagerAccessMixin):
             :class:`~ape.api.transactions.ReceiptAPI`
         """
         self._validate_calls(**txn_kwargs)
+        if "operation" not in txn_kwargs and not txn_kwargs.get("impersonate", False):
+            txn_kwargs["operation"] = 1
         return self.handler(b"".join(self.encoded_calls), **txn_kwargs)
 
     def as_transaction(self, **txn_kwargs) -> TransactionAPI:
@@ -226,6 +228,8 @@ class MultiSend(ManagerAccessMixin):
         self._validate_calls(**txn_kwargs)
         # NOTE: Will fail using `self.handler.as_transaction` because handler
         #       expects to be called only via delegatecall
+        if "operation" not in txn_kwargs and not txn_kwargs.get("impersonate", False):
+            txn_kwargs["operation"] = 1
         return self.network_manager.ecosystem.create_transaction(
             receiver=self.handler.contract.address,
             data=self.handler.encode_input(b"".join(self.encoded_calls)),

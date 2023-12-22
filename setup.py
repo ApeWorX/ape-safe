@@ -8,10 +8,13 @@ extras_require = {
         "pytest-xdist",  # multi-process runner
         "pytest-cov",  # Coverage analyzer plugin
         "hypothesis>=6.2.0,<7.0",  # Strategy-based fuzzer
+        "ape-foundry",  # Used as the testing provider
+        "ape-solidity",  # Needed for compiling the Safe contracts
     ],
     "lint": [
-        "black>=23.7.0,<24",  # Auto-formatter and linter
-        "mypy>=1.5.1,<2",  # Static type analyzer
+        "black>=23.11.0,<24",  # Auto-formatter and linter
+        "mypy>=1.7.1,<2",  # Static type analyzer
+        "types-requests",  # Needed for mypy type shed
         "types-setuptools",  # Needed for mypy type shed
         "flake8>=6.1.0,<7",  # Style linter
         "isort>=5.10.1,<6",  # Import sorting linter
@@ -24,7 +27,7 @@ extras_require = {
     ],
     "dev": [
         "commitizen",  # Manage commits and publishing releases
-        "pre-commit",  # Ensure that linters are run prior to commiting
+        "pre-commit",  # Ensure that linters are run prior to committing
         "pytest-watch",  # `ptw` test watcher/runner
         "IPython",  # Console for interacting
         "ipdb",  # Debugger (Must use `export PYTHONBREAKPOINT=ipdb.set_trace`)
@@ -50,13 +53,17 @@ setup(
     description="""ape-safe: Gnosis Safe account plugin for Ape""",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="banteg.",
-    author_email="banteeg@gmail.com",
-    url="https://github.com/banteg/ape-safe",
+    author="ApeWorX Ltd.",
+    author_email="admin@apeworx.io",
+    url="https://github.com/ApeWorX/ape-safe",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.6.11,<0.7.0",
-        "eip712>=0.2.0,<0.3.0",
+        "eth-ape>=0.7.0,<0.8",
+        "requests>=2.31.0,<3",
+        "eip712",  # Use same version as eth-ape
+        "click",  # Use same version as eth-ape
+        "pydantic",  # Use same version as eth-ape
+        "eth-utils",  # Use same version as eth-ape
     ],
     entry_points={
         "ape_cli_subcommands": [

@@ -1,12 +1,19 @@
 from contextlib import ContextDecorator
 from typing import Optional, Type
 
-from ape.exceptions import ApeException, ContractLogicError, SignatureError
+from ape.exceptions import AccountsError, ApeException, ContractLogicError, SignatureError
 from ape.types import AddressType
+from requests import Response
 
 
 class ApeSafeException(ApeException):
     pass
+
+
+class ApeSafeError(ApeSafeException, AccountsError):
+    """
+    An error to raise in place of AccountsError for the ``ape-safe`` plugin.
+    """
 
 
 class NotASigner(ApeSafeException):
@@ -98,3 +105,31 @@ class ValueRequired(MulticallException):
 class UnsupportedChainError(MulticallException):
     def __init__(self):
         super().__init__("Multicall not supported on this chain.")
+
+
+class SafeClientException(ApeSafeException):
+    pass
+
+
+class ClientUnsupportedChainError(SafeClientException):
+    def __init__(self, chain_id: int):
+        super().__init__(f"Unsupported Chain ID '{chain_id}'.")
+
+
+class ActionNotPerformedError(SafeClientException):
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class ClientResponseError(SafeClientException):
+    def __init__(self, endpoint_url: str, response: Response, message: Optional[str] = None):
+        self.endpoint_url = endpoint_url
+        self.response = response
+        message = message or f"Exception when calling '{endpoint_url}':\n{response.text}"
+        super().__init__(message)
+
+
+class MultisigTransactionNotFoundError(ClientResponseError):
+    def __init__(self, tx_hash: str, endpoint_url: str, response: Response):
+        message = f"Multisig transaction '{tx_hash}' not found."
+        super().__init__(endpoint_url, response, message=message)

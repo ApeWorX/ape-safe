@@ -2,10 +2,29 @@ import json
 import tempfile
 from pathlib import Path
 
+import ape
 import pytest
+from ape.contracts import ContractContainer
 from ape.utils import ZERO_ADDRESS
+from ethpm_types import ContractType
 
+from ape_safe import MultiSend
 from ape_safe.accounts import SafeAccount
+
+contracts_directory = Path(__file__).parent / "contracts"
+TESTS_DIR = Path(__file__).parent.absolute()
+DATA_FOLDER = Path(tempfile.mkdtemp()).resolve()
+ape.config.DATA_FOLDER = DATA_FOLDER
+
+
+@pytest.fixture(scope="session")
+def config():
+    return ape.config
+
+
+@pytest.fixture
+def data_folder(config):
+    return config.DATA_FOLDER / "safe"
 
 
 @pytest.fixture(scope="session")
@@ -24,7 +43,7 @@ def SafeSingleton(project, VERSION):
 
 
 @pytest.fixture
-def singleton(deployer, SafeSingleton):
+def singleton(deployer: SafeAccount, SafeSingleton):
     return deployer.deploy(SafeSingleton)
 
 
@@ -93,5 +112,35 @@ def safe_data_file(chain, safe_contract):
 
 @pytest.fixture
 def safe(safe_data_file):
-    # TODO: Mock `SafeAccount.client` or use local client
     return SafeAccount(account_file_path=safe_data_file)
+
+
+@pytest.fixture
+def safes():
+    return ape.accounts.containers["safe"]
+
+
+@pytest.fixture
+def token(deployer: SafeAccount):
+    text = (contracts_directory / "Token.json").read_text()
+    contract = ContractType.model_validate_json(text)
+    return deployer.deploy(ContractContainer(contract))
+
+
+@pytest.fixture
+def vault(deployer: SafeAccount, token):
+    text = (contracts_directory / "VyperVault.json").read_text()
+    vault = ContractContainer(ContractType.model_validate_json(text))
+    return deployer.deploy(vault, token)
+
+
+@pytest.fixture
+def foundry(networks):
+    with networks.ethereum.local.use_provider("foundry") as provider:
+        yield provider
+
+
+@pytest.fixture
+def multisend():
+    MultiSend.inject()
+    return MultiSend()
