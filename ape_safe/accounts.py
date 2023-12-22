@@ -62,6 +62,8 @@ class SafeContainer(AccountContainerAPI):
                 yield self._accounts[account_file.stem]
 
             else:
+                # Cache the accounts so their local state is maintained
+                # throughout the current Python session.
                 acct = SafeAccount(account_file_path=account_file)
                 self._accounts[account_file.stem] = acct
                 yield acct
