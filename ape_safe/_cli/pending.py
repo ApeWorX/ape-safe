@@ -2,6 +2,7 @@ from typing import Dict, List, Optional, Sequence, Union, cast
 
 import click
 import rich
+from ape import accounts
 from ape.api import AccountAPI
 from ape.cli import ConnectedProviderCommand
 from ape.exceptions import SignatureError
@@ -132,21 +133,26 @@ def _handle_execute_cli_arg(ctx, param, val) -> Optional[Union[AccountAPI, bool]
 @click.option("--value", type=int, help="Transaction value", default=0)
 @click.option("--to", "receiver", type=ChecksumAddress, help="Transaction receiver")
 @click.option("--nonce", type=int, help="Transaction nonce")
-@click.option("--execute", callback=_handle_execute_cli_arg)
-def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, execute):
+@click.option("--sender", callback=_handle_execute_cli_arg)
+@click.option("--execute", help="Execute if possible after proposal", is_flag=True)
+def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, sender, execute):
     """
     Create a new transaction
     """
     nonce = safe.new_nonce if nonce is None else nonce
     txn = ecosystem.create_transaction(
-        value=value, data=data, gas_price=gas_price, nonce=nonce, receiver=receiver
+        value=value,
+        data=data,
+        gas_price=gas_price,
+        nonce=nonce,
+        receiver=receiver,
     )
     safe_tx = safe.create_safe_tx(txn)
     safe_tx_hash = get_safe_tx_hash(safe_tx)
     signatures = get_signatures(safe_tx_hash, safe.local_signers)
 
     num_confirmations = 0
-    submitter = execute if isinstance(execute, AccountAPI) else None
+    submitter = sender if isinstance(sender, AccountAPI) else None
     if execute is None and submitter is None:
         # Check if we _can_ execute and ask the user.
         do_execute = (
@@ -159,10 +165,9 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, e
             # So we prompt them.
             submitter = safe.select_signer(for_="submitter")
 
-    owner = submitter if isinstance(submitter, AccountAPI) else safe.select_signer(for_="owner")
-
+    sender = submitter if isinstance(submitter, AccountAPI) else safe.select_signer(for_="sender")
     safe.client.post_transaction(
-        safe_tx, signatures, sender=owner.address, contractTransactionHash=safe_tx_hash
+        safe_tx, signatures, sender=sender.address, contractTransactionHash=safe_tx_hash
     )
 
     # Wait for new transaction to appear
@@ -178,27 +183,29 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, e
         )
         timeout -= 1
 
-    if not new_tx:
+    if new_tx:
+        cli_ctx.logger.success(f"Proposed transaction '{safe_tx_hash}'.")
+    else:
         cli_ctx.abort("Failed to propose transaction.")
 
-    if submitter:
-        _execute(safe, new_tx, submitter)
+    if execute:
+        _execute(safe, new_tx, sender)
 
 
 def _load_submitter(ctx, param, val):
     if val is None:
         return None
 
-    elif val in ctx.obj.account_manager.aliases:
-        return ctx.obj.account_manager.load(val)
+    elif val in accounts.aliases:
+        return accounts.load(val)
 
     # Account address - execute using this account.
-    elif val in ctx.obj.account_manager:
-        return ctx.obj.account_manager[val]
+    elif val in accounts:
+        return accounts[val]
 
     # Saying "yes, execute". Use first "local signer".
     elif val.lower() in ("true", "t", "1"):
-        safe = ctx.obj.account_manager.load(ctx.params["alias"])
+        safe = accounts.load(ctx.params["alias"])
         if not safe.local_signers:
             ctx.obj.abort("Cannot use `--execute TRUE` without a local signer.")
 
@@ -295,12 +302,9 @@ def execute(cli_ctx, safe, txn_ids, submitter, nonce):
 
 def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI, **tx_kwargs):
     safe_tx = safe.create_safe_tx(**txn.model_dump(mode="json", by_alias=True))
-
-    # TODO: Can remove type ignore after Ape 0.7.1
     signatures: Dict[AddressType, MessageSignature] = {
-        c.owner: MessageSignature.from_rsv(c.signature) for c in txn.confirmations  # type: ignore
+        c.owner: MessageSignature.from_rsv(c.signature) for c in txn.confirmations
     }
-
     exc_tx = safe.create_execute_transaction(safe_tx, signatures, **tx_kwargs)
     submitter.call(exc_tx)
 
@@ -339,7 +343,7 @@ def reject(cli_ctx: SafeCliContext, safe, txn_ids, execute):
         elif click.confirm(f"{txn}\nCancel Transaction?"):
             try:
                 safe.transfer(
-                    safe, "0 ether", nonce=txn.nonce, submit_transaction=submit, submitter=submitter
+                    safe, 0, nonce=txn.nonce, submit_transaction=submit, submitter=submitter
                 )
             except SignatureError:
                 # These are expected because of how the plugin works

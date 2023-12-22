@@ -73,8 +73,6 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         self, safe_tx: SafeTx, signatures: Dict[AddressType, MessageSignature], **kwargs
     ):
         safe_tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
-
-        # NOTE: Using `construct` to avoid HexBytes pydantic v1 backimports issue.
         safe_tx_data.confirmations.extend(
             SafeTxConfirmation(
                 owner=signer,
@@ -86,7 +84,6 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         )
         tx_id = cast(SafeTxID, HexBytes(safe_tx_data.safe_tx_hash).hex())
         self.transactions[tx_id] = safe_tx_data
-
         if safe_tx_data.nonce in self.transactions_by_nonce:
             self.transactions_by_nonce[safe_tx_data.nonce].append(tx_id)
         else:

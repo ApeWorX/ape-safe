@@ -28,8 +28,13 @@ def data_folder(config):
 
 
 @pytest.fixture(scope="session")
-def deployer(accounts):
-    return accounts[-1]
+def deployer(OWNERS):
+    return OWNERS[-1]
+
+
+@pytest.fixture(scope="session")
+def receiver(accounts):
+    return accounts[9]
 
 
 @pytest.fixture(scope="session", params=["1.3.0"])  # TODO: Test more versions later?

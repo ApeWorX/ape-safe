@@ -13,7 +13,7 @@ from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS, cached_property
-from ape_ethereum.transactions import TransactionType
+from ape_ethereum.transactions import StaticFeeTransaction, TransactionType
 from eip712.common import create_safe_tx_def
 from eth_account.messages import encode_defunct
 from eth_utils import keccak, to_bytes, to_int
@@ -39,6 +39,8 @@ from ape_safe.utils import get_safe_tx_hash, order_by_signer
 
 
 class SafeContainer(AccountContainerAPI):
+    _accounts: Dict[str, "SafeAccount"] = {}
+
     @property
     def _account_files(self) -> Iterator[Path]:
         yield from self.data_folder.glob("*.json")
@@ -56,7 +58,15 @@ class SafeContainer(AccountContainerAPI):
     @property
     def accounts(self) -> Iterator[AccountAPI]:
         for account_file in self._account_files:
-            yield SafeAccount(account_file_path=account_file)
+            if account_file.stem in self._accounts:
+                yield self._accounts[account_file.stem]
+
+            else:
+                # Cache the accounts so their local state is maintained
+                # throughout the current Python session.
+                acct = SafeAccount(account_file_path=account_file)
+                self._accounts[account_file.stem] = acct
+                yield acct
 
     def __len__(self) -> int:
         return len([*self._account_files])
@@ -121,11 +131,16 @@ class SafeContainer(AccountContainerAPI):
         Returns:
             :class:`~ape_safe.accounts.SafeAccount`: The Safe account loaded.
         """
+        if alias in self._accounts:
+            return self._accounts[alias]
+
         account_path = self._get_path(alias)
         if not account_path.is_file():
             raise ApeSafeError(f"Safe with '{alias}' does not exist")
 
-        return SafeAccount(account_file_path=account_path)
+        acct = SafeAccount(account_file_path=account_path)
+        self._accounts[alias] = acct
+        return acct
 
     def delete_account(self, alias: str):
         """
@@ -330,6 +345,14 @@ class SafeAccount(AccountAPI):
         Returns:
             :class:`~ape_safe.client.SafeTx`: The Safe Transaction to be used.
         """
+        gas_price = safe_tx_kwargs.get(
+            "gas_price", safe_tx_kwargs.get("gasPrice", safe_tx_kwargs.get("gas"))
+        )
+        if gas_price is None and isinstance(txn, StaticFeeTransaction):
+            gas_price = txn.gas_price or 0
+        elif gas_price is None:
+            gas_price = 0
+
         safe_tx = {
             "to": txn.receiver if txn else self.address,  # Self-call, e.g. rejection
             "value": txn.value if txn else 0,
@@ -337,7 +360,7 @@ class SafeAccount(AccountAPI):
             "nonce": self.new_nonce if txn is None or txn.nonce is None else txn.nonce,
             "operation": 0,
             "safeTxGas": 0,
-            "gasPrice": 0,
+            "gasPrice": gas_price,
             "gasToken": ZERO_ADDRESS,
             "refundReceiver": ZERO_ADDRESS,
         }
