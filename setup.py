@@ -12,13 +12,14 @@ extras_require = {
         "ape-solidity",  # Needed for compiling the Safe contracts
     ],
     "lint": [
-        "black>=23.11.0,<24",  # Auto-formatter and linter
+        "black>=23.12.0,<24",  # Auto-formatter and linter
         "mypy>=1.7.1,<2",  # Static type analyzer
         "types-requests",  # Needed for mypy type shed
         "types-setuptools",  # Needed for mypy type shed
         "flake8>=6.1.0,<7",  # Style linter
         "isort>=5.10.1,<6",  # Import sorting linter
         "mdformat>=0.7.17,<0.8",  # Docs formatter and linter
+        "mdformat-pyproject>=0.0.1",  # Allows configuring in pyproject.toml
     ],
     "release": [  # `release` GitHub Action job uses this
         "setuptools",  # Installation tool
@@ -58,7 +59,7 @@ setup(
     url="https://github.com/ApeWorX/ape-safe",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.7.0,<0.8",
+        "eth-ape>=0.7.1,<0.8",
         "requests>=2.31.0,<3",
         "eip712",  # Use same version as eth-ape
         "click",  # Use same version as eth-ape
