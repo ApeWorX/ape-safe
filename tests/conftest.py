@@ -18,16 +18,6 @@ ape.config.DATA_FOLDER = DATA_FOLDER
 
 
 @pytest.fixture(scope="session")
-def accounts():
-    return ape.accounts.test_accounts
-
-
-@pytest.fixture(scope="session")
-def chain():
-    return ape.chain
-
-
-@pytest.fixture(scope="session")
 def config():
     return ape.config
 
