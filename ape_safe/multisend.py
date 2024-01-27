@@ -91,7 +91,7 @@ class MultiSend(ManagerAccessMixin):
 
         from ape_safe import multisend
 
-        txn = multisend.Transaction()
+        txn = multisend.MultiSend()
         txn.add(contract.myMethod, *call_args)
         txn.add(contract.myMethod, *call_args)
         ...  # Add as many calls as desired to execute
