@@ -140,7 +140,7 @@ vault = tokens["yvDAI"]
 amount = dai.balanceOf(safe)  # How much we want to deposit
 
 # Create a multisend transaction (a transaction that executes multiple calls)
-txn = multisend.Transaction()
+txn = multisend.MultiSend()
 txn.add(dai.approve, vault, amount)
 txn.add(vault.deposit, amount)
 
