@@ -133,7 +133,6 @@ from ape import accounts
 from ape_tokens import tokens
 
 safe   = accounts.load("my-safe")
-signer = accounts.load("signer")
 
 # Load some contracts (here using ape-tokens)
 dai = tokens["DAI"]
@@ -147,7 +146,7 @@ txn.add(vault.deposit, amount)
 
 # Fetch signatures from any local signers, and broadcast if confirmations are met
 # Otherwise, it will post the partially confirmed message to Safe Global's API
-txn(sender=signer)
+txn(sender=safe)
 ```
 
 ## Development
