@@ -132,7 +132,7 @@ from ape_safe import multisend
 from ape import accounts
 from ape_tokens import tokens
 
-safe   = accounts.load("my-safe")
+safe = accounts.load("my-safe")
 
 # Load some contracts (here using ape-tokens)
 dai = tokens["DAI"]
