@@ -8,13 +8,14 @@ from eth_abi.packed import encode_packed
 
 from ape_safe.exceptions import UnsupportedChainError, ValueRequired
 
-MULTISEND_CODE = HexBytes(
+# TODO: Do this better
+MULTISEND_CODE = lambda address: HexBytes(  # noqa: E731
     "0x60806040526004361061001e5760003560e01c80638d80ff0a14610023575b600080fd5b6100dc6004803603602"
     "081101561003957600080fd5b810190808035906020019064010000000081111561005657600080fd5b8201836020"
     "8201111561006857600080fd5b8035906020019184600183028401116401000000008311171561008a57600080fd5"
     "b91908080601f01602080910402602001604051908101604052809392919081815260200183838082843760008184"
     "0152601f19601f8201169050808301925050505050505091929192905050506100de565b005b7f000000000000000"
-    "000000000a238cbeb142c10ef7ad8442c6d1f9e89e07e776173ffffffffffffffffffffffffffffffffffffffff16"
+    f"000000000{address[2:].lower()}73ffffffffffffffffffffffffffffffffffffffff16"
     "3073ffffffffffffffffffffffffffffffffffffffff161415610183576040517f08c379a00000000000000000000"
     "000000000000000000000000000000000000081526004018080602001828103825260308152602001806102106030"
     "913960400191505060405180910390fd5b805160205b8181101561020a578083015160f81c6001820184015160601"
@@ -119,7 +120,7 @@ class MultiSend(ManagerAccessMixin):
 
         active_provider.set_code(
             DEFAULT_ADDRESS,
-            MULTISEND_CODE,
+            MULTISEND_CODE(DEFAULT_ADDRESS),
         )
 
     @cached_property
@@ -132,7 +133,7 @@ class MultiSend(ManagerAccessMixin):
             contract_type=ContractType.model_validate(MULTISEND_CONTRACT_TYPE),
         )
 
-        if contract.code != MULTISEND_CODE:
+        if contract.code != MULTISEND_CODE(multisend_address):
             raise UnsupportedChainError()
 
         return contract
