@@ -1,6 +1,11 @@
 # Ape stuff
 .build/
 
+# NPM Stuff
+node_modules/
+package.json
+package-lock.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
