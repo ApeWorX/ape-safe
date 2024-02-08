@@ -1,5 +1,11 @@
 contracts_folder: tests/contracts
 
+plugins:
+  - name: foundry
+  - name: solidity
+  - name: etherscan
+  - name: alchemy
+
 ethereum:
   mainnet:
     default_provider: alchemy

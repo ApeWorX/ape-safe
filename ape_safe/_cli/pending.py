@@ -2,18 +2,24 @@ from typing import Dict, List, Optional, Sequence, Union, cast
 
 import click
 import rich
-from ape import accounts
 from ape.api import AccountAPI
 from ape.cli import ConnectedProviderCommand
 from ape.exceptions import SignatureError
 from ape.types import AddressType, MessageSignature
-from click.exceptions import BadOptionUsage
 from eth_typing import ChecksumAddress, Hash32
 from eth_utils import humanize_hash
 from hexbytes import HexBytes
 
 from ape_safe import SafeAccount
-from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx, safe_option, txn_ids_argument
+from ape_safe._cli.click_ext import (
+    SafeCliContext,
+    execute_option,
+    safe_cli_ctx,
+    safe_option,
+    sender_option,
+    submitter_option,
+    txn_ids_argument,
+)
 from ape_safe.accounts import get_signatures
 from ape_safe.client import UnexecutedTxData
 from ape_safe.utils import get_safe_tx_hash
@@ -98,33 +104,6 @@ def _list(cli_ctx, safe, verbose) -> None:
                     click.echo()
 
 
-# NOTE: The handling of the `--execute` flag in the `pending` CLI
-#    all happens here EXCEPT if a pending tx is executable and no
-#    value of `--execute` was provided.
-def _handle_execute_cli_arg(ctx, param, val) -> Optional[Union[AccountAPI, bool]]:
-    """
-    Either returns the account or ``False`` meaning don't execute
-    """
-
-    if val is None:
-        # Was not given any value.
-        # If it is determined in `pending` that a tx can execute,
-        # the user will get prompted.
-        # Avoid this by always doing `--execute false`.
-        return None
-
-    elif submitter := _load_submitter(ctx, param, val):
-        return submitter
-
-    # Saying "no, do not execute", even if we could.
-    elif val.lower() in ("false", "f", "0"):
-        return False
-
-    raise BadOptionUsage(
-        "--execute", f"`--execute` value '{val}` not a boolean or account identifier."
-    )
-
-
 @pending.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx()
 @safe_option
@@ -133,7 +112,7 @@ def _handle_execute_cli_arg(ctx, param, val) -> Optional[Union[AccountAPI, bool]
 @click.option("--value", type=int, help="Transaction value", default=0)
 @click.option("--to", "receiver", type=ChecksumAddress, help="Transaction receiver")
 @click.option("--nonce", type=int, help="Transaction nonce")
-@click.option("--sender", callback=_handle_execute_cli_arg)
+@sender_option
 @click.option("--execute", help="Execute if possible after proposal", is_flag=True)
 def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, sender, execute):
     """
@@ -192,33 +171,11 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, s
         _execute(safe, new_tx, sender)
 
 
-def _load_submitter(ctx, param, val):
-    if val is None:
-        return None
-
-    elif val in accounts.aliases:
-        return accounts.load(val)
-
-    # Account address - execute using this account.
-    elif val in accounts:
-        return accounts[val]
-
-    # Saying "yes, execute". Use first "local signer".
-    elif val.lower() in ("true", "t", "1"):
-        safe = accounts.load(ctx.params["alias"])
-        if not safe.local_signers:
-            ctx.obj.abort("Cannot use `--execute TRUE` without a local signer.")
-
-        return safe.select_signer(for_="submitter")
-
-    return None
-
-
 @pending.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx()
 @safe_option
 @txn_ids_argument
-@click.option("--execute", callback=_handle_execute_cli_arg)
+@execute_option
 def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
     submitter: Optional[AccountAPI] = execute if isinstance(execute, AccountAPI) else None
     pending_transactions = list(
@@ -272,7 +229,7 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
 @safe_option
 @txn_ids_argument
 # NOTE: Doesn't use --execute because we don't need BOOL values.
-@click.option("--submitter", help="Account to execute", callback=_load_submitter)
+@submitter_option
 @click.option("--nonce", help="Submitter nonce")
 def execute(cli_ctx, safe, txn_ids, submitter, nonce):
     """
@@ -313,7 +270,7 @@ def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI, **
 @safe_cli_ctx()
 @safe_option
 @txn_ids_argument
-@click.option("--execute", callback=_handle_execute_cli_arg)
+@execute_option
 def reject(cli_ctx: SafeCliContext, safe, txn_ids, execute):
     """
     Reject one or more pending transactions

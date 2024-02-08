@@ -34,34 +34,28 @@ class BaseSafeClient(ABC):
 
     @property
     @abstractmethod
-    def safe_details(self) -> SafeDetails:
-        ...
+    def safe_details(self) -> SafeDetails: ...
 
     @abstractmethod
-    def get_next_nonce(self) -> int:
-        ...
+    def get_next_nonce(self) -> int: ...
 
     @abstractmethod
-    def _all_transactions(self) -> Iterator[SafeApiTxData]:
-        ...
+    def _all_transactions(self) -> Iterator[SafeApiTxData]: ...
 
     @abstractmethod
-    def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
-        ...
+    def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]: ...
 
     @abstractmethod
     def post_transaction(
         self, safe_tx: SafeTx, signatures: Dict[AddressType, MessageSignature], **kwargs
-    ):
-        ...
+    ): ...
 
     @abstractmethod
     def post_signatures(
         self,
         safe_tx_or_hash: Union[SafeTx, SafeTxID],
         signatures: Dict[AddressType, MessageSignature],
-    ):
-        ...
+    ): ...
 
     """Shared methods"""
 

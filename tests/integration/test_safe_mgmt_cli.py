@@ -36,9 +36,12 @@ def test_list_network_connected(runner, cli, one_safe):
     assert "not connected" not in result.output
 
 
-def test_add_safe(runner, cli, no_safes, safe):
+def test_add_safe(runner, cli, no_safes, safe, chain):
     result = runner.invoke(
-        cli, ["add", safe.address, safe.alias], catch_exceptions=False, input="y\n"
+        cli,
+        ["add", safe.address, safe.alias, "--network", chain.provider.network_choice],
+        catch_exceptions=False,
+        input="y\n",
     )
     assert result.exit_code == 0, result.output
     assert "SUCCESS" in result.output, result.output

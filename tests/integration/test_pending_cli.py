@@ -3,7 +3,7 @@ def test_help(runner, cli):
     assert result.exit_code == 0, result.output
 
 
-def test_propose(runner, cli, one_safe, receiver):
+def test_propose(runner, cli, one_safe, receiver, chain):
     nonce_at_start = one_safe.next_nonce
     cmd = (
         "pending",
@@ -12,6 +12,8 @@ def test_propose(runner, cli, one_safe, receiver):
         receiver.address,
         "--value",
         "1",
+        "--network",
+        chain.provider.network_choice,
     )
 
     # Sender is required by the API even for initial proposal,
@@ -39,7 +41,9 @@ def test_propose_with_gas_price(runner, cli, one_safe, receiver, chain):
         "--value",
         "1",
         "--gas-price",
-        chain.provider.gas_price,
+        chain.provider.gas_price + 1,
+        "--network",
+        chain.provider.network_choice,
     )
     result = runner.invoke(cli, cmd, catch_exceptions=False, input=f"{one_safe.alias}\n")
     assert result.exit_code == 0
@@ -50,7 +54,7 @@ def test_propose_with_gas_price(runner, cli, one_safe, receiver, chain):
     assert tx.gas_price > 0
 
 
-def test_propose_with_sender(runner, cli, one_safe, receiver):
+def test_propose_with_sender(runner, cli, one_safe, receiver, chain):
     # First, fund the safe so the tx does not fail.
     receiver.transfer(one_safe, "1 ETH")
 
@@ -64,6 +68,8 @@ def test_propose_with_sender(runner, cli, one_safe, receiver):
         "1",
         "--sender",
         receiver.address,
+        "--network",
+        chain.provider.network_choice,
     )
     result = runner.invoke(cli, cmd, catch_exceptions=False)
     assert result.exit_code == 0, result.output
@@ -72,7 +78,7 @@ def test_propose_with_sender(runner, cli, one_safe, receiver):
     assert one_safe.next_nonce == nonce_at_start
 
 
-def test_propose_with_execute(runner, cli, one_safe, receiver):
+def test_propose_with_execute(runner, cli, one_safe, receiver, chain):
     # First, fund the safe so the tx does not fail.
     receiver.transfer(one_safe, "1 ETH")
 
@@ -87,20 +93,24 @@ def test_propose_with_execute(runner, cli, one_safe, receiver):
         "--sender",
         receiver.address,
         "--execute",
+        "--network",
+        chain.provider.network_choice,
     )
     result = runner.invoke(cli, cmd, catch_exceptions=False)
     assert result.exit_code == 0, result.output
     assert one_safe.next_nonce == nonce_at_start + 1
 
 
-def test_list_no_safes(runner, cli, no_safes):
-    result = runner.invoke(cli, ["pending", "list"])
+def test_list_no_safes(runner, cli, no_safes, chain):
+    result = runner.invoke(cli, ["pending", "list", "--network", chain.provider.network_choice])
     assert result.exit_code != 0, result.output
     assert "First, add a safe account using command" in result.output
     assert "ape safe add" in result.output
 
 
-def test_list_no_txns(runner, cli, one_safe):
-    result = runner.invoke(cli, ["pending", "list"], catch_exceptions=False)
+def test_list_no_txns(runner, cli, one_safe, chain):
+    result = runner.invoke(
+        cli, ["pending", "list", "--network", chain.provider.network_choice], catch_exceptions=False
+    )
     assert result.exit_code == 0, result.output
     assert "There are no pending transactions" in result.output

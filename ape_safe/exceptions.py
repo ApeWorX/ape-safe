@@ -85,10 +85,10 @@ class handle_safe_logic_error(ContextDecorator):
         if (
             isinstance(exc, ContractLogicError)  # NOTE: Just for mypy
             and exc_type == ContractLogicError
-            and exc.message.startswith("GS")
-            and exc.message in SAFE_ERROR_CODES
         ):
-            raise SafeLogicError(exc.message) from exc
+            message = exc.message.replace("revert: ", "").strip()
+            if message.startswith("GS") and message in SAFE_ERROR_CODES:
+                raise SafeLogicError(exc.message.replace("revert: ", "")) from exc
 
         # NOTE: Will raise `exc` by default because we did not return anything
 
