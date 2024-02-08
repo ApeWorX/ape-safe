@@ -158,7 +158,8 @@ class SafeContainer(AccountContainerAPI):
             return safe.client
 
         elif key in self.addresses:
-            return self[cast(AddressType, key)].client
+            account = cast(SafeAccount, self[cast(AddressType, key)])
+            return account.client
 
         elif key in self.aliases:
             return self.load_account(key).client
@@ -166,7 +167,8 @@ class SafeContainer(AccountContainerAPI):
         else:
             address = self.conversion_manager.convert(key, AddressType)
             if address in self.addresses:
-                return self[cast(AddressType, key)].client
+                account = cast(SafeAccount, self[cast(AddressType, key)])
+                return account.client
 
             # Is not locally managed.
             return SafeClient(address=address, chain_id=self.chain_manager.provider.chain_id)
