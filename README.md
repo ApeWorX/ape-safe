@@ -147,7 +147,7 @@ txn.add(vault.deposit, amount)
 # Fetch signatures from any local signers, and broadcast if confirmations are met
 # Note that in case the user intends to only stage a transaction, then `submit=False` argument can also be added
 # It is normal that when a user only intend to stage a transaction, an error is thrown
-# this can be ignore by including the necessary try-catch (from ape.exceptions import SignatureError)
+# this can be ignored by including the necessary try-catch (from ape.exceptions import SignatureError)
 # Note that transaction is automatically prompted for execution if enough signers are available in local
 txn(sender=safe,gas=0)
 ```
