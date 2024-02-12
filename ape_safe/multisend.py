@@ -92,7 +92,7 @@ class MultiSend(ManagerAccessMixin):
         from ape_safe import multisend
         from ape import accounts
         
-        #loads the safe
+        # load the safe
         safe = accounts.load("my-safe")
         
         txn = multisend.MultiSend()
@@ -101,8 +101,8 @@ class MultiSend(ManagerAccessMixin):
         ...  # Add as many calls as desired to execute
         txn.add(contract.myMethod, *call_args)
 	
-	#stages the transaction with the gnosis api 
-	#note that transaction is automatically prompted for execution if enough signers are available in local
+	# Stage the transaction to publish on-chain
+	# NOTE: if not enough signers are available, publish to Safe API instead
         receipt = txn(sender=safe,gas=0)
         
     """
