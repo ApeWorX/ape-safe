@@ -91,20 +91,19 @@ class MultiSend(ManagerAccessMixin):
 
         from ape_safe import multisend
         from ape import accounts
-        
+
         # load the safe
         safe = accounts.load("my-safe")
-        
+
         txn = multisend.MultiSend()
         txn.add(contract.myMethod, *call_args)
         txn.add(contract.myMethod, *call_args)
         ...  # Add as many calls as desired to execute
         txn.add(contract.myMethod, *call_args)
-	
-	# Stage the transaction to publish on-chain
-	# NOTE: if not enough signers are available, publish to Safe API instead
+
+        # Stage the transaction to publish on-chain
+        # NOTE: if not enough signers are available, publish to Safe API instead
         receipt = txn(sender=safe,gas=0)
-        
     """
 
     def __init__(self) -> None:
