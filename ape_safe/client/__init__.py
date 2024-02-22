@@ -166,13 +166,13 @@ class SafeClient(BaseSafeClient):
         self, receiver: AddressType, value: int, data: bytes, operation: int = 0
     ) -> int:
         url = f"safes/{self.address}/multsig-transactions/estimations"
-        data = {
+        request: Dict = {
             "to": receiver,
             "value": value,
             "data": HexBytes(data).hex(),
             "operation": operation,
         }
-        result = self._post(url, json=data).json()
+        result = self._post(url, json=request).json()
         gas = result.get("safeTxGas")
         return int(HexBytes(gas).hex(), 16)
 
