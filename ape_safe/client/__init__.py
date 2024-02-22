@@ -165,7 +165,7 @@ class SafeClient(BaseSafeClient):
     def estimate_gas_cost(
         self, receiver: AddressType, value: int, data: bytes, operation: int = 0
     ) -> int:
-        url = f"safes/{self.address}/multsig-transactions/estimations"
+        url = f"safes/{self.address}/multisig-transactions/estimations"
         request: Dict = {
             "to": receiver,
             "value": value,
