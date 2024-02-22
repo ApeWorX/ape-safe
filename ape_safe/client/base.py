@@ -57,6 +57,11 @@ class BaseSafeClient(ABC):
         signatures: Dict[AddressType, MessageSignature],
     ): ...
 
+    @abstractmethod
+    def estimate_gas_cost(
+        self, receiver: AddressType, value: int, data: bytes, operation: int = 0
+    ): ...
+
     """Shared methods"""
 
     def get_transactions(

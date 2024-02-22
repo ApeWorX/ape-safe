@@ -162,6 +162,20 @@ class SafeClient(BaseSafeClient):
 
             raise  # The error from BaseClient we are already raising (no changes)
 
+    def estimate_gas_cost(
+        self, receiver: AddressType, value: int, data: bytes, operation: int = 0
+    ) -> int:
+        url = f"safes/{self.address}/multsig-transactions/estimations"
+        data = {
+            "to": receiver,
+            "value": value,
+            "data": HexBytes(data).hex(),
+            "operation": operation,
+        }
+        result = self._post(url, json=data).json()
+        gas = result.get("safeTxGas")
+        return int(HexBytes(gas).hex(), 16)
+
 
 __all__ = [
     "ExecutedTxData",
