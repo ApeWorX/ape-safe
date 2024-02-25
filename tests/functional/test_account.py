@@ -19,11 +19,7 @@ def test_init(safe, OWNERS, THRESHOLD, safe_contract):
     assert safe.next_nonce == 0
 
 
-# TODO: For some reason API "mode" started failing.
-#  Also, this should probably be broken into multiple separate tests
-#  instead of using modes.
-# @pytest.mark.parametrize("mode", ("impersonate", "api", "sign"))
-@pytest.mark.parametrize("mode", ("impersonate", "sign"))
+@pytest.mark.parametrize("mode", ("impersonate", "api", "sign"))
 def test_swap_owner(safe, accounts, OWNERS, mode):
     impersonate = mode == "impersonate"
     submit = mode != "api"
@@ -85,7 +81,7 @@ def test_swap_owner(safe, accounts, OWNERS, mode):
     assert new_owner.address in safe.signers
 
 
-@pytest.mark.parametrize("mode", ["impersonate", "api", "sign"])
+@pytest.mark.parametrize("mode", ("impersonate", "api", "sign"))
 def test_add_owner(safe, accounts, OWNERS, mode):
     impersonate = mode == "impersonate"
     submit = mode != "api"
