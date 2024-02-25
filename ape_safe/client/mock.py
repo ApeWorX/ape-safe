@@ -111,5 +111,6 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             )
 
     def estimate_gas_cost(self, receiver: AddressType, value: int, data: bytes, operation: int = 0):
-        # Estimate normally.
-        return NotImplemented
+        _ = operation  # Ignored.
+        dummy = self.account_manager.test_accounts[0]  # Nothing matters.
+        return dummy.estimate_gas_cost(to=receiver, value=value, data=data)
