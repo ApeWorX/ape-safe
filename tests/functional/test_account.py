@@ -89,13 +89,14 @@ def test_add_owner(safe, accounts, OWNERS, mode):
     new_owner = accounts[len(OWNERS)]  # replace owner 1 with account N + 1
     assert new_owner.address not in safe.signers
 
-    exec_transaction = lambda: safe.contract.addOwnerWithThreshold(  # noqa: E731
-        new_owner,
-        safe.confirmations_required,
-        sender=safe,
-        impersonate=impersonate,
-        submit=submit,
-    )
+    def exec_transaction():
+        return safe.contract.addOwnerWithThreshold(
+            new_owner,
+            safe.confirmations_required,
+            sender=safe,
+            impersonate=impersonate,
+            submit=submit,
+        )
 
     if submit:
         receipt = exec_transaction()
