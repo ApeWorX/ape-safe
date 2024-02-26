@@ -467,8 +467,11 @@ class SafeAccount(AccountAPI):
     def estimate_gas_cost(self, **kwargs) -> int:
         operation = kwargs.pop("operation", 0)
         txn = kwargs.pop("txn", self.as_transaction(**kwargs))
-        return self.client.estimate_gas_cost(
-            txn.receiver or ZERO_ADDRESS, txn.value, txn.data, operation=operation
+        return (
+            self.client.estimate_gas_cost(
+                txn.receiver or ZERO_ADDRESS, txn.value, txn.data, operation=operation
+            )
+            or 0
         )
 
     def _preapproved_signature(
