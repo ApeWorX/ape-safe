@@ -459,7 +459,9 @@ class SafeAccount(AccountAPI):
 
     def prepare_transaction(self, txn: TransactionAPI) -> TransactionAPI:
         # NOTE: Need to override `AccountAPI` behavior for balance checks
-        txn.gas_limit = self.estimate_gas_cost(txn=txn)
+        if txn.gas_limit is None:
+            txn.gas_limit = self.estimate_gas_cost(txn=txn)
+
         return self.provider.prepare_transaction(txn)
 
     def estimate_gas_cost(self, **kwargs) -> int:
