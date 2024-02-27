@@ -1,3 +1,8 @@
+from datetime import datetime
+
+from ape_safe.client import ExecutedTxData
+
+
 def test_help(runner, cli):
     result = runner.invoke(cli, ["pending", "--help"], catch_exceptions=False)
     assert result.exit_code == 0, result.output
@@ -114,3 +119,59 @@ def test_list_no_txns(runner, cli, one_safe, chain):
     )
     assert result.exit_code == 0, result.output
     assert "There are no pending transactions" in result.output
+
+
+def test_approve_transaction_not_found(runner, cli, one_safe, chain):
+    tx_hash = "0x123"
+    result = runner.invoke(
+        cli,
+        ["pending", "approve", tx_hash, "--network", chain.provider.network_choice],
+        catch_exceptions=False,
+    )
+    assert result.exit_code != 0, result.output
+    assert f"Pending transaction(s) '{tx_hash}' not found." in result.output
+
+
+def test_approve(receiver, runner, cli, one_safe, chain):
+    # First, fund the safe so the tx does not fail.
+    receiver.transfer(one_safe, "1 ETH")
+    tx_hash = "0x123"
+    nonce = 1
+
+    one_safe.client.transactions_by_nonce[nonce] = tx_hash
+    one_safe.client.transactions[tx_hash] = ExecutedTxData(
+        executionDate=datetime.now(),
+        blockNumber=0,
+        transactionHash=tx_hash,
+        executor=receiver.address,
+        isExecuted=False,
+        isSuccessful=True,
+        ethGasPrice=0,
+        maxFeePerGas=1000,
+        maxPriorityFeePerGas=1000,
+        gasUsed=100,
+        fee=10,
+        origin="ape",
+        dataDecoded=None,
+        confirmationsRequired=0,
+        safeTxHash=tx_hash,
+        submissionDate=datetime.now(),
+        modified=datetime.now(),
+        nonce=nonce,
+        refundReceiver=receiver.address,
+        gasPrice=0,
+        baseGas=0,
+        safeTxGas=0,
+        gasToken=receiver.address,
+        operation=0,
+        value=0,
+        to=receiver.address,
+        safe=one_safe.address,
+    )
+
+    result = runner.invoke(
+        cli,
+        ["pending", "approve", tx_hash, "--network", chain.provider.network_choice],
+        catch_exceptions=False,
+    )
+    assert result.exit_code != 0, result.output
