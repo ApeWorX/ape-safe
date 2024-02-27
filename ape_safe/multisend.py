@@ -102,11 +102,12 @@ class MultiSend(ManagerAccessMixin):
         ...  # Add as many calls as desired to execute
         txn.add(contract.myMethod, *call_args)
 
-        # Fetch signatures from any local signers, and broadcast if confirmations are met
-        # Note that in case the user intends to only stage a transaction, then `submit=False` argument can also be added
-        # It is normal that when a user only intends to stage a transaction, an error is thrown
-        # this can be ignored by including the necessary try-catch (from ape.exceptions import SignatureError)
-        # Note that transaction is automatically prompted for execution if enough signers are available in local
+        # Fetch signatures from any local signers, and broadcast if confirmations are met.
+        # NOTE: in case the user intends to only stage a transaction then `submit_transaction=False`
+        #       argument can also be added. It is normal that when you only intend to stage a
+        #       transaction that an error is thrown, and this behavior can be skipped by using try-
+        #       catch when trying to submit the transaction (`ape.exceptions.SignatureError`).
+        # NOTE: SafeTx is automatically prompted for execution if there are enough local signers.
         try:
             receipt = txn(sender=safe,gas=0)
         except SignatureError:
