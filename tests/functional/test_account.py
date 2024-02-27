@@ -19,7 +19,7 @@ def test_init(safe, OWNERS, THRESHOLD, safe_contract):
     assert safe.next_nonce == 0
 
 
-@pytest.mark.parametrize("mode", ["impersonate", "api", "sign"])
+@pytest.mark.parametrize("mode", ("impersonate", "api", "sign"))
 def test_swap_owner(safe, accounts, OWNERS, mode):
     impersonate = mode == "impersonate"
     submit = mode != "api"
@@ -30,21 +30,24 @@ def test_swap_owner(safe, accounts, OWNERS, mode):
     # NOTE: Since the signers are processed in order, we replace the last account
 
     prev_owner = safe.compute_prev_signer(old_owner)
-    exec_transaction = lambda: safe.contract.swapOwner(  # noqa: E731
-        prev_owner,
-        old_owner,
-        new_owner,
-        sender=safe,
-        impersonate=impersonate,
-        submit=submit,
-    )
+
+    def exec_transaction():
+        return safe.contract.swapOwner(
+            prev_owner,
+            old_owner,
+            new_owner,
+            sender=safe,
+            impersonate=impersonate,
+            submit=submit,
+        )
 
     if submit:
         receipt = exec_transaction()
 
     else:
         # Attempting to execute should raise `SignatureError` and push `safe_tx` to mock client
-        assert len(list(safe.client.get_transactions(confirmed=False))) == 0
+        size = len(list(safe.client.get_transactions(confirmed=False)))
+        assert size == 0
 
         with pytest.raises(SignatureError):
             exec_transaction()
@@ -78,7 +81,7 @@ def test_swap_owner(safe, accounts, OWNERS, mode):
     assert new_owner.address in safe.signers
 
 
-@pytest.mark.parametrize("mode", ["impersonate", "api", "sign"])
+@pytest.mark.parametrize("mode", ("impersonate", "api", "sign"))
 def test_add_owner(safe, accounts, OWNERS, mode):
     impersonate = mode == "impersonate"
     submit = mode != "api"
@@ -86,13 +89,14 @@ def test_add_owner(safe, accounts, OWNERS, mode):
     new_owner = accounts[len(OWNERS)]  # replace owner 1 with account N + 1
     assert new_owner.address not in safe.signers
 
-    exec_transaction = lambda: safe.contract.addOwnerWithThreshold(  # noqa: E731
-        new_owner,
-        safe.confirmations_required,
-        sender=safe,
-        impersonate=impersonate,
-        submit=submit,
-    )
+    def exec_transaction():
+        return safe.contract.addOwnerWithThreshold(
+            new_owner,
+            safe.confirmations_required,
+            sender=safe,
+            impersonate=impersonate,
+            submit=submit,
+        )
 
     if submit:
         receipt = exec_transaction()

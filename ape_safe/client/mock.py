@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Dict, Iterator, List, Union, cast
+from typing import Dict, Iterator, List, Optional, Union, cast
 
 from ape.contracts import ContractInstance
 from ape.types import AddressType, MessageSignature
@@ -109,3 +109,8 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
                     signatureType=SignatureType.EOA,
                 )
             )
+
+    def estimate_gas_cost(
+        self, receiver: AddressType, value: int, data: bytes, operation: int = 0
+    ) -> Optional[int]:
+        return None  # Estimate gas normally
