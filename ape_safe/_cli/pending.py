@@ -191,7 +191,6 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
 
         safe_tx = safe.create_safe_tx(**txn.model_dump(by_alias=True, mode="json"))
         num_confirmations = len(txn.confirmations)
-        signatures_added = {}
 
         if num_confirmations < safe.confirmations_required:
             signatures_added = safe.add_signatures(safe_tx, confirmations=txn.confirmations)
@@ -216,7 +215,8 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
                 submitter = safe.select_signer(for_="submitter")
 
         if submitter:
-            txn.confirmations = {**txn.confirmations, **signatures_added}
+            safe_tx_hash = get_safe_tx_hash(safe_tx)
+            txn.confirmations = safe.client.get_confirmations(safe_tx_hash)
             _execute(safe, txn, submitter)
 
     # If any txn_ids remain, they were not handled.
