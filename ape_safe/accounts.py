@@ -459,7 +459,20 @@ class SafeAccount(AccountAPI):
 
     def prepare_transaction(self, txn: TransactionAPI) -> TransactionAPI:
         # NOTE: Need to override `AccountAPI` behavior for balance checks
+        if txn.gas_limit is None:
+            txn.gas_limit = self.estimate_gas_cost(txn=txn)
+
         return self.provider.prepare_transaction(txn)
+
+    def estimate_gas_cost(self, **kwargs) -> int:
+        operation = kwargs.pop("operation", 0)
+        txn = kwargs.pop("txn", self.as_transaction(**kwargs))
+        return (
+            self.client.estimate_gas_cost(
+                txn.receiver or ZERO_ADDRESS, txn.value, txn.data, operation=operation
+            )
+            or 0
+        )
 
     def _preapproved_signature(
         self, signer: Union[AddressType, BaseAddress, str]
