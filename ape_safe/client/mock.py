@@ -62,7 +62,9 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         self,
     ) -> Iterator[SafeApiTxData]:
         for nonce in sorted(self.transactions_by_nonce.keys(), reverse=True):
-            yield from map(self.transactions.get, self.transactions_by_nonce[nonce])
+            for tx in map(self.transactions.get, self.transactions_by_nonce[nonce]):
+                if tx:
+                    yield tx
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
         tx_hash = cast(SafeTxID, HexBytes(safe_tx_hash).hex())
