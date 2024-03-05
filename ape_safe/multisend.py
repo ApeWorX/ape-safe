@@ -100,6 +100,12 @@ class MultiSend(ManagerAccessMixin):
         txn.add(contract.myMethod, *call_args)
         ...  # Add as many calls as desired to execute
         txn.add(contract.myMethod, *call_args)
+        # or, using a builder pattern:
+        txn = multisend.MultiSend()
+            .add(contract.myMethod, *call_args)
+            .add(contract.myMethod, *call_args)
+            ...  # Add as many calls as desired to execute
+            .add(contract.myMethod, *call_args)
 
         # Stage the transaction to publish on-chain
         # NOTE: if not enough signers are available, publish to Safe API instead
@@ -160,7 +166,7 @@ class MultiSend(ManagerAccessMixin):
         *args,
         delegatecall=False,
         value=0,
-    ):
+    ) -> "MultiSend":
         """
         Adds a call to the Multicall session object.
 
@@ -181,6 +187,7 @@ class MultiSend(ManagerAccessMixin):
                 "callData": call.encode_input(*args),
             }
         )
+        return self
 
     def _validate_calls(self, **txn_kwargs) -> None:
         required_value = sum(call["value"] for call in self.calls)
