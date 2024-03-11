@@ -124,3 +124,10 @@ class ExecutedTxData(UnexecutedTxData):
 
 
 SafeApiTxData = Union[ExecutedTxData, UnexecutedTxData]
+
+
+class DelegateInfo(BaseModel):
+    safe: AddressType
+    delegate: AddressType
+    delegator: AddressType
+    label: str = ""
