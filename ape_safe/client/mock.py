@@ -2,6 +2,8 @@ from collections.abc import Iterator
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional, Union, cast
 
+from ape.contracts import ContractInstance
+from ape.types import AddressType, MessageSignature
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
 from eth_utils import keccak, to_hex
 from hexbytes import HexBytes
@@ -16,9 +18,11 @@ from ape_safe.client.types import (
     SignatureType,
     UnexecutedTxData,
 )
+from ape_safe.exceptions import SafeClientException
 from ape_safe.utils import get_safe_tx_hash
 
 if TYPE_CHECKING:
+    from ape.api import AccountAPI
     from ape.contracts import ContractInstance
     from ape.types import AddressType, MessageSignature
 
@@ -28,6 +32,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         self.contract = contract
         self.transactions: dict[SafeTxID, SafeApiTxData] = {}
         self.transactions_by_nonce: dict[int, list[SafeTxID]] = {}
+        self.delegates: dict["AddressType", list["AddressType"]] = {}
 
     @property
     def safe_details(self) -> SafeDetails:
@@ -77,6 +82,8 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
     def post_transaction(
         self, safe_tx: SafeTx, signatures: dict["AddressType", "MessageSignature"], **kwargs
     ):
+        owners = self.safe_details.owners
+
         safe_tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
         safe_tx_data.confirmations.extend(
             SafeTxConfirmation(
@@ -86,7 +93,18 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
                 signatureType=SignatureType.EOA,
             )
             for signer, sig in signatures.items()
+            if signer in owners
         )
+
+        # Ensure that if this is a zero-conf SafeTx, that at least one signature is from a delegate
+        # NOTE: More strict than Safe API check that silently ignores if no signatures are valid or
+        #       from delegates, but should help us to get correct logic for mock testing purposes
+        if len(safe_tx_data.confirmations) == 0 and not any(
+            self.delegator_for_delegate(signer) in owners
+            for signer in filter(lambda signer: signer not in owners, signatures)
+        ):
+            raise SafeClientException("Not submitted by any valid signer or delegate.")
+
         tx_id = cast(SafeTxID, to_hex(HexBytes(safe_tx_data.safe_tx_hash)))
         self.transactions[tx_id] = safe_tx_data
         if safe_tx_data.nonce in self.transactions_by_nonce:
@@ -119,3 +137,37 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         self, receiver: "AddressType", value: int, data: bytes, operation: int = 0
     ) -> Optional[int]:
         return None  # Estimate gas normally
+
+    def get_delegates(self) -> dict["AddressType", list["AddressType"]]:
+        return self.delegates
+
+    def delegator_for_delegate(self, delegate: "AddressType") -> Optional["AddressType"]:
+        for delegator, delegates in self.delegates.items():
+            if delegate in delegates:
+                return delegator
+
+        return None
+
+    def add_delegate(self, delegate: "AddressType", label: str, delegator: "AccountAPI"):
+        if delegator.address not in self.safe_details.owners:
+            raise SafeClientException(f"'{delegator}' not a valid owner.")
+
+        if delegator.address in self.delegates:
+            self.delegates[delegator.address].append(delegate)
+
+        else:
+            self.delegates[delegator.address] = [delegate]
+
+    def remove_delegate(self, delegate: "AddressType", delegator: "AccountAPI"):
+        if delegator.address not in self.safe_details.owners:
+            raise SafeClientException(f"'{delegator.address}' not a valid owner.")
+
+        if delegator.address not in self.delegates:
+            raise SafeClientException(
+                f"'{delegate}' not a valid delegate for '{delegator.address}'."
+            )
+
+        self.delegates[delegator.address].remove(delegate)
+
+        if len(self.delegates[delegator.address]) == 0:
+            del self.delegates[delegator.address]
