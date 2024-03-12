@@ -6,6 +6,8 @@ import ape
 import pytest
 from ape.contracts import ContractContainer
 from ape.utils import ZERO_ADDRESS
+from ape_test import TestAccount
+from eip712 import EIP712Message
 from ethpm_types import ContractType
 
 from ape_safe import MultiSend
@@ -15,6 +17,21 @@ contracts_directory = Path(__file__).parent / "contracts"
 TESTS_DIR = Path(__file__).parent.absolute()
 DATA_FOLDER = Path(tempfile.mkdtemp()).resolve()
 ape.config.DATA_FOLDER = DATA_FOLDER
+
+
+@pytest.fixture(autouse=True)
+def fix_eip712_signing(monkeypatch):
+    # TODO: `ape_test.TestAccount.sign_message` doesn't support `EIP712Message` yet
+    #       See: https://github.com/ApeWorX/ape/issues/1961
+    original_sign_message = TestAccount.sign_message
+
+    def modified_sign_message(self, msg):
+        if isinstance(msg, EIP712Message):
+            msg = msg.signable_message
+
+        return original_sign_message(self, msg)
+
+    monkeypatch.setattr(TestAccount, "sign_message", modified_sign_message)
 
 
 @pytest.fixture(scope="session")
@@ -35,6 +52,11 @@ def deployer(OWNERS):
 @pytest.fixture(scope="session")
 def receiver(accounts):
     return accounts[9]
+
+
+@pytest.fixture(scope="session")
+def delegate(accounts):
+    return accounts[8]
 
 
 @pytest.fixture(scope="session", params=["1.3.0"])  # TODO: Test more versions later?
