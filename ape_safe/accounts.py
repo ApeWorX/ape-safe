@@ -372,6 +372,48 @@ class SafeAccount(AccountAPI):
         }
         return self.safe_tx_def(**safe_tx)
 
+    def all_delegates(self) -> Iterator[AddressType]:
+        for delegates in self.client.get_delegates().values():
+            yield from delegates
+
+    def propose_safe_tx(
+        self,
+        safe_tx: SafeTx,
+        submitter: Union[AccountAPI, AddressType, str, None] = None,
+        sigs_by_signer: Optional[Dict[AddressType, MessageSignature]] = None,
+        contractTransactionHash: Optional[SafeTxID] = None,
+    ) -> SafeTxID:
+        """
+        Propose a transaction to the Safe API client
+        """
+        if not contractTransactionHash:
+            contractTransactionHash = get_safe_tx_hash(safe_tx)
+
+        if not sigs_by_signer:
+            sigs_by_signer = {}
+
+        if submitter is not None and not isinstance(submitter, AccountAPI):
+            submitter = self.load_submitter(submitter)
+
+        if (
+            submitter is not None
+            and submitter.address not in sigs_by_signer
+            and len(sigs_by_signer) < self.confirmations_required
+            and (submitter.address in self.signers or submitter.address in self.all_delegates())
+        ):
+            if sig := submitter.sign_message(safe_tx):
+                sigs_by_signer[submitter.address] = sig
+
+        # NOTE: Signatures don't have to be in order for Safe API post
+        self.client.post_transaction(
+            safe_tx,
+            sigs_by_signer,
+            sender=submitter.address if submitter else None,
+            contractTransactionHash=contractTransactionHash,
+        )
+
+        return contractTransactionHash
+
     def pending_transactions(self) -> Iterator[Tuple[SafeTx, List[SafeTxConfirmation]]]:
         for executed_tx in self.client.get_transactions(confirmed=False):
             yield self.create_safe_tx(
@@ -719,12 +761,11 @@ class SafeAccount(AccountAPI):
             f"for Safe {self.address}#{safe_tx.nonce}"  # TODO: put URI
         )
 
-        # NOTE: Signatures don't have to be in order for Safe API post
-        self.client.post_transaction(
+        self.propose_safe_tx(
             safe_tx,
-            sigs_by_signer,
+            submitter=submitter_account,
+            sigs_by_signer=sigs_by_signer,
             contractTransactionHash=safe_tx_hash,
-            sender=submitter_account.address,
         )
 
         # Return None so that Ape does not try to submit the transaction.
