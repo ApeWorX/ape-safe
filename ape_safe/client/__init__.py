@@ -123,7 +123,7 @@ class SafeClient(BaseSafeClient):
                 b"",
             )
         )
-        post_dict: Dict = {"signature": signature.hex()}
+        post_dict: Dict = {"signature": signature.hex() if signature else None}
 
         for key, value in tx_data.model_dump(by_alias=True, mode="json").items():
             if isinstance(value, HexBytes):
@@ -202,6 +202,7 @@ class SafeClient(BaseSafeClient):
 
     def add_delegate(self, delegate: AddressType, label: str, delegator: AccountAPI):
         # TODO: Replace this by adding raw hash signing into supported account plugins
+        #       See: https://github.com/ApeWorX/ape/issues/1962
         if not isinstance(delegator, KeyfileAccount):
             raise ActionNotPerformedError("Need access to private key for this method.")
 
@@ -226,6 +227,7 @@ class SafeClient(BaseSafeClient):
 
     def remove_delegate(self, delegate: AddressType, delegator: AccountAPI):
         # TODO: Replace this by adding raw hash signing into supported account plugins
+        #       See: https://github.com/ApeWorX/ape/issues/1962
         if not isinstance(delegator, KeyfileAccount):
             raise ActionNotPerformedError("Need access to private key for this method.")
 
