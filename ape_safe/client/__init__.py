@@ -3,8 +3,11 @@ from functools import reduce
 from typing import Dict, Iterator, List, Optional, Union, cast
 
 from ape.api import AccountAPI
+from ape.logging import logger
 from ape.types import AddressType, HexBytes, MessageSignature
+from ape_accounts import KeyfileAccount
 from eip712.common import SafeTxV1, SafeTxV2
+from eth_account import Account as EthAccount
 
 from ape_safe.client.base import BaseSafeClient
 from ape_safe.client.mock import MockSafeClient
@@ -198,26 +201,47 @@ class SafeClient(BaseSafeClient):
         return delegates
 
     def add_delegate(self, delegate: AddressType, label: str, delegator: AccountAPI):
-        msg = self.create_delegate_message(delegate)
-        if not (sig := delegator.sign_message(msg)):
-            raise ActionNotPerformedError("Must sign request to add delegate.")
+        # TODO: Replace this by adding raw hash signing into supported account plugins
+        if not isinstance(delegator, KeyfileAccount):
+            raise ActionNotPerformedError("Need access to private key for this method.")
+
+        logger.warning("Need to unlock account to add a delegate.")
+        delegator.unlock()  # NOTE: Ensures we have the key handy
+
+        msg_hash = self.create_delegate_message(delegate)
+        # NOTE: This is required as Safe API uses an antiquated .signHash method
+        sig = EthAccount.signHash(
+            msg_hash,
+            delegator._KeyfileAccount__cached_key,  # type: ignore[attr-defined]
+        )
 
         payload = {
             "safe": self.address,
             "delegate": delegate,
             "delegator": delegator.address,
             "label": label,
-            "signature": sig.encode_rsv().hex(),
+            "signature": sig.signature.hex(),
         }
         self._post("delegates", json=payload)
 
     def remove_delegate(self, delegate: AddressType, delegator: AccountAPI):
-        msg = self.create_delegate_message(delegate)
-        if not (sig := delegator.sign_message(msg)):
-            raise ActionNotPerformedError("Must sign request to remove delegate.")
+        # TODO: Replace this by adding raw hash signing into supported account plugins
+        if not isinstance(delegator, KeyfileAccount):
+            raise ActionNotPerformedError("Need access to private key for this method.")
+
+        logger.warning("Need to unlock account to add a delegate.")
+        delegator.unlock()  # NOTE: Ensures we have the key handy
+
+        msg_hash = self.create_delegate_message(delegate)
+        # NOTE: This is required as Safe API uses an antiquated .signHash method
+        sig = EthAccount.signHash(
+            msg_hash,
+            delegator._KeyfileAccount__cached_key,  # type: ignore[attr-defined]
+        )
 
         payload = {
-            "signature": sig.encode_rsv().hex(),
+            "delegator": delegator.address,
+            "signature": sig.signature.hex(),
         }
         self._delete(f"delegates/{delegate}", json=payload)
 
