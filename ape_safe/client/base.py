@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, Optional, Union
 import certifi
 import requests
 import urllib3
-from eth_account.messages import encode_defunct as encode_eip191_signable_message
+from ape.api import AccountAPI
+from ape.types import AddressType, MessageSignature
 from eth_utils import keccak
 from requests import Response
 from requests.adapters import HTTPAdapter
@@ -25,7 +26,7 @@ from ape_safe.exceptions import ClientResponseError
 
 if TYPE_CHECKING:
     from ape.api import AccountAPI
-    from ape.types import AddressType, MessageSignature, SignableMessage
+    from ape.types import AddressType, MessageSignature
     from requests import Response
 
 DEFAULT_HEADERS = {
@@ -119,11 +120,11 @@ class BaseSafeClient(ABC):
 
             yield txn
 
-    def create_delegate_message(self, delegate: "AddressType") -> "SignableMessage":
+    def create_delegate_message(self, delegate: AddressType) -> bytes:
         # NOTE: referencing https://github.com/safe-global/safe-eth-py/blob/
         # a0a5771622f143ee6301cfc381c5ed50832ff482/gnosis/safe/api/transaction_service_api.py#L34
         totp = int(time.time()) // 3600
-        return encode_eip191_signable_message(keccak(text=(delegate + str(totp))))
+        return keccak(text=(delegate + str(totp)))
 
     @abstractmethod
     def get_delegates(self) -> dict["AddressType", list["AddressType"]]: ...
