@@ -13,13 +13,16 @@ from ape_safe.accounts import SafeAccount
 
 contracts_directory = Path(__file__).parent / "contracts"
 TESTS_DIR = Path(__file__).parent.absolute()
-DATA_FOLDER = Path(tempfile.mkdtemp()).resolve()
-ape.config.DATA_FOLDER = DATA_FOLDER
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def config():
-    return ape.config
+    cfg = ape.config
+    # Ensure we don't persist any .ape data.
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path = Path(temp_dir).resolve()
+        cfg.DATA_FOLDER = path
+        yield cfg
 
 
 @pytest.fixture
@@ -43,8 +46,14 @@ def VERSION(request):
 
 
 @pytest.fixture(scope="session")
-def SafeSingleton(project, VERSION):
-    return project.dependencies["safe-contracts"][VERSION]["GnosisSafe"]
+def safe_contracts(project, VERSION):
+    dependency = project.dependencies.get_dependency("safe-contracts", VERSION)
+    return dependency.project
+
+
+@pytest.fixture(scope="session")
+def SafeSingleton(safe_contracts):
+    return safe_contracts.GnosisSafe
 
 
 @pytest.fixture
@@ -53,9 +62,9 @@ def singleton(deployer: SafeAccount, SafeSingleton):
 
 
 @pytest.fixture(scope="session")
-def SafeProxy(project, SafeSingleton, VERSION):
-    Proxy = project.dependencies["safe-contracts"][VERSION]["GnosisSafeProxy"]
-    IProxy = project.dependencies["safe-contracts"][VERSION]["IProxy"]
+def SafeProxy(safe_contracts, SafeSingleton):
+    Proxy = safe_contracts.GnosisSafeProxy
+    IProxy = safe_contracts.IProxy
     # NOTE: Proxy only has a constructor, so we add the rest of it's ABI here for simplified use
     Proxy.contract_type.abi += [IProxy.contract_type.abi[0], *SafeSingleton.contract_type.abi]
     return Proxy

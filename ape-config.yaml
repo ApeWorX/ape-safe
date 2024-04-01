@@ -33,10 +33,6 @@ dependencies:
         import_remapping:
           - "@openzeppelin/contracts=openzeppelin/v3.4.0"
 
-solidity:
-  import_remapping:
-    - "@gnosis=safe-contracts/v1.3.0"
-
 foundry:
   fork:
     ethereum:
