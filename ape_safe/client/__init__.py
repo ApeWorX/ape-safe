@@ -30,7 +30,6 @@ TRANSACTION_SERVICE_URL = {
     # https://docs.safe.global/safe-core-api/available-services.
     # NOTE: There should be no trailing slashes at the end of the URL.
     1: "https://safe-transaction-mainnet.safe.global",
-    5: "https://safe-transaction-goerli.safe.global",
     10: "https://safe-transaction-optimism.safe.global",
     56: "https://safe-transaction-bsc.safe.global",
     100: "https://safe-transaction-gnosis-chain.safe.global",
