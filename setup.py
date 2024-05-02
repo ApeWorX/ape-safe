@@ -12,12 +12,12 @@ extras_require = {
         "ape-solidity",  # Needed for compiling the Safe contracts
     ],
     "lint": [
-        "black>=24.1.1,<25",  # Auto-formatter and linter
-        "mypy>=1.8.0,<2",  # Static type analyzer
+        "black>=24.4.2,<25",  # Auto-formatter and linter
+        "mypy>=1.10.0,<2",  # Static type analyzer
         "types-requests",  # Needed for mypy type shed
         "types-setuptools",  # Needed for mypy type shed
         "flake8>=7.0.0,<8",  # Style linter
-        "isort>=5.10.1,<6",  # Import sorting linter
+        "isort>=5.13.2,<6",  # Import sorting linter
         "mdformat>=0.7.17,<0.8",  # Docs formatter and linter
         "mdformat-pyproject>=0.0.1",  # Allows configuring in pyproject.toml
     ],
@@ -91,5 +91,6 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
 )
