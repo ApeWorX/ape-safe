@@ -59,7 +59,7 @@ def test_propose_with_gas_price(runner, cli, one_safe, receiver, chain):
     assert tx.gas_price > 0
 
 
-def test_propose_with_sender(runner, cli, one_safe, receiver, chain):
+def test_propose_with_sender(runner, cli, one_safe, receiver, chain, foundry):
     # First, fund the safe so the tx does not fail.
     receiver.transfer(one_safe, "1 ETH")
 
