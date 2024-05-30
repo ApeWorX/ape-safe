@@ -59,7 +59,7 @@ def test_propose_with_gas_price(runner, cli, one_safe, receiver, chain):
     assert tx.gas_price > 0
 
 
-def test_propose_with_sender(runner, cli, one_safe, receiver, chain):
+def test_propose_with_sender(runner, cli, one_safe, receiver, chain, foundry):
     # First, fund the safe so the tx does not fail.
     receiver.transfer(one_safe, "1 ETH")
 
@@ -114,18 +114,18 @@ def test_list_no_safes(runner, cli, no_safes, chain):
 
 
 def test_list_no_txns(runner, cli, one_safe, chain):
-    result = runner.invoke(
-        cli, ["pending", "list", "--network", chain.provider.network_choice], catch_exceptions=False
-    )
+    arguments = ("pending", "list", "--network", chain.provider.network_choice)
+    result = runner.invoke(cli, arguments, catch_exceptions=False)
     assert result.exit_code == 0, result.output
     assert "There are no pending transactions" in result.output
 
 
 def test_approve_transaction_not_found(runner, cli, one_safe, chain):
     tx_hash = "0x123"
+    arguments = ("pending", "approve", tx_hash, "--network", chain.provider.network_choice)
     result = runner.invoke(
         cli,
-        ["pending", "approve", tx_hash, "--network", chain.provider.network_choice],
+        arguments,
         catch_exceptions=False,
     )
     assert result.exit_code != 0, result.output
@@ -169,9 +169,10 @@ def test_approve(receiver, runner, cli, one_safe, chain):
         safe=one_safe.address,
     )
 
+    arguments = ("pending", "approve", tx_hash, "--network", chain.provider.network_choice)
     result = runner.invoke(
         cli,
-        ["pending", "approve", tx_hash, "--network", chain.provider.network_choice],
+        arguments,
         catch_exceptions=False,
     )
     assert result.exit_code != 0, result.output

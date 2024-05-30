@@ -23,6 +23,6 @@ def no_safes(data_folder):
 
 @pytest.fixture
 def one_safe(data_folder, safes, safe):
-    shutil.rmtree(data_folder)
+    shutil.rmtree(data_folder, ignore_errors=True)
     safes.save_account(safe.alias, safe.address)
     return safes.load_account(safe.alias)
