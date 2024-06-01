@@ -1,4 +1,5 @@
-from typing import Dict, List, Optional, Sequence, Union, cast
+from collections.abc import Sequence
+from typing import Optional, Union, cast
 
 import click
 import rich
@@ -46,7 +47,7 @@ def _list(cli_ctx, safe, verbose) -> None:
         rich.print("There are no pending transactions.")
         return
 
-    txns_by_nonce: Dict[int, List[UnexecutedTxData]] = {}
+    txns_by_nonce: dict[int, list[UnexecutedTxData]] = {}
     for txn in txns:
         if txn.nonce in txns_by_nonce:
             txns_by_nonce[txn.nonce].append(txn)
@@ -259,7 +260,7 @@ def execute(cli_ctx, safe, txn_ids, submitter, nonce):
 
 def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI, **tx_kwargs):
     safe_tx = safe.create_safe_tx(**txn.model_dump(mode="json", by_alias=True))
-    signatures: Dict[AddressType, MessageSignature] = {
+    signatures: dict[AddressType, MessageSignature] = {
         c.owner: MessageSignature.from_rsv(c.signature) for c in txn.confirmations
     }
     exc_tx = safe.create_execute_transaction(safe_tx, signatures, **tx_kwargs)

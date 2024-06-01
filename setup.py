@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 from setuptools import find_packages, setup
 
 extras_require = {
@@ -59,7 +58,7 @@ setup(
     url="https://github.com/ApeWorX/ape-safe",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.7.7,<0.8",
+        "eth-ape>=0.8.1,<0.9",
         "requests>=2.31.0,<3",
         "eip712",  # Use same version as eth-ape
         "click",  # Use same version as eth-ape
@@ -71,7 +70,7 @@ setup(
             "ape_safe=ape_safe._cli:cli",
         ],
     },
-    python_requires=">=3.8,<4",
+    python_requires=">=3.9,<4",
     extras_require=extras_require,
     py_modules=["ape_safe"],
     license="Apache-2.0",
@@ -87,7 +86,6 @@ setup(
         "Operating System :: MacOS",
         "Operating System :: POSIX",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",

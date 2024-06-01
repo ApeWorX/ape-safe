@@ -1,7 +1,8 @@
 import json
 import os
+from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
-from typing import Any, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union, cast
+from typing import Any, Dict, Optional, Union, cast
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.address import BaseAddress
@@ -192,7 +193,7 @@ def get_signatures(
     return signatures
 
 
-def _safe_tx_exec_args(safe_tx: SafeTx) -> List:
+def _safe_tx_exec_args(safe_tx: SafeTx) -> list:
     return list(safe_tx._body_["message"].values())
 
 
@@ -283,7 +284,7 @@ class SafeAccount(AccountAPI):
             return self.contract.VERSION()
 
     @property
-    def signers(self) -> List[AddressType]:
+    def signers(self) -> list[AddressType]:
         # NOTE: Signers are in order because of `Set`
         try:
             return self.client.safe_details.owners
@@ -329,7 +330,7 @@ class SafeAccount(AccountAPI):
         raise NotImplementedError("Safe accounts do not support message signing!")
 
     @property
-    def safe_tx_def(self) -> Type[SafeTx]:
+    def safe_tx_def(self) -> type[SafeTx]:
         return create_safe_tx_def(
             version=self.version,
             contract_address=self.address,
@@ -372,14 +373,14 @@ class SafeAccount(AccountAPI):
         }
         return self.safe_tx_def(**safe_tx)
 
-    def pending_transactions(self) -> Iterator[Tuple[SafeTx, List[SafeTxConfirmation]]]:
+    def pending_transactions(self) -> Iterator[tuple[SafeTx, list[SafeTxConfirmation]]]:
         for executed_tx in self.client.get_transactions(confirmed=False):
             yield self.create_safe_tx(
                 **executed_tx.model_dump(mode="json", by_alias=True)
             ), executed_tx.confirmations
 
     @property
-    def local_signers(self) -> List[AccountAPI]:
+    def local_signers(self) -> list[AccountAPI]:
         # NOTE: Is not ordered by signing order
         # TODO: Skip per user config
         # TODO: Order per user config
@@ -605,7 +606,7 @@ class SafeAccount(AccountAPI):
         txn: TransactionAPI,
         submit: bool = True,
         submitter: Union[AccountAPI, AddressType, str, None] = None,
-        skip: Optional[List[Union[AccountAPI, AddressType, str]]] = None,
+        skip: Optional[list[Union[AccountAPI, AddressType, str]]] = None,
         signatures_required: Optional[int] = None,  # NOTE: Required if increasing threshold
         **signer_options,
     ) -> Optional[TransactionAPI]:
@@ -731,7 +732,7 @@ class SafeAccount(AccountAPI):
         return None
 
     def add_signatures(
-        self, safe_tx: SafeTx, confirmations: Optional[List[SafeTxConfirmation]] = None
+        self, safe_tx: SafeTx, confirmations: Optional[list[SafeTxConfirmation]] = None
     ) -> Dict[AddressType, MessageSignature]:
         confirmations = confirmations or []
         if not self.local_signers:
@@ -753,7 +754,7 @@ class SafeAccount(AccountAPI):
         return select_account(prompt_message=f"Select a {for_}", key=self.local_signers)
 
 
-def _get_safe_tx_id(safe_tx: SafeTx, confirmations: List[SafeTxConfirmation]) -> SafeTxID:
+def _get_safe_tx_id(safe_tx: SafeTx, confirmations: list[SafeTxConfirmation]) -> SafeTxID:
     if tx_hash_result := next((c.transaction_hash for c in confirmations), None):
         return cast(SafeTxID, tx_hash_result)
 

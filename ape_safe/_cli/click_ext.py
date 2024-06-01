@@ -1,4 +1,5 @@
-from typing import NoReturn, Optional, Sequence, Union, cast
+from collections.abc import Sequence
+from typing import NoReturn, Optional, Union, cast
 
 import click
 from ape.api import AccountAPI

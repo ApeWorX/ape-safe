@@ -1,5 +1,6 @@
+from collections.abc import Iterator
 from datetime import datetime, timezone
-from typing import Dict, Iterator, List, Optional, Union, cast
+from typing import Optional, Union, cast
 
 from ape.contracts import ContractInstance
 from ape.types import AddressType, MessageSignature
@@ -23,8 +24,8 @@ from ape_safe.utils import get_safe_tx_hash
 class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
     def __init__(self, contract: ContractInstance):
         self.contract = contract
-        self.transactions: Dict[SafeTxID, SafeApiTxData] = {}
-        self.transactions_by_nonce: Dict[int, List[SafeTxID]] = {}
+        self.transactions: dict[SafeTxID, SafeApiTxData] = {}
+        self.transactions_by_nonce: dict[int, list[SafeTxID]] = {}
 
     @property
     def safe_details(self) -> SafeDetails:
@@ -52,7 +53,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         )
 
     @property
-    def modules(self) -> List[AddressType]:
+    def modules(self) -> list[AddressType]:
         return self.contract.getModules() if "getModules" in self.contract._view_methods_ else []
 
     def get_next_nonce(self) -> int:
@@ -72,7 +73,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             yield from safe_tx_data.confirmations
 
     def post_transaction(
-        self, safe_tx: SafeTx, signatures: Dict[AddressType, MessageSignature], **kwargs
+        self, safe_tx: SafeTx, signatures: dict[AddressType, MessageSignature], **kwargs
     ):
         safe_tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
         safe_tx_data.confirmations.extend(
@@ -94,7 +95,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
     def post_signatures(
         self,
         safe_tx_or_hash: Union[SafeTx, SafeTxID],
-        signatures: Dict[AddressType, MessageSignature],
+        signatures: dict[AddressType, MessageSignature],
     ):
         for signer, signature in signatures.items():
             safe_tx_id = (

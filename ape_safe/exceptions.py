@@ -1,5 +1,5 @@
 from contextlib import ContextDecorator
-from typing import Optional, Type
+from typing import Optional
 
 from ape.exceptions import AccountsError, ApeException, ContractLogicError, SignatureError
 from ape.types import AddressType
@@ -81,7 +81,7 @@ class handle_safe_logic_error(ContextDecorator):
     def __enter__(self):
         pass
 
-    def __exit__(self, exc_type: Type[BaseException], exc: BaseException, tb):
+    def __exit__(self, exc_type: type[BaseException], exc: BaseException, tb):
         if (
             isinstance(exc, ContractLogicError)  # NOTE: Just for mypy
             and exc_type == ContractLogicError

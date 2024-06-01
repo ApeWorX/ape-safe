@@ -1,5 +1,3 @@
-from typing import List
-
 from ape.api import ReceiptAPI, TransactionAPI
 from ape.contracts.base import ContractInstance, ContractTransactionHandler
 from ape.types import ContractType, HexBytes
@@ -116,7 +114,7 @@ class MultiSend(ManagerAccessMixin):
         """
         Initialize a new Multicall session object. By default, there are no calls to make.
         """
-        self.calls: List[dict] = []
+        self.calls: list[dict] = []
 
     @classmethod
     def inject(cls):

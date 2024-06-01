@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Dict, List, NewType, Optional, Union, cast
+from typing import NewType, Optional, Union, cast
 
 from ape.types import AddressType, HexBytes
 from eip712.common import SafeTxV1, SafeTxV2
@@ -18,9 +18,9 @@ class SafeDetails(BaseModel):
     address: AddressType
     nonce: int
     threshold: int
-    owners: List[AddressType]
+    owners: list[AddressType]
     master_copy: AddressType = Field(alias="masterCopy")
-    modules: List[AddressType]
+    modules: list[AddressType]
     fallback_handler: AddressType = Field(alias="fallbackHandler")
     guard: AddressType
     version: str
@@ -61,7 +61,7 @@ class UnexecutedTxData(BaseModel):
     modified: datetime
     safe_tx_hash: SafeTxID = Field(alias="safeTxHash")
     confirmations_required: int = Field(alias="confirmationsRequired")
-    confirmations: List[SafeTxConfirmation] = []
+    confirmations: list[SafeTxConfirmation] = []
     trusted: bool = True
     signatures: Optional[HexBytes] = None
 
@@ -77,7 +77,7 @@ class UnexecutedTxData(BaseModel):
         )
 
     @property
-    def base_tx_dict(self) -> Dict:
+    def base_tx_dict(self) -> dict:
         return {
             "to": self.to,
             "value": self.value,
