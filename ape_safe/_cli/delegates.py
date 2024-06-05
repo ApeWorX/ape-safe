@@ -9,7 +9,7 @@ from ape_safe._cli.click_ext import callback_factory, safe_argument, safe_cli_ct
 @click.group()
 def delegates():
     """
-    Commands for viewing and configuring delegates thru the configured Safe API
+    View and configure delegates
     """
 
 
@@ -38,7 +38,7 @@ def _list(cli_ctx, safe):
 @click.argument("signer", callback=callback_factory.submitter_callback)
 def add(cli_ctx, safe, delegate, label, signer):
     """
-    Add a delegate for a specific signer in a Safe
+    Add a delegate for a signer in a Safe
     """
     delegate = cli_ctx.conversion_manager.convert(delegate, AddressType)
     safe.client.add_delegate(delegate, label, signer)

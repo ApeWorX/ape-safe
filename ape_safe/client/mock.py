@@ -162,7 +162,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         if delegator.address not in self.safe_details.owners:
             raise SafeClientException(f"'{delegator.address}' not a valid owner.")
 
-        if delegator.address not in self.delegates:
+        elif delegator.address not in self.delegates:
             raise SafeClientException(
                 f"'{delegate}' not a valid delegate for '{delegator.address}'."
             )
