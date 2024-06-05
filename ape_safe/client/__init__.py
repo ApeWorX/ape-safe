@@ -221,7 +221,7 @@ class SafeClient(BaseSafeClient):
 
         # NOTE: This is required as Safe API uses an antiquated .signHash method
         if not (sig := delegator.sign_raw_msghash(msg_hash)):
-            raise ActionNotPerformedError("Did not sign delegation")
+            raise ActionNotPerformedError("Did not sign delegate approval")
 
         payload = {
             "safe": self.address,
@@ -233,24 +233,15 @@ class SafeClient(BaseSafeClient):
         self._post("delegates", json=payload)
 
     def remove_delegate(self, delegate: "AddressType", delegator: "AccountAPI"):
-        # TODO: Replace this by adding raw hash signing into supported account plugins
-        #       See: https://github.com/ApeWorX/ape/issues/1962
-        if not isinstance(delegator, KeyfileAccount):
-            raise ActionNotPerformedError("Need access to private key for this method.")
-
-        logger.warning("Need to unlock account to add a delegate.")
-        delegator.unlock()  # NOTE: Ensures we have the key handy
-
         msg_hash = self.create_delegate_message(delegate)
+
         # NOTE: This is required as Safe API uses an antiquated .signHash method
-        sig = EthAccount.signHash(
-            msg_hash,
-            delegator._KeyfileAccount__cached_key,  # type: ignore[attr-defined]
-        )
+        if not (sig := delegator.sign_raw_msghash(msg_hash)):
+            raise ActionNotPerformedError("Did not sign delegate removal")
 
         payload = {
             "delegator": delegator.address,
-            "signature": sig.signature.hex(),
+            "signature": sig.encode_rsv().hex(),
         }
         self._delete(f"delegates/{delegate}", json=payload)
 
