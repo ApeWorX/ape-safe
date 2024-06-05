@@ -89,4 +89,4 @@ jobs:
             pip install .[test]
 
         - name: Run Tests
-          run: ape test -n 0 -s --cov
+          run: ape test -n 0 -s --cov -v WARNING
