@@ -1,9 +1,9 @@
 import click
-from ape.cli import ConnectedProviderCommand
+from ape.cli import ConnectedProviderCommand, account_option
 from ape.types import AddressType
 from eth_typing import ChecksumAddress
 
-from ape_safe._cli.click_ext import callback_factory, safe_argument, safe_cli_ctx, safe_option
+from ape_safe._cli.click_ext import safe_argument, safe_cli_ctx, safe_option
 
 
 @click.group()
@@ -35,15 +35,16 @@ def _list(cli_ctx, safe):
 @safe_option
 @click.argument("delegate", type=ChecksumAddress)
 @click.argument("label")
-@click.argument("signer", callback=callback_factory.submitter_callback)
-def add(cli_ctx, safe, delegate, label, signer):
+@account_option()
+def add(cli_ctx, safe, delegate, label, account):
     """
     Add a delegate for a signer in a Safe
     """
     delegate = cli_ctx.conversion_manager.convert(delegate, AddressType)
-    safe.client.add_delegate(delegate, label, signer)
+    safe.client.add_delegate(delegate, label, account)
     cli_ctx.logger.success(
-        f"Added delegate {delegate} ({label}) for {signer.address} in {safe.address} ({safe.alias})"
+        f"Added delegate {delegate} ({label}) for {account.address} "
+        f"in {safe.address} ({safe.alias})"
     )
 
 
@@ -51,13 +52,13 @@ def add(cli_ctx, safe, delegate, label, signer):
 @safe_cli_ctx()
 @safe_option
 @click.argument("delegate", type=ChecksumAddress)
-@click.argument("signer", callback=callback_factory.submitter_callback)
-def remove(cli_ctx, safe, delegate, signer):
+@account_option()
+def remove(cli_ctx, safe, delegate, account):
     """
     Remove a delegate for a specific signer in a Safe
     """
     delegate = cli_ctx.conversion_manager.convert(delegate, AddressType)
-    safe.client.remove_delegate(delegate, signer)
+    safe.client.remove_delegate(delegate, account)
     cli_ctx.logger.success(
-        f"Removed delegate {delegate} for {signer.address} in {safe.address} ({safe.alias})"
+        f"Removed delegate {delegate} for {account.address} in {safe.address} ({safe.alias})"
     )
