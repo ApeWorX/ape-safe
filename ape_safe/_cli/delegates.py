@@ -27,7 +27,7 @@ def _list(cli_ctx, safe):
             click.echo("- " + "\n- ".join(delegates[delegator]))
 
     else:
-        cli_ctx.logger.error(f"No delegates for {safe.address} ({safe.alias})")
+        cli_ctx.logger.info(f"No delegates for {safe.address} ({safe.alias})")
 
 
 @delegates.command(cls=ConnectedProviderCommand)
