@@ -99,11 +99,12 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         # Ensure that if this is a zero-conf SafeTx, that at least one signature is from a delegate
         # NOTE: More strict than Safe API check that silently ignores if no signatures are valid or
         #       from delegates, but should help us to get correct logic for mock testing purposes
-        if len(safe_tx_data.confirmations) == 0 and not any(
+        # NOTE: Using `assert` because this client is only meant for mock testing purposes
+        assert len(safe_tx_data.confirmations) > 0
+        assert all(
             self.delegator_for_delegate(signer) in owners
             for signer in filter(lambda signer: signer not in owners, signatures)
-        ):
-            raise SafeClientException("Not submitted by any valid signer or delegate.")
+        )
 
         tx_id = cast(SafeTxID, to_hex(HexBytes(safe_tx_data.safe_tx_hash)))
         self.transactions[tx_id] = safe_tx_data
