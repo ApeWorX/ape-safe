@@ -7,13 +7,13 @@ def test_manage_delegates(safe, delegate, OWNERS):
     owner = OWNERS[0]
     assert owner.address not in safe.client.get_delegates()
 
-    safe.client.add_delegate(delegate, "pepito", owner)
+    safe.client.add_delegate(delegate.address, "pepito", owner)
     assert delegate.address in safe.client.get_delegates()[owner.address]
     assert delegate.address in safe.all_delegates()
     # NOTE: Only in MockSafeClient
     assert safe.client.delegator_for_delegate(delegate.address) == owner.address
 
-    safe.client.remove_delegate(delegate, owner)
+    safe.client.remove_delegate(delegate.address, owner)
     assert owner.address not in safe.client.get_delegates()
 
     with pytest.raises(SafeClientException):
@@ -32,7 +32,7 @@ def test_delegate_can_propose_safe_tx(safe, delegate, OWNERS):
         # Not a delegate or signer
         safe.propose_safe_tx(safe_tx, submitter=delegate)
 
-    safe.client.add_delegate(delegate, "pepito", owner)
+    safe.client.add_delegate(delegate.address, "pepito", owner)
     safe.propose_safe_tx(safe_tx, submitter=delegate)
 
     assert len(safe.get_api_confirmations(safe_tx)) == 0
