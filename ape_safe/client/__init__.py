@@ -217,27 +217,18 @@ class SafeClient(BaseSafeClient):
         return delegates
 
     def add_delegate(self, delegate: "AddressType", label: str, delegator: "AccountAPI"):
-        # TODO: Replace this by adding raw hash signing into supported account plugins
-        #       See: https://github.com/ApeWorX/ape/issues/1962
-        if not isinstance(delegator, KeyfileAccount):
-            raise ActionNotPerformedError("Need access to private key for this method.")
-
-        logger.warning("Need to unlock account to add a delegate.")
-        delegator.unlock()  # NOTE: Ensures we have the key handy
-
         msg_hash = self.create_delegate_message(delegate)
+
         # NOTE: This is required as Safe API uses an antiquated .signHash method
-        sig = EthAccount.signHash(
-            msg_hash,
-            delegator._KeyfileAccount__cached_key,  # type: ignore[attr-defined]
-        )
+        if not (sig := delegator.sign_raw_msghash(msg_hash)):
+            raise ActionNotPerformedError("Did not sign delegation")
 
         payload = {
             "safe": self.address,
             "delegate": delegate,
             "delegator": delegator.address,
             "label": label,
-            "signature": sig.signature.hex(),
+            "signature": sig.encode_rsv().hex(),
         }
         self._post("delegates", json=payload)
 

@@ -8,7 +8,7 @@ import certifi
 import requests
 import urllib3
 from ape.api import AccountAPI
-from ape.types import AddressType, MessageSignature
+from ape.types import AddressType, HexBytes, MessageSignature
 from eth_utils import keccak
 from requests import Response
 from requests.adapters import HTTPAdapter
@@ -120,11 +120,11 @@ class BaseSafeClient(ABC):
 
             yield txn
 
-    def create_delegate_message(self, delegate: AddressType) -> bytes:
+    def create_delegate_message(self, delegate: AddressType) -> HexBytes:
         # NOTE: referencing https://github.com/safe-global/safe-eth-py/blob/
         # a0a5771622f143ee6301cfc381c5ed50832ff482/gnosis/safe/api/transaction_service_api.py#L34
         totp = int(time.time()) // 3600
-        return keccak(text=(delegate + str(totp)))
+        return HexBytes(keccak(text=(delegate + str(totp))))
 
     @abstractmethod
     def get_delegates(self) -> dict["AddressType", list["AddressType"]]: ...
