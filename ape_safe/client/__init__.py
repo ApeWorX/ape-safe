@@ -80,7 +80,7 @@ class SafeClient(BaseSafeClient):
         confirmed: Confirmed if True, not confirmed if False, both if None
         """
 
-        url = f"safes/{self.address}/transactions"
+        url = f"safes/{self.address}/all-transactions"
         while url:
             response = self._get(url)
             data = response.json()
