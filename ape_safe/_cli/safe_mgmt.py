@@ -132,12 +132,16 @@ def remove(cli_ctx: SafeCliContext, safe, skip_confirmation):
 
 @click.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx()
-@click.argument("address", type=ChecksumAddress)
+@click.argument("account")
 @click.option("--confirmed", is_flag=True, default=None)
-def all_txns(cli_ctx: SafeCliContext, address, confirmed):
+def all_txns(cli_ctx: SafeCliContext, account, confirmed):
     """
     View and filter all transactions for a given Safe using Safe API
     """
+    if account in cli_ctx.account_manager.aliases:
+        account = cli_ctx.account_manager.load(account)
+
+    address = cli_ctx.conversion_manager.convert(account, AddressType)
 
     # NOTE: Create a client to support non-local safes.
     client = cli_ctx.safes.create_client(address)
