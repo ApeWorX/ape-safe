@@ -77,22 +77,24 @@ class SafeClient(BaseSafeClient):
 
     def _all_transactions(self) -> Iterator[SafeApiTxData]:
         """
-        confirmed: Confirmed if True, not confirmed if False, both if None
+        Get all transactions from safe, both confirmed and unconfirmed
         """
 
-        url = f"safes/{self.address}/transactions"
+        url = f"safes/{self.address}/all-transactions"
         while url:
             response = self._get(url)
             data = response.json()
 
             for txn in data.get("results"):
-                # TODO: Replace with `model_validate()` after ape 0.7.
                 # NOTE: Using construct because of pydantic v2 back import validation error.
-                if "isExecuted" in txn and txn["isExecuted"]:
-                    yield ExecutedTxData.model_validate(txn)
+                if "isExecuted" in txn:
+                    if txn["isExecuted"]:
+                        yield ExecutedTxData.model_validate(txn)
 
-                else:
-                    yield UnexecutedTxData.model_validate(txn)
+                    else:
+                        yield UnexecutedTxData.model_validate(txn)
+
+                # else it is an incoming transaction
 
             url = data.get("next")
 

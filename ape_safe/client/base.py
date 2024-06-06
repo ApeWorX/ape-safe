@@ -96,7 +96,8 @@ class BaseSafeClient(ABC):
                 elif confirmed and not is_confirmed:
                     continue  # NOTE: Skip not confirmed transactions
 
-            if txn.nonce < next_nonce and isinstance(txn, UnexecutedTxData):
+            # NOTE: use `type(txn) is ...` because ExecutedTxData is a subclass of UnexecutedTxData
+            if txn.nonce < next_nonce and type(txn) is UnexecutedTxData:
                 continue  # NOTE: Skip orphaned transactions
 
             if filter_by_ids and txn.safe_tx_hash not in filter_by_ids:
@@ -136,10 +137,13 @@ class BaseSafeClient(ABC):
         return urllib3.PoolManager(ca_certs=certifi.where())
 
     def _request(self, method: str, url: str, json: Optional[dict] = None, **kwargs) -> Response:
-        # **WARNING**: The trailing slash in the URL is CRITICAL!
-        # If you remove it, things will not work as expected.
-
-        api_url = f"{self.transaction_service_url}/api/v1/{url}/"
+        # NOTE: paged requests include full url already
+        if url.startswith(f"{self.transaction_service_url}/api/v1/"):
+            api_url = url
+        else:
+            # **WARNING**: The trailing slash in the URL is CRITICAL!
+            # If you remove it, things will not work as expected.
+            api_url = f"{self.transaction_service_url}/api/v1/{url}/"
         do_fail = not kwargs.pop("allow_failure", False)
 
         # Use `or 10` to handle when None is explicit.
