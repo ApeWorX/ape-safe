@@ -136,10 +136,13 @@ class BaseSafeClient(ABC):
         return urllib3.PoolManager(ca_certs=certifi.where())
 
     def _request(self, method: str, url: str, json: Optional[dict] = None, **kwargs) -> Response:
-        # **WARNING**: The trailing slash in the URL is CRITICAL!
-        # If you remove it, things will not work as expected.
-
-        api_url = f"{self.transaction_service_url}/api/v1/{url}/"
+        # NOTE: paged requests include full url already
+        if url.startswith(f"{self.transaction_service_url}/api/v1/"):
+            api_url = url
+        else:
+            # **WARNING**: The trailing slash in the URL is CRITICAL!
+            # If you remove it, things will not work as expected.
+            api_url = f"{self.transaction_service_url}/api/v1/{url}/"
         do_fail = not kwargs.pop("allow_failure", False)
 
         # Use `or 10` to handle when None is explicit.
