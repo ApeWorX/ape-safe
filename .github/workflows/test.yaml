@@ -88,5 +88,8 @@ jobs:
             python -m pip install --upgrade pip
             pip install .[test]
 
-        - name: Run Tests
-          run: ape test -n 0 -s --cov -v WARNING
+        - name: Run Functional Tests
+          run: ape test -n 0 tests/functional/ -s --cov -v WARNING
+
+        - name: Run Integration Tests
+          run: ape test -n 0 tests/integration/ -s --cov -v WARNING
