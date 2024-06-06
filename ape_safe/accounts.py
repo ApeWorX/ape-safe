@@ -418,7 +418,7 @@ class SafeAccount(AccountAPI):
         contractTransactionHash: Optional[SafeTxID] = None,
     ) -> SafeTxID:
         """
-        Propose a transaction to the Safe API client
+        Propose a safe_tx to the Safe API client
         """
         if not contractTransactionHash:
             contractTransactionHash = get_safe_tx_hash(safe_tx)
@@ -447,6 +447,18 @@ class SafeAccount(AccountAPI):
         )
 
         return contractTransactionHash
+
+    def propose(
+        self,
+        txn: Optional[TransactionAPI] = None,
+        submitter: Union[AccountAPI, AddressType, str, None] = None,
+        **safe_tx_kwargs,
+    ) -> SafeTxID:
+        """
+        Propose a transaction to the Safe API client
+        """
+        safe_tx = self.create_safe_tx(txn=txn, **safe_tx_kwargs)
+        return self.propose_safe_tx(safe_tx, submitter=submitter)
 
     def pending_transactions(self) -> Iterator[tuple[SafeTx, list[SafeTxConfirmation]]]:
         for executed_tx in self.client.get_transactions(confirmed=False):
