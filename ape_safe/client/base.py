@@ -96,7 +96,8 @@ class BaseSafeClient(ABC):
                 elif confirmed and not is_confirmed:
                     continue  # NOTE: Skip not confirmed transactions
 
-            if txn.nonce < next_nonce and isinstance(txn, UnexecutedTxData):
+            # NOTE: use `type(txn) is ...` because ExecutedTxData is a subclass of UnexecutedTxData
+            if txn.nonce < next_nonce and type(txn) is UnexecutedTxData:
                 continue  # NOTE: Skip orphaned transactions
 
             if filter_by_ids and txn.safe_tx_hash not in filter_by_ids:
