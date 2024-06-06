@@ -1,8 +1,10 @@
+import json
 from datetime import datetime
 from functools import reduce
 from typing import Dict, Iterator, Optional, Union, cast
 
 from ape.types import AddressType, HexBytes, MessageSignature
+from ape.utils.misc import USER_AGENT, get_package_version
 from eip712.common import SafeTxV1, SafeTxV2
 
 from ape_safe.client.base import BaseSafeClient
@@ -24,6 +26,12 @@ from ape_safe.exceptions import (
     MultisigTransactionNotFoundError,
 )
 from ape_safe.utils import get_safe_tx_hash, order_by_signer
+
+APE_SAFE_VERSION = get_package_version(__name__)
+APE_SAFE_USER_AGENT = f"Ape-Safe/{APE_SAFE_VERSION} {USER_AGENT}"
+# NOTE: Origin must be a string, but can be json that contains url & name fields
+ORIGIN = json.dumps(dict(url="https://apeworx.io", name="Ape Safe", ua=APE_SAFE_USER_AGENT))
+assert len(ORIGIN) <= 200  # NOTE: Must be less than 200 chars
 
 TRANSACTION_SERVICE_URL = {
     # NOTE: If URLs need to be updated, a list of available service URLs can be found at
@@ -118,7 +126,7 @@ class SafeClient(BaseSafeClient):
                 b"",
             )
         )
-        post_dict: Dict = {"signature": signature.hex()}
+        post_dict: Dict = {"signature": signature.hex(), "origin": ORIGIN}
 
         for key, value in tx_data.model_dump(by_alias=True, mode="json").items():
             if isinstance(value, HexBytes):
