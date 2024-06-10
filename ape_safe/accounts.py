@@ -14,7 +14,7 @@ from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS, cached_property
-from ape_ethereum.transactions import StaticFeeTransaction, TransactionType
+from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
 from eth_account.messages import encode_defunct
 from eth_utils import keccak, to_bytes, to_int
@@ -348,14 +348,6 @@ class SafeAccount(AccountAPI):
         Returns:
             :class:`~ape_safe.client.SafeTx`: The Safe Transaction to be used.
         """
-        gas_price = safe_tx_kwargs.get(
-            "gas_price", safe_tx_kwargs.get("gasPrice", safe_tx_kwargs.get("gas"))
-        )
-        if gas_price is None and isinstance(txn, StaticFeeTransaction):
-            gas_price = txn.gas_price or 0
-        elif gas_price is None:
-            gas_price = 0
-
         safe_tx = {
             "to": txn.receiver if txn else self.address,  # Self-call, e.g. rejection
             "value": txn.value if txn else 0,
@@ -363,7 +355,7 @@ class SafeAccount(AccountAPI):
             "nonce": self.new_nonce if txn is None or txn.nonce is None else txn.nonce,
             "operation": 0,
             "safeTxGas": 0,
-            "gasPrice": gas_price,
+            "gasPrice": 0,
             "gasToken": ZERO_ADDRESS,
             "refundReceiver": ZERO_ADDRESS,
         }

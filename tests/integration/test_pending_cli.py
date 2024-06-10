@@ -37,28 +37,6 @@ def test_propose(runner, cli, one_safe, receiver, chain):
     assert one_safe.next_nonce == nonce_at_start
 
 
-def test_propose_with_gas_price(runner, cli, one_safe, receiver, chain):
-    cmd = (
-        "pending",
-        "propose",
-        "--to",
-        receiver.address,
-        "--value",
-        "1",
-        "--gas-price",
-        chain.provider.gas_price + 1,
-        "--network",
-        chain.provider.network_choice,
-    )
-    result = runner.invoke(cli, cmd, catch_exceptions=False, input=f"{one_safe.alias}\n")
-    assert result.exit_code == 0
-    safe_tx_hash = result.output.split("Proposed transaction '")[-1].split("'")[0].strip()
-
-    # Verify gas price was used.
-    tx = one_safe.client.transactions[safe_tx_hash]
-    assert tx.gas_price > 0
-
-
 def test_propose_with_sender(runner, cli, one_safe, receiver, chain, foundry):
     # First, fund the safe so the tx does not fail.
     receiver.transfer(one_safe, "1 ETH")
