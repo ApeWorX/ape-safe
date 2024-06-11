@@ -16,7 +16,6 @@ from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
-from eth_account.messages import encode_defunct
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 
@@ -179,16 +178,14 @@ class SafeContainer(AccountContainerAPI):
 
 
 def get_signatures(
-    safe_tx_hash: str,
+    safe_tx: SafeTx,
     signers: Iterable[AccountAPI],
 ) -> Dict[AddressType, MessageSignature]:
     signatures: Dict[AddressType, MessageSignature] = {}
     for signer in signers:
-        message = encode_defunct(hexstr=safe_tx_hash)
-        signature = signer.sign_message(message)
+        signature = signer.sign_message(safe_tx)
         if signature:
-            signature_adjusted = adjust_v_in_signature(signature)
-            signatures[signer.address] = signature_adjusted
+            signatures[signer.address] = signature
 
     return signatures
 
@@ -669,7 +666,7 @@ class SafeAccount(AccountAPI):
         # NOTE: It is okay to have less signatures, but it never should fetch more than needed
         signers = [x for x in available_signers if x.address not in sigs_by_signer]
         if signers:
-            new_signatures = get_signatures(safe_tx_hash, signers)
+            new_signatures = get_signatures(safe_tx, signers)
             sigs_by_signer = {**sigs_by_signer, **new_signatures}
 
         if (
@@ -736,7 +733,7 @@ class SafeAccount(AccountAPI):
         ][:amount_needed]
 
         safe_tx_hash = _get_safe_tx_id(safe_tx, confirmations)
-        signatures = get_signatures(safe_tx_hash, signers)
+        signatures = get_signatures(safe_tx, signers)
         if signatures:
             self.client.post_signatures(safe_tx_hash, signatures)
 
@@ -754,20 +751,3 @@ def _get_safe_tx_id(safe_tx: SafeTx, confirmations: list[SafeTxConfirmation]) ->
         return value
 
     raise ApeSafeError("Failed to get transaction hash.")
-
-
-def adjust_v_in_signature(signature: MessageSignature) -> MessageSignature:
-    MIN_VALID_V_VALUE_FOR_SAFE_ECDSA = 27
-    v = signature.v
-
-    if v < MIN_VALID_V_VALUE_FOR_SAFE_ECDSA:
-        v += MIN_VALID_V_VALUE_FOR_SAFE_ECDSA
-
-    # Add 4 because we signed with the prefix.
-    v += 4
-
-    return MessageSignature(
-        v=v,
-        r=signature.r,
-        s=signature.s,
-    )

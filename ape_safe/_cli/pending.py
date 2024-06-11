@@ -129,7 +129,7 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, s
     )
     safe_tx = safe.create_safe_tx(txn)
     safe_tx_hash = get_safe_tx_hash(safe_tx)
-    signatures = get_signatures(safe_tx_hash, safe.local_signers)
+    signatures = get_signatures(safe_tx, safe.local_signers)
 
     num_confirmations = 0
     submitter = sender if isinstance(sender, AccountAPI) else None
