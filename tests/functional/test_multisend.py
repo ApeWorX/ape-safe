@@ -1,8 +1,3 @@
-import pytest
-
-from ape_safe.exceptions import SafeLogicError
-
-
 def test_asset(vault, token):
     assert vault.asset() == token
 
