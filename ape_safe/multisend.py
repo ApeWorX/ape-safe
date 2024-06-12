@@ -18,7 +18,7 @@ MULTISEND_CALL_ONLY_ADDRESSES = (
 MULTISEND_CALL_ONLY_MANIFEST = PackageManifest.model_validate_json(
     files("ape_safe").joinpath("manifests/multisend.json").read_text()
 )
-MULTISEND_CALL_ONLY = MULTISEND_CALL_ONLY_MANIFEST.contract_types["MultiSendCallOnly"]  # type: ignore
+MULTISEND_CALL_ONLY = MULTISEND_CALL_ONLY_MANIFEST.contract_types["MultiSendCallOnly"]  # type: ignore # noqa: E501
 
 
 class MultiSend(ManagerAccessMixin):
