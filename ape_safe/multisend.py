@@ -115,24 +115,24 @@ class MultiSend(ManagerAccessMixin):
 
     def __init__(self) -> None:
         """
-        Initialize a new Multicall session object. By default, there are no calls to make.
+        Initialize a new MultiSend session object. By default, there are no calls to make.
         """
         self.calls: list[dict] = []
 
     @classmethod
     def inject(cls):
         """
-        Create the multicall module contract on-chain, so we can use it.
+        Create the multisend module contract on-chain, so we can use it.
         Must use a provider that supports ``debug_setCode``.
 
         Usage example::
 
-            from ape_ethereum import multicall
+            from ape_safe.multisend import MultiSend
 
             @pytest.fixture(scope="session")
-            def use_multicall():
-                # NOTE: use this fixture any test where you want to use a multicall
-                multicall.BaseMulticall.deploy()
+            def multisend():
+                MultiSend.inject()
+                return MultiSend()
         """
         active_provider = cls.network_manager.active_provider
         assert active_provider, "Must be connected to an active network to deploy"
@@ -169,7 +169,7 @@ class MultiSend(ManagerAccessMixin):
         value=0,
     ) -> "MultiSend":
         """
-        Adds a call to the Multicall session object.
+        Append a call to the MultiSend session object.
 
         Raises:
             :class:`InvalidOption`: If one of the kwarg modifiers is not able to be used.
@@ -221,11 +221,11 @@ class MultiSend(ManagerAccessMixin):
 
     def __call__(self, **txn_kwargs) -> ReceiptAPI:
         """
-        Execute the Multicall transaction. The transaction will broadcast again every time
+        Execute the MultiSend transaction. The transaction will broadcast again every time
         the ``Transaction`` object is called.
 
         Raises:
-            :class:`UnsupportedChain`: If there is not an instance of Multicall3 deployed
+            :class:`UnsupportedChain`: If there is not an instance of MultiSend deployed
               on the current chain at the expected address.
 
         Args:
@@ -241,7 +241,7 @@ class MultiSend(ManagerAccessMixin):
 
     def as_transaction(self, **txn_kwargs) -> TransactionAPI:
         """
-        Encode the Multicall transaction as a ``TransactionAPI`` object, but do not execute it.
+        Encode the MultiSend transaction as a ``TransactionAPI`` object, but do not execute it.
 
         Returns:
             :class:`~ape.api.transactions.TransactionAPI`
@@ -258,6 +258,12 @@ class MultiSend(ManagerAccessMixin):
         )
 
     def add_from_calldata(self, calldata: bytes):
+        """
+        Decode all calls from a multisend calldata and add them to this MultiSend.
+
+        Args:
+            calldata: Calldata encoding the MultiSend.multiSend call
+        """
         _, args = self.contract.decode_input(calldata)
         buffer = BytesIO(args["transactions"])
         while buffer.tell() < len(args["transactions"]):
