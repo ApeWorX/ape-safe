@@ -16,7 +16,7 @@ MULTISEND_CALL_ONLY_ADDRESSES = (
     "0xA1dabEF33b3B82c7814B6D82A79e50F4AC44102B",  # MultiSend Call Only v1.3.0 (EIP-155)
 )
 MULTISEND_CALL_ONLY_MANIFEST = PackageManifest.model_validate_json(
-    files("ape_safe").joinpath("data/multisend.json").read_text()
+    files("ape_safe").joinpath("manifests/multisend.json").read_text()
 )
 MULTISEND_CALL_ONLY = MULTISEND_CALL_ONLY_MANIFEST.contract_types["MultiSendCallOnly"]
 

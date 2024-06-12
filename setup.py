@@ -77,7 +77,7 @@ setup(
     zip_safe=False,
     keywords="ethereum",
     packages=find_packages(exclude=["tests", "tests.*"]),
-    package_data={"ape_safe": ["py.typed", "data/*"]},
+    package_data={"ape_safe": ["py.typed", "manifests/*"]},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
