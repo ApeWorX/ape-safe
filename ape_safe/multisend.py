@@ -1,11 +1,13 @@
+from importlib.resources import files
 from io import BytesIO
 
 from ape import convert
 from ape.api import ReceiptAPI, TransactionAPI
 from ape.contracts.base import ContractInstance, ContractTransactionHandler
-from ape.types import AddressType, ContractType, HexBytes
+from ape.types import AddressType, HexBytes
 from ape.utils import ManagerAccessMixin, cached_property
 from eth_abi.packed import encode_packed
+from ethpm_types import PackageManifest
 
 from ape_safe.exceptions import UnsupportedChainError, ValueRequired
 
@@ -13,12 +15,10 @@ MULTISEND_CALL_ONLY_ADDRESSES = (
     "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",  # MultiSend Call Only v1.3.0
     "0xA1dabEF33b3B82c7814B6D82A79e50F4AC44102B",  # MultiSend Call Only v1.3.0 (EIP-155)
 )
-MULTISEND_CALL_ONLY_CODE = HexBytes(
-    "0x60806040526004361061001e5760003560e01c80638d80ff0a14610023575b600080fd5b6100dc6004803603602081101561003957600080fd5b810190808035906020019064010000000081111561005657600080fd5b82018360208201111561006857600080fd5b8035906020019184600183028401116401000000008311171561008a57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f8201169050808301925050505050505091929192905050506100de565b005b805160205b8181101561015f578083015160f81c6001820184015160601c60158301850151603584018601516055850187016000856000811461012857600181146101385761013d565b6000808585888a5af1915061013d565b600080fd5b50600081141561014c57600080fd5b82605501870196505050505050506100e3565b50505056fea264697066735822122035246402746c96964495cae5b36461fd44dfb89f8e6cf6f6b8d60c0aa89f414864736f6c63430007060033"  # noqa: E501
+MULTISEND_CALL_ONLY_MANIFEST = PackageManifest.model_validate_json(
+    files("ape_safe").joinpath("data/multisend.json").read_text()
 )
-MULTISEND_CALL_ONLY_CONTRACT_TYPE = ContractType.model_validate_json(
-    '{"abi":[{"inputs":[{"internalType":"bytes","name":"transactions","type":"bytes"}],"name":"multiSend","outputs":[],"stateMutability":"payable","type":"function"}],"contractName":"MultiSendCallOnly","methodIdentifiers":{"multiSend(bytes)":"0x8d80ff0a"}}'  # noqa: E501
-)
+MULTISEND_CALL_ONLY = MULTISEND_CALL_ONLY_MANIFEST.contract_types["MultiSendCallOnly"]
 
 
 class MultiSend(ManagerAccessMixin):
@@ -75,14 +75,16 @@ class MultiSend(ManagerAccessMixin):
         active_provider = cls.network_manager.active_provider
         assert active_provider, "Must be connected to an active network to deploy"
 
-        active_provider.set_code(MULTISEND_CALL_ONLY_ADDRESSES[0], MULTISEND_CALL_ONLY_CODE)
+        active_provider.set_code(
+            MULTISEND_CALL_ONLY_ADDRESSES[0], MULTISEND_CALL_ONLY.get_runtime_bytecode()
+        )
 
     @cached_property
     def contract(self) -> ContractInstance:
         for address in MULTISEND_CALL_ONLY_ADDRESSES:
-            if self.provider.get_code(address) == MULTISEND_CALL_ONLY_CODE:
+            if self.provider.get_code(address) == MULTISEND_CALL_ONLY.get_runtime_bytecode():
                 return self.chain_manager.contracts.instance_at(
-                    address, contract_type=MULTISEND_CALL_ONLY_CONTRACT_TYPE
+                    address, contract_type=MULTISEND_CALL_ONLY
                 )
 
         raise UnsupportedChainError()
