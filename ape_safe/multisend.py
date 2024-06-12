@@ -1,6 +1,9 @@
+from io import BytesIO
+
+from ape import convert
 from ape.api import ReceiptAPI, TransactionAPI
 from ape.contracts.base import ContractInstance, ContractTransactionHandler
-from ape.types import ContractType, HexBytes
+from ape.types import AddressType, ContractType, HexBytes
 from ape.utils import ManagerAccessMixin, cached_property
 from eth_abi.packed import encode_packed
 
@@ -253,3 +256,21 @@ class MultiSend(ManagerAccessMixin):
             data=self.handler.encode_input(b"".join(self.encoded_calls)),
             **txn_kwargs,
         )
+
+    def add_from_calldata(self, calldata: bytes):
+        _, args = self.contract.decode_input(calldata)
+        buffer = BytesIO(args["transactions"])
+        while buffer.tell() < len(args["transactions"]):
+            operation = int.from_bytes(buffer.read(1), "big")
+            target = convert(buffer.read(20), AddressType)
+            value = int.from_bytes(buffer.read(32), "big")
+            length = int.from_bytes(buffer.read(32), "big")
+            data = HexBytes(buffer.read(length))
+            self.calls.append(
+                {
+                    "operation": operation,
+                    "target": target,
+                    "value": value,
+                    "callData": data,
+                }
+            )
