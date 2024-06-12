@@ -98,7 +98,6 @@ class MultiSend(ManagerAccessMixin):
         self,
         call,
         *args,
-        delegatecall=False,
         value=0,
     ) -> "MultiSend":
         """
@@ -110,12 +109,11 @@ class MultiSend(ManagerAccessMixin):
         Args:
             call: :class:`ContractMethodHandler` The method to call.
             *args: The arguments to invoke the method with.
-            delegatecall: bool Whether the call should be processed using delegatecall.
             value: int The amount of ether to forward with the call.
         """
         self.calls.append(
             {
-                "operation": int(delegatecall),
+                "operation": 0,
                 "target": call.contract.address,
                 "value": value or 0,
                 "callData": call.encode_input(*args),
