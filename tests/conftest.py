@@ -1,11 +1,12 @@
 import json
+import shutil
 import tempfile
 from pathlib import Path
 
 import ape
 import pytest
 from ape.contracts import ContractContainer
-from ape.utils import ZERO_ADDRESS
+from ape.utils import ZERO_ADDRESS, create_tempdir
 from ethpm_types import ContractType
 
 from ape_safe import MultiSend
@@ -14,14 +15,24 @@ from ape_safe.accounts import SafeAccount
 contracts_directory = Path(__file__).parent / "contracts"
 TESTS_DIR = Path(__file__).parent.absolute()
 
+# TODO: Test more versions.
+VERSIONS = ("1.3.0",)
+
 
 @pytest.fixture(scope="session", autouse=True)
-def config():
+def config(project):
     cfg = ape.config
+
+    # Ensure we have the safe-contracts dependencies.
+    for version in VERSIONS:
+        _ = project.dependencies.get_dependency("safe-contracts", version)
+
     # Ensure we don't persist any .ape data.
-    with tempfile.TemporaryDirectory() as temp_dir:
-        path = Path(temp_dir).resolve()
-        cfg.DATA_FOLDER = path
+    with create_tempdir() as path:
+        # First, copy in Safe contracts so we don't download each time.
+        dest = path / "dest"
+        shutil.copytree(cfg.DATA_FOLDER, dest)
+        cfg.DATA_FOLDER = dest
         yield cfg
 
 
@@ -40,7 +51,7 @@ def receiver(accounts):
     return accounts[9]
 
 
-@pytest.fixture(scope="session", params=["1.3.0"])  # TODO: Test more versions later?
+@pytest.fixture(scope="session", params=VERSIONS)
 def VERSION(request):
     return request.param
 
