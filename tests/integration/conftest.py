@@ -1,11 +1,11 @@
 import shutil
+from contextlib import contextmanager
 
 import pytest
-from contextlib import contextmanager
+from ape.utils import create_tempdir
 from click.testing import CliRunner
 
 from ape_safe._cli import cli as CLI
-from ape.utils import create_tempdir
 
 
 @pytest.fixture
