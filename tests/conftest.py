@@ -30,8 +30,9 @@ def config(project):
     # Ensure we don't persist any .ape data.
     with create_tempdir() as path:
         # First, copy in Safe contracts so we don't download each time.
-        shutil.copytree(cfg.DATA_FOLDER, path)
-        cfg.DATA_FOLDER = path
+        dest = path / "dest"
+        shutil.copytree(cfg.DATA_FOLDER, dest)
+        cfg.DATA_FOLDER = dest
         yield cfg
 
 
