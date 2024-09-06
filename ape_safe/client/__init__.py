@@ -4,7 +4,8 @@ from functools import reduce
 from typing import Dict, Iterator, Optional, Union, cast
 
 from ape.types import AddressType, HexBytes, MessageSignature
-from ape.utils.misc import USER_AGENT, get_package_version
+from ape.utils.misc import get_package_version
+from ape.utils.rpc import USER_AGENT
 from eip712.common import SafeTxV1, SafeTxV2
 
 from ape_safe.client.base import BaseSafeClient
