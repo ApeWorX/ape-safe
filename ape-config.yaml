@@ -13,34 +13,32 @@ ethereum:
     default_provider: foundry
 
 dependencies:
-  - name: openzeppelin
-    github: OpenZeppelin/openzeppelin-contracts
-    version: 3.4.0
   - name: safe-contracts
-    npm: "@gnosis.pm/safe-contracts"
-    version: 1.3.0
+    github: safe-global/safe-smart-account
+    version: v1.3.0
     config_override:
-      solidity:
-        version: 0.7.6
       compile:
         exclude:
-          - "test/*"
-          - "interfaces/*"
+          - test
+          - examples
+          - interfaces/ViewStorageAccessible.sol
 
-solidity:
-  import_remapping:
-    - "@openzeppelin/contracts=openzeppelin/v3.4.0"
-    - "@gnosis=safe-contracts/v1.3.0"
+      dependencies:
+        - name: openzeppelin
+          github: OpenZeppelin/openzeppelin-contracts
+          version: 3.4.0
+
+      solidity:
+        version: 0.7.6
+        import_remapping:
+          - "@openzeppelin/contracts=openzeppelin/v3.4.0"
 
 foundry:
   fork:
-      ethereum:
-        mainnet:
-          upstream_provider: alchemy
-          block_number: 15776634
-        goerli:
-          upstream_provider: alchemy
-          block_number: 7849922
-        sepolia:
-          upstream_provider: alchemy
-          block_number: 3091950
+    ethereum:
+      mainnet:
+        upstream_provider: alchemy
+        block_number: 15776634
+      sepolia:
+        upstream_provider: alchemy
+        block_number: 3091950

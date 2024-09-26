@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 from setuptools import find_packages, setup
 
 extras_require = {
@@ -8,16 +7,16 @@ extras_require = {
         "pytest-xdist",  # multi-process runner
         "pytest-cov",  # Coverage analyzer plugin
         "hypothesis>=6.2.0,<7.0",  # Strategy-based fuzzer
-        "ape-foundry",  # Used as the testing provider
-        "ape-solidity",  # Needed for compiling the Safe contracts
+        "ape-foundry>=0.8",  # Used as the testing provider
+        "ape-solidity>=0.8",  # Needed for compiling the Safe contracts
     ],
     "lint": [
-        "black>=24.1.1,<25",  # Auto-formatter and linter
-        "mypy>=1.8.0,<2",  # Static type analyzer
+        "black>=24.8.0,<25",  # Auto-formatter and linter
+        "mypy>=1.11.1,<2",  # Static type analyzer
         "types-requests",  # Needed for mypy type shed
         "types-setuptools",  # Needed for mypy type shed
-        "flake8>=7.0.0,<8",  # Style linter
-        "isort>=5.10.1,<6",  # Import sorting linter
+        "flake8>=7.1.1,<8",  # Style linter
+        "isort>=5.13.2,<6",  # Import sorting linter
         "mdformat>=0.7.17,<0.8",  # Docs formatter and linter
         "mdformat-pyproject>=0.0.1",  # Allows configuring in pyproject.toml
     ],
@@ -59,7 +58,7 @@ setup(
     url="https://github.com/ApeWorX/ape-safe",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.7.7,<0.8",
+        "eth-ape>=0.8.14,<0.9",
         "requests>=2.31.0,<3",
         "eip712",  # Use same version as eth-ape
         "click",  # Use same version as eth-ape
@@ -71,14 +70,14 @@ setup(
             "ape_safe=ape_safe._cli:cli",
         ],
     },
-    python_requires=">=3.8,<4",
+    python_requires=">=3.9,<4",
     extras_require=extras_require,
     py_modules=["ape_safe"],
     license="Apache-2.0",
     zip_safe=False,
     keywords="ethereum",
     packages=find_packages(exclude=["tests", "tests.*"]),
-    package_data={"ape_safe": ["py.typed"]},
+    package_data={"ape_safe": ["py.typed", "manifests/*"]},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -87,9 +86,9 @@ setup(
         "Operating System :: MacOS",
         "Operating System :: POSIX",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
 )

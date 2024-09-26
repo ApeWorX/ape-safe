@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from functools import cached_property
-from typing import Dict, Iterator, Optional, Set, Union
+from typing import Optional, Union
 
 import certifi
 import requests
@@ -47,14 +48,14 @@ class BaseSafeClient(ABC):
 
     @abstractmethod
     def post_transaction(
-        self, safe_tx: SafeTx, signatures: Dict[AddressType, MessageSignature], **kwargs
+        self, safe_tx: SafeTx, signatures: dict[AddressType, MessageSignature], **kwargs
     ): ...
 
     @abstractmethod
     def post_signatures(
         self,
         safe_tx_or_hash: Union[SafeTx, SafeTxID],
-        signatures: Dict[AddressType, MessageSignature],
+        signatures: dict[AddressType, MessageSignature],
     ): ...
 
     @abstractmethod
@@ -69,8 +70,8 @@ class BaseSafeClient(ABC):
         confirmed: Optional[bool] = None,
         starting_nonce: int = 0,
         ending_nonce: Optional[int] = None,
-        filter_by_ids: Optional[Set[SafeTxID]] = None,
-        filter_by_missing_signers: Optional[Set[AddressType]] = None,
+        filter_by_ids: Optional[set[SafeTxID]] = None,
+        filter_by_missing_signers: Optional[set[AddressType]] = None,
     ) -> Iterator[SafeApiTxData]:
         """
         confirmed: Confirmed if True, not confirmed if False, both if None
@@ -95,7 +96,8 @@ class BaseSafeClient(ABC):
                 elif confirmed and not is_confirmed:
                     continue  # NOTE: Skip not confirmed transactions
 
-            if txn.nonce < next_nonce and isinstance(txn, UnexecutedTxData):
+            # NOTE: use `type(txn) is ...` because ExecutedTxData is a subclass of UnexecutedTxData
+            if txn.nonce < next_nonce and type(txn) is UnexecutedTxData:
                 continue  # NOTE: Skip orphaned transactions
 
             if filter_by_ids and txn.safe_tx_hash not in filter_by_ids:
@@ -127,18 +129,21 @@ class BaseSafeClient(ABC):
     def _get(self, url: str) -> Response:
         return self._request("GET", url)
 
-    def _post(self, url: str, json: Optional[Dict] = None, **kwargs) -> Response:
+    def _post(self, url: str, json: Optional[dict] = None, **kwargs) -> Response:
         return self._request("POST", url, json=json, **kwargs)
 
     @cached_property
     def _http(self):
         return urllib3.PoolManager(ca_certs=certifi.where())
 
-    def _request(self, method: str, url: str, json: Optional[Dict] = None, **kwargs) -> Response:
-        # **WARNING**: The trailing slash in the URL is CRITICAL!
-        # If you remove it, things will not work as expected.
-
-        api_url = f"{self.transaction_service_url}/api/v1/{url}/"
+    def _request(self, method: str, url: str, json: Optional[dict] = None, **kwargs) -> Response:
+        # NOTE: paged requests include full url already
+        if url.startswith(f"{self.transaction_service_url}/api/v1/"):
+            api_url = url
+        else:
+            # **WARNING**: The trailing slash in the URL is CRITICAL!
+            # If you remove it, things will not work as expected.
+            api_url = f"{self.transaction_service_url}/api/v1/{url}/"
         do_fail = not kwargs.pop("allow_failure", False)
 
         # Use `or 10` to handle when None is explicit.

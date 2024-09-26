@@ -1,11 +1,12 @@
 import json
+import shutil
 import tempfile
 from pathlib import Path
 
 import ape
 import pytest
 from ape.contracts import ContractContainer
-from ape.utils import ZERO_ADDRESS
+from ape.utils import ZERO_ADDRESS, create_tempdir
 from ethpm_types import ContractType
 
 from ape_safe import MultiSend
@@ -13,13 +14,26 @@ from ape_safe.accounts import SafeAccount
 
 contracts_directory = Path(__file__).parent / "contracts"
 TESTS_DIR = Path(__file__).parent.absolute()
-DATA_FOLDER = Path(tempfile.mkdtemp()).resolve()
-ape.config.DATA_FOLDER = DATA_FOLDER
+
+# TODO: Test more versions.
+VERSIONS = ("1.3.0",)
 
 
-@pytest.fixture(scope="session")
-def config():
-    return ape.config
+@pytest.fixture(scope="session", autouse=True)
+def config(project):
+    cfg = ape.config
+
+    # Ensure we have the safe-contracts dependencies.
+    for version in VERSIONS:
+        _ = project.dependencies.get_dependency("safe-contracts", version)
+
+    # Ensure we don't persist any .ape data.
+    with create_tempdir() as path:
+        # First, copy in Safe contracts so we don't download each time.
+        dest = path / "dest"
+        shutil.copytree(cfg.DATA_FOLDER, dest)
+        cfg.DATA_FOLDER = dest
+        yield cfg
 
 
 @pytest.fixture
@@ -37,14 +51,20 @@ def receiver(accounts):
     return accounts[9]
 
 
-@pytest.fixture(scope="session", params=["1.3.0"])  # TODO: Test more versions later?
+@pytest.fixture(scope="session", params=VERSIONS)
 def VERSION(request):
     return request.param
 
 
 @pytest.fixture(scope="session")
-def SafeSingleton(project, VERSION):
-    return project.dependencies["safe-contracts"][VERSION]["GnosisSafe"]
+def safe_contracts(project, VERSION):
+    dependency = project.dependencies.get_dependency("safe-contracts", VERSION)
+    return dependency.project
+
+
+@pytest.fixture(scope="session")
+def SafeSingleton(safe_contracts):
+    return safe_contracts.GnosisSafe
 
 
 @pytest.fixture
@@ -53,9 +73,9 @@ def singleton(deployer: SafeAccount, SafeSingleton):
 
 
 @pytest.fixture(scope="session")
-def SafeProxy(project, SafeSingleton, VERSION):
-    Proxy = project.dependencies["safe-contracts"][VERSION]["GnosisSafeProxy"]
-    IProxy = project.dependencies["safe-contracts"][VERSION]["IProxy"]
+def SafeProxy(safe_contracts, SafeSingleton):
+    Proxy = safe_contracts.GnosisSafeProxy
+    IProxy = safe_contracts.IProxy
     # NOTE: Proxy only has a constructor, so we add the rest of it's ABI here for simplified use
     Proxy.contract_type.abi += [IProxy.contract_type.abi[0], *SafeSingleton.contract_type.abi]
     return Proxy

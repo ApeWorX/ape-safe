@@ -1,4 +1,5 @@
-from typing import Dict, List, Optional, Sequence, Union, cast
+from collections.abc import Sequence
+from typing import Optional, Union, cast
 
 import click
 import rich
@@ -46,7 +47,7 @@ def _list(cli_ctx, safe, verbose) -> None:
         rich.print("There are no pending transactions.")
         return
 
-    txns_by_nonce: Dict[int, List[UnexecutedTxData]] = {}
+    txns_by_nonce: dict[int, list[UnexecutedTxData]] = {}
     for txn in txns:
         if txn.nonce in txns_by_nonce:
             txns_by_nonce[txn.nonce].append(txn)
@@ -128,7 +129,7 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, s
     )
     safe_tx = safe.create_safe_tx(txn)
     safe_tx_hash = get_safe_tx_hash(safe_tx)
-    signatures = get_signatures(safe_tx_hash, safe.local_signers)
+    signatures = get_signatures(safe_tx, safe.local_signers)
 
     num_confirmations = 0
     submitter = sender if isinstance(sender, AccountAPI) else None
@@ -191,7 +192,6 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
 
         safe_tx = safe.create_safe_tx(**txn.model_dump(by_alias=True, mode="json"))
         num_confirmations = len(txn.confirmations)
-        signatures_added = {}
 
         if num_confirmations < safe.confirmations_required:
             signatures_added = safe.add_signatures(safe_tx, confirmations=txn.confirmations)
@@ -216,7 +216,8 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
                 submitter = safe.select_signer(for_="submitter")
 
         if submitter:
-            txn.confirmations = {**txn.confirmations, **signatures_added}
+            safe_tx_hash = get_safe_tx_hash(safe_tx)
+            txn.confirmations = safe.client.get_confirmations(safe_tx_hash)
             _execute(safe, txn, submitter)
 
     # If any txn_ids remain, they were not handled.
@@ -259,7 +260,7 @@ def execute(cli_ctx, safe, txn_ids, submitter, nonce):
 
 def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI, **tx_kwargs):
     safe_tx = safe.create_safe_tx(**txn.model_dump(mode="json", by_alias=True))
-    signatures: Dict[AddressType, MessageSignature] = {
+    signatures: dict[AddressType, MessageSignature] = {
         c.owner: MessageSignature.from_rsv(c.signature) for c in txn.confirmations
     }
     exc_tx = safe.create_execute_transaction(safe_tx, signatures, **tx_kwargs)

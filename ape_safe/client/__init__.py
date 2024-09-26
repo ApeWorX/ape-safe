@@ -1,8 +1,10 @@
+import json
 from datetime import datetime
 from functools import reduce
 from typing import Dict, Iterator, Optional, Union, cast
 
 from ape.types import AddressType, HexBytes, MessageSignature
+from ape.utils import USER_AGENT, get_package_version
 from eip712.common import SafeTxV1, SafeTxV2
 
 from ape_safe.client.base import BaseSafeClient
@@ -25,12 +27,17 @@ from ape_safe.exceptions import (
 )
 from ape_safe.utils import get_safe_tx_hash, order_by_signer
 
+APE_SAFE_VERSION = get_package_version(__name__)
+APE_SAFE_USER_AGENT = f"Ape-Safe/{APE_SAFE_VERSION} {USER_AGENT}"
+# NOTE: Origin must be a string, but can be json that contains url & name fields
+ORIGIN = json.dumps(dict(url="https://apeworx.io", name="Ape Safe", ua=APE_SAFE_USER_AGENT))
+assert len(ORIGIN) <= 200  # NOTE: Must be less than 200 chars
+
 TRANSACTION_SERVICE_URL = {
     # NOTE: If URLs need to be updated, a list of available service URLs can be found at
     # https://docs.safe.global/safe-core-api/available-services.
     # NOTE: There should be no trailing slashes at the end of the URL.
     1: "https://safe-transaction-mainnet.safe.global",
-    5: "https://safe-transaction-goerli.safe.global",
     10: "https://safe-transaction-optimism.safe.global",
     56: "https://safe-transaction-bsc.safe.global",
     100: "https://safe-transaction-gnosis-chain.safe.global",
@@ -42,6 +49,7 @@ TRANSACTION_SERVICE_URL = {
     43114: "https://safe-transaction-avalanche.safe.global",
     84531: "https://safe-transaction-base-testnet.safe.global",
     11155111: "https://safe-transaction-sepolia.safe.global",
+    81457: "https://transaction.blast-safe.io",
 }
 
 
@@ -78,22 +86,24 @@ class SafeClient(BaseSafeClient):
 
     def _all_transactions(self) -> Iterator[SafeApiTxData]:
         """
-        confirmed: Confirmed if True, not confirmed if False, both if None
+        Get all transactions from safe, both confirmed and unconfirmed
         """
 
-        url = f"safes/{self.address}/transactions"
+        url = f"safes/{self.address}/all-transactions"
         while url:
             response = self._get(url)
             data = response.json()
 
             for txn in data.get("results"):
-                # TODO: Replace with `model_validate()` after ape 0.7.
                 # NOTE: Using construct because of pydantic v2 back import validation error.
-                if "isExecuted" in txn and txn["isExecuted"]:
-                    yield ExecutedTxData.model_validate(txn)
+                if "isExecuted" in txn:
+                    if txn["isExecuted"]:
+                        yield ExecutedTxData.model_validate(txn)
 
-                else:
-                    yield UnexecutedTxData.model_validate(txn)
+                    else:
+                        yield UnexecutedTxData.model_validate(txn)
+
+                # else it is an incoming transaction
 
             url = data.get("next")
 
@@ -117,7 +127,7 @@ class SafeClient(BaseSafeClient):
                 b"",
             )
         )
-        post_dict: Dict = {"signature": signature.hex()}
+        post_dict: Dict = {"signature": signature.hex(), "origin": ORIGIN}
 
         for key, value in tx_data.model_dump(by_alias=True, mode="json").items():
             if isinstance(value, HexBytes):
