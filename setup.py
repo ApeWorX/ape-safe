@@ -7,8 +7,8 @@ extras_require = {
         "pytest-xdist",  # multi-process runner
         "pytest-cov",  # Coverage analyzer plugin
         "hypothesis>=6.2.0,<7.0",  # Strategy-based fuzzer
-        "ape-foundry",  # Used as the testing provider
-        "ape-solidity",  # Needed for compiling the Safe contracts
+        "ape-foundry>=0.8",  # Used as the testing provider
+        "ape-solidity>=0.8",  # Needed for compiling the Safe contracts
     ],
     "lint": [
         "black>=24.8.0,<25",  # Auto-formatter and linter
