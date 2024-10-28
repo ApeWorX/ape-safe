@@ -1,17 +1,13 @@
 from importlib import import_module
-from typing import Any, Optional
+from typing import Any
 
 from ape import plugins
-from ape.api import PluginConfig
-
-
-class SafeConfig(PluginConfig):
-    default_safe: Optional[str] = None
-    """Alias of the default safe."""
 
 
 @plugins.register(plugins.Config)
 def config_class():
+    from ape_safe.config import SafeConfig
+
     return SafeConfig
 
 
@@ -31,6 +27,11 @@ def __getattr__(name: str) -> Any:
     elif name in ("SafeAccount", "SafeContainer"):
         return getattr(import_module("ape_safe.accounts"), name)
 
+    elif name == "SafeConfig":
+        from ape_safe.config import SafeConfig
+
+        return SafeConfig
+
     else:
         raise AttributeError(name)
 
@@ -38,5 +39,6 @@ def __getattr__(name: str) -> Any:
 __all__ = [
     "MultiSend",
     "SafeAccount",
+    "SafeConfig",
     "SafeContainer",
 ]

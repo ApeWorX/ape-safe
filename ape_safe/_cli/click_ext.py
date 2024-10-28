@@ -2,13 +2,14 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, NoReturn, Optional, Union, cast
 
 import click
-from ape.api import AccountAPI
 from ape.cli import ApeCliContextObject, ape_cli_context
 from ape.exceptions import Abort
-from ape.utils import ManagerAccessMixin
 from click import BadOptionUsage, MissingParameter
 
 if TYPE_CHECKING:
+    # perf: Keep the CLI module loading fast as possible.
+    from ape.api import AccountAPI
+
     from ape_safe.accounts import SafeContainer
 
 
@@ -41,7 +42,7 @@ txn_ids_argument = click.argument(
 )
 
 
-class CallbackFactory(ManagerAccessMixin):
+class CallbackFactory:
     """
     Helper class to prevent circular import and have access
     to Ape objects.
@@ -49,14 +50,16 @@ class CallbackFactory(ManagerAccessMixin):
 
     @classmethod
     def safe_callback(cls, ctx, param, value):
+        from ape.utils import ManagerAccessMixin as access
+
         # NOTE: For some reason, the Cli CTX object is not the SafeCliCtx yet at this point.
-        safes = cls.account_manager.containers["safe"]
+        safes = access.account_manager.containers["safe"]
         if value is None:
             # First, check config for a default. If one is there,
             # we must use that.
-            safe_config = cls.config_manager.get_config("safe")
+            safe_config = access.config_manager.get_config("safe")
             if alias := safe_config.default_safe:
-                return cls.account_manager.load(alias)
+                return access.account_manager.load(alias)
 
             # If there is only 1 safe, just use that.
             elif len(safes) == 1:
@@ -69,7 +72,7 @@ class CallbackFactory(ManagerAccessMixin):
             raise MissingParameter(message=f"Must specify one of '{options}').")
 
         elif value in safes.aliases:
-            return cls.account_manager.load(value)
+            return access.account_manager.load(value)
 
         else:
             raise BadOptionUsage("--safe", f"No safe with alias '{value}'")
@@ -79,16 +82,18 @@ class CallbackFactory(ManagerAccessMixin):
         if val is None:
             return None
 
-        elif val in cls.account_manager.aliases:
-            return cls.account_manager.load(val)
+        from ape.utils import ManagerAccessMixin as access
+
+        if val in access.account_manager.aliases:
+            return access.account_manager.load(val)
 
         # Account address - execute using this account.
-        elif val in cls.account_manager:
-            return cls.account_manager[val]
+        elif val in access.account_manager:
+            return access.account_manager[val]
 
         # Saying "yes, execute". Use first "local signer".
         elif val.lower() in ("true", "t", "1"):
-            safe = cls.account_manager.load(ctx.params["alias"])
+            safe = access.account_manager.load(ctx.params["alias"])
             if not safe.local_signers:
                 ctx.obj.abort("Cannot use `--execute TRUE` without a local signer.")
 
@@ -97,7 +102,7 @@ class CallbackFactory(ManagerAccessMixin):
         return None
 
     @classmethod
-    def sender_callback(cls, ctx, param, val) -> Optional[Union[AccountAPI, bool]]:
+    def sender_callback(cls, ctx, param, val) -> Optional[Union["AccountAPI", bool]]:
         """
         Either returns the account or ``False`` meaning don't execute.
         NOTE: The handling of the `--execute` flag in the `pending` CLI
@@ -107,7 +112,7 @@ class CallbackFactory(ManagerAccessMixin):
         return cls._get_execute_callback(ctx, param, val, name="sender")
 
     @classmethod
-    def execute_callback(cls, ctx, param, val) -> Optional[Union[AccountAPI, bool]]:
+    def execute_callback(cls, ctx, param, val) -> Optional[Union["AccountAPI", bool]]:
         """
         Either returns the account or ``False`` meaning don't execute.
         """
