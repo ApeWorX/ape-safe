@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import NoReturn, Optional, Union, cast
+from typing import TYPE_CHECKING, NoReturn, Optional, Union, cast
 
 import click
 from ape.api import AccountAPI
@@ -8,14 +8,17 @@ from ape.exceptions import Abort
 from ape.utils import ManagerAccessMixin
 from click import BadOptionUsage, MissingParameter
 
-from ape_safe.accounts import SafeContainer
+if TYPE_CHECKING:
+    from ape_safe.accounts import SafeContainer
 
 
 class SafeCliContext(ApeCliContextObject):
     @property
-    def safes(self) -> SafeContainer:
+    def safes(self) -> "SafeContainer":
         # NOTE: Would only happen in local development of this plugin.
         assert "safe" in self.account_manager.containers, "Are all API methods implemented?"
+
+        from ape_safe.accounts import SafeContainer
 
         safe_container = self.account_manager.containers["safe"]
         return cast(SafeContainer, safe_container)

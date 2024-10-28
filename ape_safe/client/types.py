@@ -35,9 +35,9 @@ class SignatureType(str, Enum):
 class SafeTxConfirmation(BaseModel):
     owner: AddressType
     submission_date: datetime = Field(alias="submissionDate")
-    transaction_hash: Optional[HexBytes] = Field(None, alias="transactionHash")
+    transaction_hash: Optional[HexBytes] = Field(default=None, alias="transactionHash")
     signature: HexBytes
-    signature_type: Optional[SignatureType] = Field(None, alias="signatureType")
+    signature_type: Optional[SignatureType] = Field(default=None, alias="signatureType")
 
 
 class OperationType(int, Enum):

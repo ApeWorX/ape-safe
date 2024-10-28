@@ -21,6 +21,7 @@ include = '\.pyi?$'
 [tool.pytest.ini_options]
 # NOTE: can't use xdist
 addopts = """
+    -p no:pytest_ethereum
     -n 0
     --cov-branch
     --cov-report term

@@ -7,11 +7,9 @@ from ape.cli import (
     skip_confirmation_option,
 )
 from ape.exceptions import ChainError, ProviderNotConnectedError
-from ape.types import AddressType
 from eth_typing import ChecksumAddress
 
 from ape_safe._cli.click_ext import SafeCliContext, safe_argument, safe_cli_ctx
-from ape_safe.client import ExecutedTxData
 
 
 @click.command(name="list")
@@ -90,6 +88,7 @@ def add(cli_ctx: SafeCliContext, ecosystem, network, address, alias):
     """
     Add a Safe to locally tracked Safes
     """
+    from ape.types import AddressType
 
     address = cli_ctx.conversion_manager.convert(address, AddressType)
     safe_contract = cli_ctx.chain_manager.contracts.instance_at(address)
@@ -138,6 +137,10 @@ def all_txns(cli_ctx: SafeCliContext, account, confirmed):
     """
     View and filter all transactions for a given Safe using Safe API
     """
+    from ape.types import AddressType
+
+    from ape_safe.client import ExecutedTxData
+
     if account in cli_ctx.account_manager.aliases:
         account = cli_ctx.account_manager.load(account)
 
