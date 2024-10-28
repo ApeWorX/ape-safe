@@ -1,9 +1,8 @@
 from collections.abc import Sequence
-from typing import Optional, Union, cast
+from typing import TYPE_CHECKING, Optional, Union, cast
 
 import click
 import rich
-from ape.api import AccountAPI
 from ape.cli import ConnectedProviderCommand
 from ape.exceptions import SignatureError
 from ape.types import AddressType, MessageSignature
@@ -11,7 +10,6 @@ from eth_typing import ChecksumAddress, Hash32
 from eth_utils import humanize_hash
 from hexbytes import HexBytes
 
-from ape_safe import SafeAccount
 from ape_safe._cli.click_ext import (
     SafeCliContext,
     execute_option,
@@ -21,9 +19,12 @@ from ape_safe._cli.click_ext import (
     submitter_option,
     txn_ids_argument,
 )
-from ape_safe.accounts import get_signatures
-from ape_safe.client import UnexecutedTxData
-from ape_safe.utils import get_safe_tx_hash
+
+if TYPE_CHECKING:
+    from ape.api import AccountAPI
+
+    from ape_safe.accounts import SafeAccount
+    from ape_safe.client import UnexecutedTxData
 
 
 @click.group()
@@ -119,6 +120,11 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, s
     """
     Create a new transaction
     """
+    from ape.api import AccountAPI
+
+    from ape_safe.accounts import get_signatures
+    from ape_safe.utils import get_safe_tx_hash
+
     nonce = safe.new_nonce if nonce is None else nonce
     txn = ecosystem.create_transaction(
         value=value,
@@ -178,6 +184,10 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, s
 @txn_ids_argument
 @execute_option
 def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
+    from ape.api import AccountAPI
+
+    from ape_safe.utils import get_safe_tx_hash
+
     submitter: Optional[AccountAPI] = execute if isinstance(execute, AccountAPI) else None
     pending_transactions = list(
         safe.client.get_transactions(confirmed=False, starting_nonce=safe.next_nonce)
@@ -258,7 +268,7 @@ def execute(cli_ctx, safe, txn_ids, submitter, nonce):
         cli_ctx.abort_txns_not_found(txn_ids)
 
 
-def _execute(safe: SafeAccount, txn: UnexecutedTxData, submitter: AccountAPI, **tx_kwargs):
+def _execute(safe: "SafeAccount", txn: "UnexecutedTxData", submitter: "AccountAPI", **tx_kwargs):
     safe_tx = safe.create_safe_tx(**txn.model_dump(mode="json", by_alias=True))
     signatures: dict[AddressType, MessageSignature] = {
         c.owner: MessageSignature.from_rsv(c.signature) for c in txn.confirmations
@@ -276,6 +286,8 @@ def reject(cli_ctx: SafeCliContext, safe, txn_ids, execute):
     """
     Reject one or more pending transactions
     """
+    from ape.api import AccountAPI
+
     submit = False if execute in (False, None) else True
     submitter = execute if isinstance(execute, AccountAPI) else None
     if submitter is None and submit:
@@ -369,7 +381,7 @@ def _show_confs(confs, extra_line: bool = True, prefix: Optional[str] = None):
 
 # Helper method for handling transactions in a loop.
 def _filter_tx_from_ids(
-    txn_ids: Sequence[Union[int, str]], txn: UnexecutedTxData
+    txn_ids: Sequence[Union[int, str]], txn: "UnexecutedTxData"
 ) -> Sequence[Union[int, str]]:
     if txn.nonce in txn_ids:
         # Filter out all transactions with the same nonce
