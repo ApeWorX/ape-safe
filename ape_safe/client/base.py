@@ -1,13 +1,11 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from functools import cached_property
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import certifi
 import requests
 import urllib3
-from ape.types import AddressType, MessageSignature
-from requests import Response
 from requests.adapters import HTTPAdapter
 
 from ape_safe.client.types import (
@@ -20,6 +18,10 @@ from ape_safe.client.types import (
     UnexecutedTxData,
 )
 from ape_safe.exceptions import ClientResponseError
+
+if TYPE_CHECKING:
+    from ape.types import AddressType, MessageSignature
+    from requests import Response
 
 DEFAULT_HEADERS = {
     "Accept": "application/json",
@@ -48,19 +50,19 @@ class BaseSafeClient(ABC):
 
     @abstractmethod
     def post_transaction(
-        self, safe_tx: SafeTx, signatures: dict[AddressType, MessageSignature], **kwargs
+        self, safe_tx: SafeTx, signatures: dict["AddressType", "MessageSignature"], **kwargs
     ): ...
 
     @abstractmethod
     def post_signatures(
         self,
         safe_tx_or_hash: Union[SafeTx, SafeTxID],
-        signatures: dict[AddressType, MessageSignature],
+        signatures: dict["AddressType", "MessageSignature"],
     ): ...
 
     @abstractmethod
     def estimate_gas_cost(
-        self, receiver: AddressType, value: int, data: bytes, operation: int = 0
+        self, receiver: "AddressType", value: int, data: bytes, operation: int = 0
     ) -> Optional[int]: ...
 
     """Shared methods"""
@@ -71,7 +73,7 @@ class BaseSafeClient(ABC):
         starting_nonce: int = 0,
         ending_nonce: Optional[int] = None,
         filter_by_ids: Optional[set[SafeTxID]] = None,
-        filter_by_missing_signers: Optional[set[AddressType]] = None,
+        filter_by_missing_signers: Optional[set["AddressType"]] = None,
     ) -> Iterator[SafeApiTxData]:
         """
         confirmed: Confirmed if True, not confirmed if False, both if None
@@ -126,17 +128,17 @@ class BaseSafeClient(ABC):
         session.mount("https://", adapter)
         return session
 
-    def _get(self, url: str) -> Response:
+    def _get(self, url: str) -> "Response":
         return self._request("GET", url)
 
-    def _post(self, url: str, json: Optional[dict] = None, **kwargs) -> Response:
+    def _post(self, url: str, json: Optional[dict] = None, **kwargs) -> "Response":
         return self._request("POST", url, json=json, **kwargs)
 
     @cached_property
     def _http(self):
         return urllib3.PoolManager(ca_certs=certifi.where())
 
-    def _request(self, method: str, url: str, json: Optional[dict] = None, **kwargs) -> Response:
+    def _request(self, method: str, url: str, json: Optional[dict] = None, **kwargs) -> "Response":
         # NOTE: paged requests include full url already
         if url.startswith(f"{self.transaction_service_url}/api/v1/"):
             api_url = url

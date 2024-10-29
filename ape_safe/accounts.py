@@ -2,13 +2,11 @@ import json
 import os
 from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union, cast
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
-from ape.api.address import BaseAddress
 from ape.api.networks import ForkedNetworkAPI
 from ape.cli import select_account
-from ape.contracts import ContractInstance
 from ape.exceptions import ContractNotFoundError, ProviderNotConnectedError
 from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
@@ -36,6 +34,10 @@ from ape_safe.exceptions import (
     handle_safe_logic_error,
 )
 from ape_safe.utils import get_safe_tx_hash, order_by_signer
+
+if TYPE_CHECKING:
+    from ape.api.address import BaseAddress
+    from ape.contracts import ContractInstance
 
 
 class SafeContainer(AccountContainerAPI):
@@ -215,7 +217,7 @@ class SafeAccount(AccountAPI):
         return ecosystem.decode_address(self.account_file["address"])
 
     @cached_property
-    def contract(self) -> ContractInstance:
+    def contract(self) -> "ContractInstance":
         safe_contract = self.chain_manager.contracts.instance_at(self.address)
         if self.fallback_handler:
             contract_signatures = {x.signature for x in safe_contract.contract_type.abi}
@@ -236,7 +238,7 @@ class SafeAccount(AccountAPI):
             return safe_contract
 
     @cached_property
-    def fallback_handler(self) -> Optional[ContractInstance]:
+    def fallback_handler(self) -> Optional["ContractInstance"]:
         slot = keccak(text="fallback_manager.handler.address")
         value = self.provider.get_storage(self.address, slot)
         address = self.network_manager.ecosystem.decode_address(value[-20:])
@@ -408,7 +410,7 @@ class SafeAccount(AccountAPI):
             *exec_args, encoded_signatures, **txn_options
         )
 
-    def compute_prev_signer(self, signer: Union[str, AddressType, BaseAddress]) -> AddressType:
+    def compute_prev_signer(self, signer: Union[str, AddressType, "BaseAddress"]) -> AddressType:
         """
         Sometimes it's handy to have "previous owner" for ownership change operations,
         this function makes it easy to calculate.
@@ -465,7 +467,7 @@ class SafeAccount(AccountAPI):
         )
 
     def _preapproved_signature(
-        self, signer: Union[AddressType, BaseAddress, str]
+        self, signer: Union[AddressType, "BaseAddress", str]
     ) -> MessageSignature:
         # Get the Safe-style "preapproval" signature type, which is a sentinel value used to denote
         # when a signer approved via some other method, such as `approveHash` or being `msg.sender`

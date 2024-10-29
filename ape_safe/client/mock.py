@@ -1,9 +1,7 @@
 from collections.abc import Iterator
 from datetime import datetime, timezone
-from typing import Optional, Union, cast
+from typing import TYPE_CHECKING, Optional, Union, cast
 
-from ape.contracts import ContractInstance
-from ape.types import AddressType, MessageSignature
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
 from eth_utils import keccak
 from hexbytes import HexBytes
@@ -20,9 +18,13 @@ from ape_safe.client.types import (
 )
 from ape_safe.utils import get_safe_tx_hash
 
+if TYPE_CHECKING:
+    from ape.contracts import ContractInstance
+    from ape.types import AddressType, MessageSignature
+
 
 class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
-    def __init__(self, contract: ContractInstance):
+    def __init__(self, contract: "ContractInstance"):
         self.contract = contract
         self.transactions: dict[SafeTxID, SafeApiTxData] = {}
         self.transactions_by_nonce: dict[int, list[SafeTxID]] = {}
@@ -47,13 +49,13 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         )
 
     @property
-    def guard(self) -> AddressType:
+    def guard(self) -> "AddressType":
         return (
             self.contract.getGuard() if "getGuard" in self.contract._view_methods_ else ZERO_ADDRESS
         )
 
     @property
-    def modules(self) -> list[AddressType]:
+    def modules(self) -> list["AddressType"]:
         return self.contract.getModules() if "getModules" in self.contract._view_methods_ else []
 
     def get_next_nonce(self) -> int:
@@ -73,7 +75,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             yield from safe_tx_data.confirmations
 
     def post_transaction(
-        self, safe_tx: SafeTx, signatures: dict[AddressType, MessageSignature], **kwargs
+        self, safe_tx: SafeTx, signatures: dict["AddressType", "MessageSignature"], **kwargs
     ):
         safe_tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
         safe_tx_data.confirmations.extend(
@@ -95,7 +97,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
     def post_signatures(
         self,
         safe_tx_or_hash: Union[SafeTx, SafeTxID],
-        signatures: dict[AddressType, MessageSignature],
+        signatures: dict["AddressType", "MessageSignature"],
     ):
         for signer, signature in signatures.items():
             safe_tx_id = (
@@ -114,6 +116,6 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             )
 
     def estimate_gas_cost(
-        self, receiver: AddressType, value: int, data: bytes, operation: int = 0
+        self, receiver: "AddressType", value: int, data: bytes, operation: int = 0
     ) -> Optional[int]:
         return None  # Estimate gas normally

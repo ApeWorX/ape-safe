@@ -1,15 +1,18 @@
 from importlib.resources import files
 from io import BytesIO
+from typing import TYPE_CHECKING
 
 from ape import convert
-from ape.api import ReceiptAPI, TransactionAPI
-from ape.contracts.base import ContractInstance, ContractTransactionHandler
 from ape.types import AddressType, HexBytes
 from ape.utils import ManagerAccessMixin, cached_property
 from eth_abi.packed import encode_packed
 from ethpm_types import PackageManifest
 
 from ape_safe.exceptions import UnsupportedChainError, ValueRequired
+
+if TYPE_CHECKING:
+    from ape.api import ReceiptAPI, TransactionAPI
+    from ape.contracts.base import ContractInstance, ContractTransactionHandler
 
 MULTISEND_CALL_ONLY_ADDRESSES = (
     "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",  # MultiSend Call Only v1.3.0
@@ -80,7 +83,7 @@ class MultiSend(ManagerAccessMixin):
         )
 
     @cached_property
-    def contract(self) -> ContractInstance:
+    def contract(self) -> "ContractInstance":
         for address in MULTISEND_CALL_ONLY_ADDRESSES:
             if self.provider.get_code(address) == MULTISEND_CALL_ONLY.get_runtime_bytecode():
                 return self.chain_manager.contracts.instance_at(
@@ -90,7 +93,7 @@ class MultiSend(ManagerAccessMixin):
         raise UnsupportedChainError()
 
     @property
-    def handler(self) -> ContractTransactionHandler:
+    def handler(self) -> "ContractTransactionHandler":
         return self.contract.multiSend
 
     def add(
@@ -149,7 +152,7 @@ class MultiSend(ManagerAccessMixin):
             for call in self.calls
         ]
 
-    def __call__(self, **txn_kwargs) -> ReceiptAPI:
+    def __call__(self, **txn_kwargs) -> "ReceiptAPI":
         """
         Execute the MultiSend transaction. The transaction will broadcast again every time
         the ``Transaction`` object is called.
@@ -169,7 +172,7 @@ class MultiSend(ManagerAccessMixin):
             txn_kwargs["operation"] = 1
         return self.handler(b"".join(self.encoded_calls), **txn_kwargs)
 
-    def as_transaction(self, **txn_kwargs) -> TransactionAPI:
+    def as_transaction(self, **txn_kwargs) -> "TransactionAPI":
         """
         Encode the MultiSend transaction as a ``TransactionAPI`` object, but do not execute it.
 
