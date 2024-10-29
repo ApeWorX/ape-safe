@@ -5,7 +5,6 @@ import click
 import rich
 from ape.cli import ConnectedProviderCommand
 from ape.exceptions import SignatureError
-from ape.types import AddressType, MessageSignature
 from eth_typing import ChecksumAddress, Hash32
 from eth_utils import humanize_hash
 from hexbytes import HexBytes
@@ -269,6 +268,9 @@ def execute(cli_ctx, safe, txn_ids, submitter, nonce):
 
 
 def _execute(safe: "SafeAccount", txn: "UnexecutedTxData", submitter: "AccountAPI", **tx_kwargs):
+    # perf: Avoid these imports during CLI load time for `ape --help` performance.
+    from ape.types import AddressType, MessageSignature
+
     safe_tx = safe.create_safe_tx(**txn.model_dump(mode="json", by_alias=True))
     signatures: dict[AddressType, MessageSignature] = {
         c.owner: MessageSignature.from_rsv(c.signature) for c in txn.confirmations

@@ -16,6 +16,10 @@ extras_require = {
         "types-requests",  # Needed for mypy type shed
         "types-setuptools",  # Needed for mypy type shed
         "flake8>=7.1.1,<8",  # Style linter
+        "flake8-breakpoint>=1.1.0,<2",  # Detect breakpoints left in code
+        "flake8-print>=4.0.1,<5",  # Detect print statements left in code
+        "flake8-pydantic",  # For detecting issues with Pydantic models
+        "flake8-type-checking",  # Detect imports to move in/out of type-checking blocks
         "isort>=5.13.2,<6",  # Import sorting linter
         "mdformat>=0.7.18,<0.8",  # Docs formatter and linter
         "mdformat-pyproject>=0.0.1",  # Allows configuring in pyproject.toml
