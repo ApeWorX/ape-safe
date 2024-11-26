@@ -33,6 +33,7 @@ class MultiSend(ManagerAccessMixin):
 
         from ape_safe import multisend
         from ape import accounts
+        from ape.exceptions import SignatureError
 
         # load the safe
         safe = accounts.load("my-safe")
@@ -49,9 +50,16 @@ class MultiSend(ManagerAccessMixin):
             ...  # Add as many calls as desired to execute
             .add(contract.myMethod, *call_args)
 
-        # Stage the transaction to publish on-chain
-        # NOTE: if not enough signers are available, publish to Safe API instead
-        receipt = txn(sender=safe,gas=0)
+        # Fetch signatures from any local signers, and broadcast if confirmations are met.
+        # NOTE: in case the user intends to only stage a transaction then `submit_transaction=False`
+        #       argument can also be added. It is normal that when you only intend to stage a
+        #       transaction that an error is thrown, and this behavior can be skipped by using try-
+        #       catch when trying to submit the transaction (`ape.exceptions.SignatureError`).
+        # NOTE: SafeTx is automatically prompted for execution if there are enough local signers.
+        try:
+            receipt = txn(sender=safe,gas=0)
+        except SignatureError:
+            pass                
     """
 
     def __init__(self) -> None:
