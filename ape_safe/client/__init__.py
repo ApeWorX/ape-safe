@@ -1,7 +1,8 @@
 import json
+from collections.abc import Iterator
 from datetime import datetime
 from functools import reduce
-from typing import Dict, Iterator, Optional, Union, cast
+from typing import Optional, Union, cast
 
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import USER_AGENT, get_package_version
@@ -117,7 +118,7 @@ class SafeClient(BaseSafeClient):
             url = data.get("next")
 
     def post_transaction(
-        self, safe_tx: SafeTx, signatures: Dict[AddressType, MessageSignature], **kwargs
+        self, safe_tx: SafeTx, signatures: dict[AddressType, MessageSignature], **kwargs
     ):
         tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
         signature = HexBytes(
@@ -128,7 +129,7 @@ class SafeClient(BaseSafeClient):
                 b"",
             )
         )
-        post_dict: Dict = {"signature": to_hex(signature), "origin": ORIGIN}
+        post_dict: dict = {"signature": to_hex(signature), "origin": ORIGIN}
 
         for key, value in tx_data.model_dump(by_alias=True, mode="json").items():
             if isinstance(value, HexBytes):
@@ -154,7 +155,7 @@ class SafeClient(BaseSafeClient):
     def post_signatures(
         self,
         safe_tx_or_hash: Union[SafeTx, SafeTxID],
-        signatures: Dict[AddressType, MessageSignature],
+        signatures: dict[AddressType, MessageSignature],
     ):
         if isinstance(safe_tx_or_hash, (SafeTxV1, SafeTxV2)):
             safe_tx = safe_tx_or_hash
@@ -179,7 +180,7 @@ class SafeClient(BaseSafeClient):
         self, receiver: AddressType, value: int, data: bytes, operation: int = 0
     ) -> Optional[int]:
         url = f"safes/{self.address}/multisig-transactions/estimations"
-        request: Dict = {
+        request: dict = {
             "to": receiver,
             "value": value,
             "data": to_hex(HexBytes(data)),
