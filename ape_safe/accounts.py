@@ -2,7 +2,7 @@ import json
 import os
 from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Optional, Union, cast
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.networks import ForkedNetworkAPI
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
 
 class SafeContainer(AccountContainerAPI):
-    _accounts: Dict[str, "SafeAccount"] = {}
+    _accounts: dict[str, "SafeAccount"] = {}
 
     @property
     def _account_files(self) -> Iterator[Path]:
@@ -182,8 +182,8 @@ class SafeContainer(AccountContainerAPI):
 def get_signatures(
     safe_tx: SafeTx,
     signers: Iterable[AccountAPI],
-) -> Dict[AddressType, MessageSignature]:
-    signatures: Dict[AddressType, MessageSignature] = {}
+) -> dict[AddressType, MessageSignature]:
+    signatures: dict[AddressType, MessageSignature] = {}
     for signer in signers:
         signature = signer.sign_message(safe_tx)
         if signature:
@@ -535,7 +535,7 @@ class SafeAccount(AccountAPI):
 
         return super().call(txn, **call_kwargs)
 
-    def get_api_confirmations(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
+    def get_api_confirmations(self, safe_tx: SafeTx) -> dict[AddressType, MessageSignature]:
         safe_tx_id = get_safe_tx_hash(safe_tx)
         try:
             client_confirmations = self.client.get_confirmations(safe_tx_id)
@@ -560,7 +560,7 @@ class SafeAccount(AccountAPI):
             if self.contract.approvedHashes(signer, safe_tx_hash) > 0
         }
 
-    def _all_approvals(self, safe_tx: SafeTx) -> Dict[AddressType, MessageSignature]:
+    def _all_approvals(self, safe_tx: SafeTx) -> dict[AddressType, MessageSignature]:
         approvals = self.get_api_confirmations(safe_tx)
 
         # NOTE: Do this last because it should take precedence
@@ -724,7 +724,7 @@ class SafeAccount(AccountAPI):
 
     def add_signatures(
         self, safe_tx: SafeTx, confirmations: Optional[list[SafeTxConfirmation]] = None
-    ) -> Dict[AddressType, MessageSignature]:
+    ) -> dict[AddressType, MessageSignature]:
         confirmations = confirmations or []
         if not self.local_signers:
             raise ApeSafeError("Cannot sign without local signers.")
