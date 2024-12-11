@@ -6,7 +6,7 @@ import rich
 from ape.cli import ConnectedProviderCommand
 from ape.exceptions import SignatureError
 from eth_typing import ChecksumAddress, Hash32
-from eth_utils import humanize_hash
+from eth_utils import humanize_hash, to_hex
 from hexbytes import HexBytes
 
 from ape_safe._cli.click_ext import (
@@ -89,12 +89,12 @@ def _list(cli_ctx, safe, verbose) -> None:
                         value = "0"
 
                     if isinstance(value, bytes):
-                        value_str = HexBytes(value).hex()
+                        value_str = str(to_hex(HexBytes(value)))
                     else:
                         value_str = f"{value}"
 
                     if len(value_str) > 42:
-                        value_str = humanize_hash(cast(Hash32, HexBytes(value_str)))
+                        value_str = f"{humanize_hash(cast(Hash32, HexBytes(value_str)))}"
 
                     data[field_name] = value_str
 

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional, Union, cast
 
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
-from eth_utils import keccak
+from eth_utils import keccak, to_hex
 from hexbytes import HexBytes
 
 from ape_safe.client.base import BaseSafeClient
@@ -70,7 +70,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
                     yield tx
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
-        tx_hash = cast(SafeTxID, HexBytes(safe_tx_hash).hex())
+        tx_hash = cast(SafeTxID, to_hex(HexBytes(safe_tx_hash)))
         if safe_tx_data := self.transactions.get(tx_hash):
             yield from safe_tx_data.confirmations
 
@@ -87,7 +87,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             )
             for signer, sig in signatures.items()
         )
-        tx_id = cast(SafeTxID, HexBytes(safe_tx_data.safe_tx_hash).hex())
+        tx_id = cast(SafeTxID, to_hex(HexBytes(safe_tx_data.safe_tx_hash)))
         self.transactions[tx_id] = safe_tx_data
         if safe_tx_data.nonce in self.transactions_by_nonce:
             self.transactions_by_nonce[safe_tx_data.nonce].append(tx_id)
@@ -105,7 +105,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
                 if isinstance(safe_tx_or_hash, (str, bytes, int))
                 else get_safe_tx_hash(safe_tx_or_hash)
             )
-            tx_id = cast(SafeTxID, HexBytes(safe_tx_id).hex())
+            tx_id = cast(SafeTxID, to_hex(HexBytes(safe_tx_id)))
             self.transactions[tx_id].confirmations.append(
                 SafeTxConfirmation(
                     owner=signer,

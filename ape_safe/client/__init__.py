@@ -6,6 +6,7 @@ from typing import Dict, Iterator, Optional, Union, cast
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import USER_AGENT, get_package_version
 from eip712.common import SafeTxV1, SafeTxV2
+from eth_utils import to_hex
 
 from ape_safe.client.base import BaseSafeClient
 from ape_safe.client.mock import MockSafeClient
@@ -127,11 +128,11 @@ class SafeClient(BaseSafeClient):
                 b"",
             )
         )
-        post_dict: Dict = {"signature": signature.hex(), "origin": ORIGIN}
+        post_dict: Dict = {"signature": to_hex(signature), "origin": ORIGIN}
 
         for key, value in tx_data.model_dump(by_alias=True, mode="json").items():
             if isinstance(value, HexBytes):
-                post_dict[key] = value.hex()
+                post_dict[key] = to_hex(value)
             elif isinstance(value, OperationType):
                 post_dict[key] = int(value)
             elif isinstance(value, datetime):
@@ -161,9 +162,11 @@ class SafeClient(BaseSafeClient):
         else:
             safe_tx_hash = safe_tx_or_hash
 
-        safe_tx_hash = cast(SafeTxID, HexBytes(safe_tx_hash).hex())
+        safe_tx_hash = cast(SafeTxID, to_hex(HexBytes(safe_tx_hash)))
         url = f"multisig-transactions/{safe_tx_hash}/confirmations"
-        signature = HexBytes(b"".join([x.encode_rsv() for x in order_by_signer(signatures)])).hex()
+        signature = to_hex(
+            HexBytes(b"".join([x.encode_rsv() for x in order_by_signer(signatures)]))
+        )
         try:
             self._post(url, json={"signature": signature})
         except ClientResponseError as err:
@@ -179,12 +182,12 @@ class SafeClient(BaseSafeClient):
         request: Dict = {
             "to": receiver,
             "value": value,
-            "data": HexBytes(data).hex(),
+            "data": to_hex(HexBytes(data)),
             "operation": operation,
         }
         result = self._post(url, json=request).json()
         gas = result.get("safeTxGas")
-        return int(HexBytes(gas).hex(), 16)
+        return int(to_hex(HexBytes(gas)), 16)
 
 
 __all__ = [
