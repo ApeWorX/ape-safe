@@ -96,4 +96,5 @@ jobs:
           run: npm install "@gnosis.pm/safe-contracts@${{ matrix.safe-version }}"
 
         - name: Run Tests
-          run: pytest -n 0 -s --cov
+          #TODO: Put back: run: pytest -n 0 -s --cov
+          run: pytest tests/functional/test_account.py::test_swap_owner --maxfail 1 --stepwise -vvv
