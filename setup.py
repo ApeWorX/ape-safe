@@ -64,12 +64,14 @@ setup(
     url="https://github.com/ApeWorX/ape-safe",
     include_package_data=True,
     install_requires=[
-        "eth-ape @ git+https://github.com/ApeWorX/ape.git@main",
+        "click>=8.1.7,<9",
+        "eip712>=0.2.10,<3",
+        "eth-ape>=0.8.21,<0.9",
+        # TODO: Figure out why web3 7 environment doesn't work.
+        # "eth-utils>=2.1.0,<6",
+        "eth-utils>=2.1.0,<3",
+        "pydantic>=2.10.2,<3",
         "requests>=2.31.0,<3",
-        "eip712",  # Use same version as eth-ape
-        "click",  # Use same version as eth-ape
-        "pydantic",  # Use same version as eth-ape
-        "eth-utils",  # Use same version as eth-ape
     ],
     entry_points={
         "ape_cli_subcommands": [
