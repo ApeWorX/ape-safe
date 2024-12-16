@@ -28,6 +28,7 @@ addopts = """
     --cov-report html
     --cov-report xml
     --cov=ape_safe
+    --show-internal
 """
 python_files = "test_*.py"
 testpaths = "tests"

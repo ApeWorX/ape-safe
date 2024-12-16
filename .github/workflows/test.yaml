@@ -97,4 +97,4 @@ jobs:
 
         - name: Run Tests
           #TODO: Put back: run: pytest -n 0 -s --cov
-          run: pytest tests/functional/test_account.py::test_swap_owner --maxfail 1 --stepwise -vvv
+          run: pytest tests/functional/test_account.py::test_swap_owner --maxfail 1 -vvv
