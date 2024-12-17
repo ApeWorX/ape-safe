@@ -2,7 +2,7 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, cast
 
 from eip712.messages import calculate_hash
-from eth_utils import to_int
+from eth_utils import to_hex, to_int
 
 if TYPE_CHECKING:
     from ape.types import AddressType, MessageSignature
@@ -19,4 +19,4 @@ def order_by_signer(
 
 def get_safe_tx_hash(safe_tx) -> "SafeTxID":
     message_hash = calculate_hash(safe_tx.signable_message)
-    return cast("SafeTxID", message_hash.hex())
+    return cast("SafeTxID", to_hex(message_hash))

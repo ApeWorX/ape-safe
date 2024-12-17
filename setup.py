@@ -7,7 +7,7 @@ extras_require = {
         "pytest-xdist",  # multi-process runner
         "pytest-cov",  # Coverage analyzer plugin
         "hypothesis>=6.2.0,<7.0",  # Strategy-based fuzzer
-        "ape-foundry>=0.8",  # Used as the testing provider
+        "ape-foundry>=0.8.7",  # Used as the testing provider
         "ape-solidity>=0.8",  # Needed for compiling the Safe contracts
     ],
     "lint": [
@@ -64,12 +64,12 @@ setup(
     url="https://github.com/ApeWorX/ape-safe",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.8.14,<0.9",
+        "click>=8.1.7,<9",
+        "eip712>=0.2.10,<3",
+        "eth-ape>=0.8.21,<0.9",
+        "eth-utils>=2.1.0,<6",
+        "pydantic>=2.10.2,<3",
         "requests>=2.31.0,<3",
-        "eip712",  # Use same version as eth-ape
-        "click",  # Use same version as eth-ape
-        "pydantic",  # Use same version as eth-ape
-        "eth-utils",  # Use same version as eth-ape
     ],
     entry_points={
         "ape_cli_subcommands": [

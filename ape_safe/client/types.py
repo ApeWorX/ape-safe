@@ -5,7 +5,7 @@ from typing import NewType, Optional, Union, cast
 from ape.types import AddressType, HexBytes
 from eip712.common import SafeTxV1, SafeTxV2
 from eth_typing import HexStr
-from eth_utils import add_0x_prefix
+from eth_utils import add_0x_prefix, to_hex
 from pydantic import BaseModel, Field
 
 from ape_safe.utils import get_safe_tx_hash
@@ -93,7 +93,7 @@ class UnexecutedTxData(BaseModel):
 
     def __str__(self) -> str:
         # TODO: Decode data
-        data_hex = self.data.hex() if self.data else ""
+        data_hex = to_hex(self.data) if self.data else ""
         if len(data_hex) > 40:
             data_hex = f"{data_hex[:18]}....{data_hex[-18:]}"
 
