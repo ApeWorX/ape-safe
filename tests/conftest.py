@@ -16,7 +16,7 @@ contracts_directory = Path(__file__).parent / "contracts"
 TESTS_DIR = Path(__file__).parent.absolute()
 
 # TODO: Test more versions.
-VERSIONS = ("1.3.0",)
+VERSIONS = ("1.3.0", "1.1.1")
 
 
 @pytest.fixture(scope="session", autouse=True)
