@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union, cast
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.networks import ForkedNetworkAPI
 from ape.cli import select_account
+from ape.contracts import ContractCall
 from ape.exceptions import ContractNotFoundError, ProviderNotConnectedError
 from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
@@ -16,6 +17,8 @@ from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
+from ethpm_types.abi import ABIType, MethodABI
+from packaging.version import Version
 
 from ape_safe.client import (
     BaseSafeClient,
@@ -276,11 +279,31 @@ class SafeAccount(AccountAPI):
         return SafeClient(address=self.address, chain_id=self.provider.chain_id)
 
     @property
-    def version(self) -> str:
+    def version(self) -> Version:
         try:
-            return self.client.safe_details.version.replace("+L2", "")
+            # NOTE: Shortcut w/ Safe API (if available)
+            version = self.client.safe_details.version.replace("+L2", "")
+
         except Exception:
-            return self.contract.VERSION()
+            VERSION_ABI = MethodABI(
+                name="VERSION",
+                type="function",
+                stateMutability="view",
+                outputs=[ABIType(type="string")],
+            )
+            # NOTE: We want to make a direct call, so we can use this for loading
+            #       the proper verison of the Safe protocol w/ `.contract`
+            version = ContractCall(VERSION_ABI, address=self.address)()
+            if not isinstance(version, str):
+                raise ContractNotFoundError(
+                    self.address,
+                    bool(self.provider.network.explorer),
+                    f"{self.provider.network.ecosystem.name}:"
+                    f"{self.provider.network.name}:"
+                    f"{self.provider.name}",
+                )
+
+        return Version(version)
 
     @property
     def signers(self) -> list[AddressType]:
@@ -307,6 +330,7 @@ class SafeAccount(AccountAPI):
         try:
             return self.client.get_next_nonce()
         except Exception:
+            # NOTE: `.nonce` conflicts with `AccountAPI.nonce`, so use `._view_methods_`
             return self.contract._view_methods_["nonce"]()
 
     @property
@@ -326,12 +350,13 @@ class SafeAccount(AccountAPI):
         return self.next_nonce
 
     def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
+        # TODO: Support signing via https://eips.ethereum.org/EIPS/eip-1271 in Ape
         raise NotImplementedError("Safe accounts do not support message signing!")
 
     @property
     def safe_tx_def(self) -> type[SafeTx]:
         return create_safe_tx_def(
-            version=self.version,
+            version=str(self.version),
             contract_address=self.address,
             chain_id=self.provider.chain_id,
         )
