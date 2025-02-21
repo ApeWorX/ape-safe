@@ -3,6 +3,11 @@ import click
 from ape_safe._cli.pending import pending
 from ape_safe._cli.safe_mgmt import _list, add, all_txns, remove
 
+try:
+    from ape_safe._cli.host_api import host
+except ImportError:
+    host = None  # type: ignore[assignment]
+
 
 @click.group(short_help="Manage Safe accounts and view Safe API data")
 def cli():
@@ -17,3 +22,5 @@ cli.add_command(add)
 cli.add_command(remove)
 cli.add_command(all_txns)
 cli.add_command(pending)
+if host:
+    cli.add_command(host)
