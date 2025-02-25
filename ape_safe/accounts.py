@@ -274,30 +274,26 @@ class SafeAccount(AccountAPI):
 
     @property
     def version(self) -> Version:
-        try:
-            # NOTE: Shortcut w/ Safe API (if available)
-            version = self.client.safe_details.version.replace("+L2", "")
+        # NOTE: We want to make a direct call, so we can use this for loading
+        #       the proper verison of the Safe protocol w/ `.contract`
+        VERSION_ABI = MethodABI(
+            name="VERSION",
+            type="function",
+            stateMutability="view",
+            outputs=[ABIType(type="string")],
+        )
 
-        except Exception:
-            VERSION_ABI = MethodABI(
-                name="VERSION",
-                type="function",
-                stateMutability="view",
-                outputs=[ABIType(type="string")],
-            )
-            # NOTE: We want to make a direct call, so we can use this for loading
-            #       the proper verison of the Safe protocol w/ `.contract`
-            version = ContractCall(VERSION_ABI, address=self.address)()
-            if not isinstance(version, str):
-                raise ContractNotFoundError(
-                    self.address,
-                    bool(self.provider.network.explorer),
-                    f"{self.provider.network.ecosystem.name}:"
-                    f"{self.provider.network.name}:"
-                    f"{self.provider.name}",
-                )
+        if isinstance(version := ContractCall(VERSION_ABI, address=self.address)(), str):
+            return Version(version)
 
-        return Version(version)
+        # NOTE: If `eth_call` returns nothing, it will be rendered as randomly
+        raise ContractNotFoundError(
+            self.address,
+            bool(self.provider.network.explorer),
+            f"{self.provider.network.ecosystem.name}:"
+            f"{self.provider.network.name}:"
+            f"{self.provider.name}",
+        )
 
     @property
     def signers(self) -> list[AddressType]:
