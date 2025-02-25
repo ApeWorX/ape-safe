@@ -69,7 +69,9 @@ class SafeFactory(ManagerAccessMixin):
         if (payment_amount := self.conversion_manager.convert(payment_amount, int)) > 0 and (
             payment_token == ZERO_ADDRESS or payment_receiver == ZERO_ADDRESS
         ):
-            raise ValueError
+            raise ValueError(
+                "If sending payments, must include both `payment_token` and `payment_receiver`"
+            )
 
         else:  # Both are not empty
             payment_token = self.conversion_manager.convert(payment_token, AddressType)
