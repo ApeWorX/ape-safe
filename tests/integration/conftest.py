@@ -1,8 +1,6 @@
-import tempfile
-from pathlib import Path
-
 import ape
 import pytest
+from ape.utils import create_tempdir
 from click.testing import CliRunner
 
 from ape_safe._cli import cli as ape_safe_cli
@@ -16,8 +14,8 @@ def safe_container():
 # NOTE: Every test gets a different data folder
 @pytest.fixture(scope="function", autouse=True)
 def patch_data_folder(monkeypatch, safe_container):
-    with tempfile.TemporaryDirectory() as data_folder_override:
-        monkeypatch.setattr(safe_container, "data_folder", Path(data_folder_override))
+    with create_tempdir() as data_folder_override:
+        monkeypatch.setattr(safe_container, "data_folder", data_folder_override)
         yield
 
 
