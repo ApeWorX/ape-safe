@@ -9,7 +9,7 @@ from packaging.version import Version
 from ape_safe.packages import SAFE_PACKAGE_BY_VERSION, PackageType, get_factory, get_singleton
 
 if TYPE_CHECKING:
-    from ape.api import AccountAPI
+    from ape.api import AccountAPI, BaseAddress
     from ape.contracts import ContractInstance
 
 
@@ -42,14 +42,14 @@ class SafeFactory(ManagerAccessMixin):
 
     def create(
         self,
-        owners: Iterable[Union["AddressType", str]],
+        owners: Iterable[Union["BaseAddress", "AddressType", str]],
         threshold: int,
-        callback_address: Union["AddressType", str] = ZERO_ADDRESS,
+        callback_address: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
         callback_calldata: Optional[bytes] = None,
-        fallback_handler: Union["AddressType", str] = ZERO_ADDRESS,
-        payment_token: Union["AddressType", str] = ZERO_ADDRESS,
+        fallback_handler: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
+        payment_token: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
         payment_amount: Union[str, int] = 0,
-        payment_receiver: Union["AddressType", str] = ZERO_ADDRESS,
+        payment_receiver: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
         salt: Optional[int] = None,
         version: Union[Version, str, None] = None,
         **txn_kwargs,
