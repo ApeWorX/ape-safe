@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import cache
 from importlib import resources
 from typing import TYPE_CHECKING, Union
 
@@ -10,25 +11,31 @@ from pydantic import BaseModel
 if TYPE_CHECKING:
     from ape.contracts import ContractContainer, ContractInstance
 
-with resources.as_file(resources.files(__package__).joinpath("manifests")) as manifest_folder:
-    SAFE_PACKAGE_BY_VERSION = {
-        Version(manifest_path.stem.lstrip("safe-v")): ProjectManager.from_manifest(manifest_path)
-        for manifest_path in manifest_folder.glob("safe-*.json")
-    }
-    MULTISEND_PACKAGE = ProjectManager.from_manifest(manifest_folder / "multisend.json")
-
 
 class PackageType(str, Enum):
     SINGLETON = "SafeSingleton"
     PROXY = "SafeProxy"
     PROXY_FACTORY = "SafeProxyFactory"
+    MULTISEND = "Multisend"
+
+    @cache
+    def get_manifest(self, version: Version) -> ProjectManager:
+        with resources.as_file(
+            resources.files(__package__).joinpath("manifests")
+        ) as manifest_folder:
+            if not (manifest_path := manifest_folder / f"safe-v{version}.json").exists():
+                raise KeyError(f"Unknown version 'v{version}'.")
+
+        return ProjectManager.from_manifest(manifest_path)
 
     def __call__(self, version: Union[Version, str]) -> "ContractContainer":
         if not isinstance(version, Version):
             version = Version(version.lstrip("v"))
 
-        if not (package := SAFE_PACKAGE_BY_VERSION.get(version)):
-            raise KeyError(f"Unknown version 'v{version}'.")
+        package = self.get_manifest(version)
+
+        if self is PackageType.MULTISEND:
+            return package.MultiSend
 
         elif self is PackageType.PROXY_FACTORY:
             if version == Version("1.1.1"):
