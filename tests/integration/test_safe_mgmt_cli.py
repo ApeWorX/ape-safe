@@ -44,17 +44,25 @@ def test_add_safe(runner, cli, safe, chain, safe_container):
         input="y\n",
     )
     assert result.exit_code == 0, result.output
-    assert "SUCCESS" in result.output, result.output
+
+    result = runner.invoke(cli, "list")
+    assert safe.address in result.output, result.output
     safe_container.delete_account(safe.alias)
 
 
 def test_remove_safe(runner, cli, safe_account):
+    safe_address = safe_account.address
     result = runner.invoke(cli, ("remove", safe_account.alias), catch_exceptions=False, input="y\n")
     assert result.exit_code == 0, result.output
-    assert "SUCCESS" in result.output, result.output
+
+    result = runner.invoke(cli, "list")
+    assert safe_address not in result.output, result.output
 
 
 def test_remove_safe_skip_confirmation(runner, cli, safe_account):
+    safe_address = safe_account.address
     result = runner.invoke(cli, ("remove", safe_account.alias, "--yes"), catch_exceptions=False)
     assert result.exit_code == 0, result.output
-    assert "SUCCESS" in result.output, result.output
+
+    result = runner.invoke(cli, "list")
+    assert safe_address not in result.output, result.output

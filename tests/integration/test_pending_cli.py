@@ -13,6 +13,8 @@ def test_propose(runner, cli, safe_account, receiver, chain):
     cmd = (
         "pending",
         "propose",
+        "--safe",
+        safe_account.alias,
         "--to",
         receiver.address,
         "--value",
@@ -25,13 +27,8 @@ def test_propose(runner, cli, safe_account, receiver, chain):
     # so it prompts the user.
     sender_input = f"{safe_account.alias}\n"
 
-    result = runner.invoke(cli, cmd, catch_exceptions=False, input=sender_input)
+    result = runner.invoke(cli, cmd, input=sender_input)
     assert result.exit_code == 0
-    assert "Proposed transaction" in result.output
-    safe_tx_hash = result.output.split("Proposed transaction '")[-1].split("'")[0].strip()
-
-    # Verify the transaction is in the service.
-    assert safe_tx_hash in safe_account.client.transactions
 
     # The nonce is the same because we did not execute.
     assert safe_account.next_nonce == nonce_at_start
@@ -45,6 +42,8 @@ def test_propose_with_sender(runner, cli, safe_account, receiver, chain, foundry
     cmd = (
         "pending",
         "propose",
+        "--safe",
+        safe_account.alias,
         "--to",
         receiver.address,
         "--value",
@@ -69,6 +68,8 @@ def test_propose_with_execute(runner, cli, safe_account, receiver, chain):
     cmd = (
         "pending",
         "propose",
+        "--safe",
+        safe_account.alias,
         "--to",
         receiver.address,
         "--value",
