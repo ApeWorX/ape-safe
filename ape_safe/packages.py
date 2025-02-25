@@ -1,4 +1,4 @@
-from enum import StrEnum
+from enum import Enum
 from importlib import resources
 from typing import TYPE_CHECKING
 
@@ -18,7 +18,7 @@ with resources.as_file(resources.files(__package__).joinpath("manifests")) as ma
     MULTISEND_PACKAGE = ProjectManager.from_manifest(manifest_folder / "multisend.json")
 
 
-class PackageType(StrEnum):
+class PackageType(str, Enum):
     SINGLETON = "SafeSingleton"
     PROXY = "SafeProxy"
     PROXY_FACTORY = "SafeProxyFactory"
@@ -54,7 +54,7 @@ class PackageType(StrEnum):
         return SafeSingleton
 
 
-class DeploymentType(StrEnum):
+class DeploymentType(str, Enum):
     CANONICAL = "canonical"
     EIP155 = "eip155"
     ZKSYNC = "zksync"
