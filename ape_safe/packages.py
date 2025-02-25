@@ -12,27 +12,31 @@ if TYPE_CHECKING:
     from ape.contracts import ContractContainer, ContractInstance
 
 
+with resources.as_file(resources.files(__package__).joinpath("manifests")) as manifest_folder:
+    MANIFESTS_BY_VERSION = {
+        Version(m.stem.lstrip("safe-v")): m for m in manifest_folder.glob("safe-v*.json")
+    }
+
+
+@cache
+def get_manifest(version: Version) -> ProjectManager:
+    if not (manifest_path := MANIFESTS_BY_VERSION.get(version)):
+        raise KeyError(f"Unknown version 'v{version}'.")
+
+    return ProjectManager.from_manifest(manifest_path)
+
+
 class PackageType(str, Enum):
     SINGLETON = "SafeSingleton"
     PROXY = "SafeProxy"
     PROXY_FACTORY = "SafeProxyFactory"
     MULTISEND = "Multisend"
 
-    @cache
-    def get_manifest(self, version: Version) -> ProjectManager:
-        with resources.as_file(
-            resources.files(__package__).joinpath("manifests")
-        ) as manifest_folder:
-            if not (manifest_path := manifest_folder / f"safe-v{version}.json").exists():
-                raise KeyError(f"Unknown version 'v{version}'.")
-
-        return ProjectManager.from_manifest(manifest_path)
-
     def __call__(self, version: Union[Version, str]) -> "ContractContainer":
         if not isinstance(version, Version):
             version = Version(version.lstrip("v"))
 
-        package = self.get_manifest(version)
+        package = get_manifest(version)
 
         if self is PackageType.MULTISEND:
             return package.MultiSend

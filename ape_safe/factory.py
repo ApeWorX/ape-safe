@@ -6,7 +6,7 @@ from ape.types import AddressType
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
 from packaging.version import Version
 
-from ape_safe.packages import SAFE_PACKAGE_BY_VERSION, PackageType, get_factory, get_singleton
+from ape_safe.packages import MANIFESTS_BY_VERSION, PackageType, get_factory, get_singleton
 
 if TYPE_CHECKING:
     from ape.api import AccountAPI, BaseAddress
@@ -31,7 +31,7 @@ class SafeFactory(ManagerAccessMixin):
 
     @property
     def contract(self) -> "ContractInstance":
-        return self.get_factory(max(SAFE_PACKAGE_BY_VERSION))
+        return self.get_factory(max(MANIFESTS_BY_VERSION))
 
     @cache
     def get_singleton(self, version: Version) -> "ContractInstance":
@@ -81,7 +81,7 @@ class SafeFactory(ManagerAccessMixin):
             salt = secrets.randbits(256)
 
         if not version:
-            version = max(SAFE_PACKAGE_BY_VERSION)
+            version = max(MANIFESTS_BY_VERSION)
 
         elif not isinstance(version, Version):
             version = Version(version.lstrip("v"))
