@@ -290,9 +290,7 @@ class SafeAccount(AccountAPI):
         raise ContractNotFoundError(
             self.address,
             bool(self.provider.network.explorer),
-            f"{self.provider.network.ecosystem.name}:"
-            f"{self.provider.network.name}:"
-            f"{self.provider.name}",
+            self.provider.network_choice,
         )
 
     @property
