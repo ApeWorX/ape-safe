@@ -1,6 +1,6 @@
 from enum import Enum
 from importlib import resources
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import requests
 from ape.managers.project import ProjectManager
@@ -23,7 +23,7 @@ class PackageType(str, Enum):
     PROXY = "SafeProxy"
     PROXY_FACTORY = "SafeProxyFactory"
 
-    def __call__(self, version: Version | str) -> "ContractContainer":
+    def __call__(self, version: Union[Version, str]) -> "ContractContainer":
         if not isinstance(version, Version):
             version = Version(version.lstrip("v"))
 
@@ -71,7 +71,7 @@ class DeploymentAsset(BaseModel):
     version: str
     deployments: dict[DeploymentType, DeploymentInfo]
     # ChainID => DeploymentType
-    networkAddresses: dict[int, DeploymentType | list[DeploymentType]]
+    networkAddresses: dict[int, Union[DeploymentType, list[DeploymentType]]]
 
 
 BASE_ASSETS_URL = (
@@ -79,7 +79,7 @@ BASE_ASSETS_URL = (
 )
 
 
-def get_singleton(chain_id: int, version: Version | str) -> "ContractInstance":
+def get_singleton(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
     if not isinstance(version, Version):
         version = Version(version.lstrip("v"))
 
@@ -102,7 +102,7 @@ def get_singleton(chain_id: int, version: Version | str) -> "ContractInstance":
     return Singleton.at(deployment_info.address)
 
 
-def get_factory(chain_id: int, version: Version | str) -> "ContractInstance":
+def get_factory(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
     if not isinstance(version, Version):
         version = Version(version.lstrip("v"))
 

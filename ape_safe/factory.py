@@ -1,6 +1,6 @@
 import secrets
 from functools import cache
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, Optional, Union
 
 from ape.types import AddressType
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
@@ -42,16 +42,16 @@ class Factory(ManagerAccessMixin):
 
     def create(
         self,
-        owners: Iterable["AddressType | str"],
+        owners: Iterable[Union["AddressType", str]],
         threshold: int,
-        callback_address: "AddressType | str" = ZERO_ADDRESS,
-        callback_calldata: bytes | None = None,
-        fallback_handler: "AddressType | str" = ZERO_ADDRESS,
-        payment_token: "AddressType | str" = ZERO_ADDRESS,
-        payment_amount: str | int = 0,
-        payment_receiver: "AddressType | str" = ZERO_ADDRESS,
-        salt: int | None = None,
-        version: "Version | str | None" = None,
+        callback_address: Union["AddressType", str] = ZERO_ADDRESS,
+        callback_calldata: Optional[bytes] = None,
+        fallback_handler: Union["AddressType", str] = ZERO_ADDRESS,
+        payment_token: Union["AddressType", str] = ZERO_ADDRESS,
+        payment_amount: Union[str, int] = 0,
+        payment_receiver: Union["AddressType", str] = ZERO_ADDRESS,
+        salt: Optional[int] = None,
+        version: Union[Version, str, None] = None,
         **txn_kwargs,
     ) -> "ContractInstance":
         if not (owners := [self.conversion_manager.convert(a, AddressType) for a in owners]):
