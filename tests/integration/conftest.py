@@ -1,40 +1,41 @@
-import shutil
-from contextlib import contextmanager
+import tempfile
+from pathlib import Path
 
+import ape
 import pytest
-from ape.utils import create_tempdir
 from click.testing import CliRunner
 
-from ape_safe._cli import cli as CLI
+from ape_safe._cli import cli as ape_safe_cli
+
+
+@pytest.fixture
+def safe_container():
+    return ape.accounts.containers["safe"]
+
+
+# NOTE: Every test gets a different data folder
+@pytest.fixture(scope="function", autouse=True)
+def patch_data_folder(monkeypatch, safe_container):
+    with tempfile.TemporaryDirectory() as data_folder_override:
+        monkeypatch.setattr(safe_container, "data_folder", Path(data_folder_override))
+        yield
 
 
 @pytest.fixture
 def runner():
-    return CliRunner()
+    yield CliRunner(mix_stderr=True)
 
 
 @pytest.fixture
 def cli():
-    return CLI
+    return ape_safe_cli
 
 
 @pytest.fixture
-def no_safes(data_folder):
-    with _remove_safes(data_folder):
-        yield
+def safe_account(safe_container, safe):
+    safe_container.save_account(safe.alias, safe.address)
 
+    yield safe_container.load_account(safe.alias)
 
-@pytest.fixture
-def one_safe(data_folder, safes, safe):
-    with _remove_safes(data_folder):
-        safes.save_account(safe.alias, safe.address)
-        yield safes.load_account(safe.alias)
-
-
-@contextmanager
-def _remove_safes(data_folder):
-    with create_tempdir() as temp_dir:
-        dest = temp_dir / "dest"
-        shutil.move(data_folder, dest)
-        yield
-        shutil.move(dest, data_folder)
+    if safe.alias in safe_container.aliases:
+        safe_container.delete_account(safe.alias)
