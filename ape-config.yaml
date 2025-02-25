@@ -1,3 +1,4 @@
+# NOTE: For testing only
 contracts_folder: tests/contracts
 
 plugins:
@@ -12,7 +13,27 @@ ethereum:
   local:
     default_provider: foundry
 
+# NOTE: Build before release w/ `ape pm compile`
 dependencies:
+  - name: safe-contracts
+    github: safe-global/safe-smart-account
+    version: v1.1.1
+    config_override:
+      compile:
+        exclude:
+          - mocks
+          - interfaces
+
+      dependencies:
+        - name: openzeppelin
+          github: OpenZeppelin/openzeppelin-contracts
+          version: 2.2.0
+
+      solidity:
+        version: 0.5.14
+        import_remapping:
+          - "@openzeppelin/contracts=openzeppelin/v2.2.0"
+
   - name: safe-contracts
     github: safe-global/safe-smart-account
     version: v1.3.0
@@ -21,7 +42,27 @@ dependencies:
         exclude:
           - test
           - examples
-          - interfaces/ViewStorageAccessible.sol
+          - interfaces
+
+      dependencies:
+        - name: openzeppelin
+          github: OpenZeppelin/openzeppelin-contracts
+          version: 3.4.0
+
+      solidity:
+        version: 0.7.6
+        import_remapping:
+          - "@openzeppelin/contracts=openzeppelin/v3.4.0"
+
+  - name: safe-contracts
+    github: safe-global/safe-smart-account
+    version: v1.4.1
+    config_override:
+      compile:
+        exclude:
+          - test
+          - examples
+          - interfaces
 
       dependencies:
         - name: openzeppelin

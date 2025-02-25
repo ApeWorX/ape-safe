@@ -65,8 +65,8 @@ setup(
     include_package_data=True,
     install_requires=[
         "click>=8.1.7,<9",
-        "eip712>=0.2.10,<3",
-        "eth-ape>=0.8.21,<0.9",
+        "eip712>=0.2.11,<3",
+        "eth-ape>=0.8.28,<0.9",
         "eth-utils>=2.1.0,<6",
         "pydantic>=2.10.2,<3",
         "requests>=2.31.0,<3",

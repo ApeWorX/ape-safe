@@ -12,17 +12,20 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.10"
+    - name: Setup Ape
+      uses: ApeWorX/github-action@v3
 
-    - name: Install dependencies
+    - name: Build and Install Contract Dependencies
+      run: |
+        ape pm compile
+        ape run build
+
+    - name: Install Package
       run: |
         python -m pip install --upgrade pip
-        pip install -e .[release]
-        
-    - name: Build
+        pip install .[release]
+
+    - name: Build Python distribution
       run: python setup.py sdist bdist_wheel
 
     - name: Publish
