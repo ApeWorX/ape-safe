@@ -714,7 +714,12 @@ class SafeAccount(AccountAPI):
                 **gas_args,
                 nonce=submitter_account.nonce,
             )
-            return submitter_account.sign_transaction(exec_transaction, **signer_options)
+            txn = submitter_account.sign_transaction(exec_transaction, **signer_options)
+            # NOTE: Because of `ape_ethereum.transactions.BaseTransaction.serialize_transaction`
+            #       doing a recovered signer check, and we gotta make sure the address matches
+            #       the recovered address of the signed transaction.
+            txn.sender = submitter_account.address
+            return txn
 
         elif submit:
             # NOTE: User wanted to submit transaction, but we can't, so don't publish to API
