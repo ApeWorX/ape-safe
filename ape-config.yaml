@@ -54,6 +54,26 @@ dependencies:
         import_remapping:
           - "@openzeppelin/contracts=openzeppelin/v3.4.0"
 
+  - name: safe-contracts
+    github: safe-global/safe-smart-account
+    version: v1.4.1
+    config_override:
+      compile:
+        exclude:
+          - test
+          - examples
+          - interfaces
+
+      dependencies:
+        - name: openzeppelin
+          github: OpenZeppelin/openzeppelin-contracts
+          version: 3.4.0
+
+      solidity:
+        version: 0.7.6
+        import_remapping:
+          - "@openzeppelin/contracts=openzeppelin/v3.4.0"
+
 foundry:
   fork:
     ethereum:

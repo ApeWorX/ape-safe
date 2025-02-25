@@ -18,6 +18,7 @@ contracts_directory = Path(__file__).parent / "contracts"
     scope="session",
     # TODO: Test more versions.
     params=(
+        "1.4.1",
         "1.3.0",
         "1.1.1",
     ),
