@@ -9,7 +9,7 @@ from packaging.version import Version
 
 from ape_safe import MultiSend
 from ape_safe.accounts import SafeAccount
-from ape_safe.factory import Factory
+from ape_safe.factory import SafeFactory
 
 contracts_directory = Path(__file__).parent / "contracts"
 
@@ -34,8 +34,8 @@ def deployer(OWNERS):
 
 @pytest.fixture(scope="session")
 def safe_factory(VERSION, deployer):
-    Factory.inject(VERSION, deployer)
-    return Factory()
+    SafeFactory.inject(VERSION, deployer)
+    return SafeFactory()
 
 
 @pytest.fixture(scope="session")

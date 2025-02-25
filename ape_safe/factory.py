@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from ape.contracts import ContractInstance
 
 
-class Factory(ManagerAccessMixin):
+class SafeFactory(ManagerAccessMixin):
     _singleton: dict[Version, "ContractInstance"] = {}
     _factory: dict[Version, "ContractInstance"] = {}
 
