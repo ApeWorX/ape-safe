@@ -20,15 +20,8 @@ from ethpm_types import ContractType
 from ethpm_types.abi import ABIType, MethodABI
 from packaging.version import Version
 
-from ape_safe.client import (
-    BaseSafeClient,
-    MockSafeClient,
-    SafeClient,
-    SafeTx,
-    SafeTxConfirmation,
-    SafeTxID,
-)
-from ape_safe.exceptions import (
+from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation, SafeTxID
+from .exceptions import (
     ApeSafeError,
     NoLocalSigners,
     NotASigner,
@@ -36,7 +29,8 @@ from ape_safe.exceptions import (
     SafeClientException,
     handle_safe_logic_error,
 )
-from ape_safe.utils import get_safe_tx_hash, order_by_signer
+from .packages import PackageType
+from .utils import get_safe_tx_hash, order_by_signer
 
 if TYPE_CHECKING:
     from ape.api.address import BaseAddress
@@ -221,7 +215,7 @@ class SafeAccount(AccountAPI):
 
     @cached_property
     def contract(self) -> "ContractInstance":
-        safe_contract = self.chain_manager.contracts.instance_at(self.address)
+        safe_contract = PackageType.PROXY(self.version).at(self.address)
         if self.fallback_handler:
             contract_signatures = {x.signature for x in safe_contract.contract_type.abi}
             fallback_signatures = {x.signature for x in self.fallback_handler.contract_type.abi}
