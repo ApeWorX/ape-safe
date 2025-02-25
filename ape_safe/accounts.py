@@ -2,7 +2,7 @@ import json
 import os
 from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, Union, cast
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.networks import ForkedNetworkAPI
@@ -13,6 +13,7 @@ from ape.logging import logger
 from ape.managers.accounts import AccountManager, TestAccountManager
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS, cached_property
+from ape_ethereum.proxies import ProxyInfo, ProxyType
 from ape_ethereum.transactions import TransactionType
 from eip712.common import create_safe_tx_def
 from eth_utils import keccak, to_bytes, to_int
@@ -29,6 +30,7 @@ from .exceptions import (
     SafeClientException,
     handle_safe_logic_error,
 )
+from .factory import SafeFactory
 from .packages import PackageType
 from .utils import get_safe_tx_hash, order_by_signer
 
@@ -195,6 +197,7 @@ def _safe_tx_exec_args(safe_tx: SafeTx) -> list:
 
 class SafeAccount(AccountAPI):
     account_file_path: Path  # NOTE: Cache any relevant data here
+    _factory: ClassVar[SafeFactory] = SafeFactory()
 
     @property
     def alias(self) -> str:
@@ -215,7 +218,14 @@ class SafeAccount(AccountAPI):
 
     @cached_property
     def contract(self) -> "ContractInstance":
-        safe_contract = PackageType.PROXY(self.version).at(self.address)
+        version = self.version
+        safe_contract = PackageType.PROXY(version).at(
+            self.address,
+            proxy_info=ProxyInfo(
+                target=self._factory.get_singleton(version=version),
+                type=ProxyType.GnosisSafe,
+            ),
+        )
         if self.fallback_handler:
             contract_signatures = {x.signature for x in safe_contract.contract_type.abi}
             fallback_signatures = {x.signature for x in self.fallback_handler.contract_type.abi}
