@@ -22,7 +22,6 @@ dependencies:
       compile:
         exclude:
           - mocks
-          - proxies
           - interfaces
 
       dependencies:
@@ -43,7 +42,7 @@ dependencies:
         exclude:
           - test
           - examples
-          - interfaces/ViewStorageAccessible.sol
+          - interfaces
 
       dependencies:
         - name: openzeppelin
