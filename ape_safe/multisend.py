@@ -1,27 +1,19 @@
-from importlib.resources import files
 from io import BytesIO
 from typing import TYPE_CHECKING
 
 from ape import convert
+from ape.exceptions import UnsupportedChainError
 from ape.types import AddressType, HexBytes
 from ape.utils import ManagerAccessMixin, cached_property
 from eth_abi.packed import encode_packed
-from ethpm_types import PackageManifest
+from packaging.version import Version
 
-from ape_safe.exceptions import UnsupportedChainError, ValueRequired
+from .exceptions import ValueRequired
+from .packages import MANIFESTS_BY_VERSION, PackageType, get_multisend
 
 if TYPE_CHECKING:
     from ape.api import ReceiptAPI, TransactionAPI
     from ape.contracts.base import ContractInstance, ContractTransactionHandler
-
-MULTISEND_CALL_ONLY_ADDRESSES = (
-    "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",  # MultiSend Call Only v1.3.0
-    "0xA1dabEF33b3B82c7814B6D82A79e50F4AC44102B",  # MultiSend Call Only v1.3.0 (EIP-155)
-)
-MULTISEND_CALL_ONLY_MANIFEST = PackageManifest.model_validate_json(
-    files("ape_safe").joinpath("manifests/multisend.json").read_text()
-)
-MULTISEND_CALL_ONLY = MULTISEND_CALL_ONLY_MANIFEST.contract_types["MultiSendCallOnly"]  # type: ignore # noqa: E501
 
 
 class MultiSend(ManagerAccessMixin):
@@ -54,14 +46,15 @@ class MultiSend(ManagerAccessMixin):
         receipt = txn(sender=safe,gas=0)
     """
 
-    def __init__(self) -> None:
+    def __init__(self, version: Version = max(MANIFESTS_BY_VERSION)) -> None:
         """
         Initialize a new MultiSend session object. By default, there are no calls to make.
         """
         self.calls: list[dict] = []
+        self.version = version
 
     @classmethod
-    def inject(cls):
+    def inject(cls, version: Version = max(MANIFESTS_BY_VERSION)):
         """
         Create the multisend module contract on-chain, so we can use it.
         Must use a provider that supports ``debug_setCode``.
@@ -77,20 +70,27 @@ class MultiSend(ManagerAccessMixin):
         """
         active_provider = cls.network_manager.active_provider
         assert active_provider, "Must be connected to an active network to deploy"
+        MultiSend = PackageType.MULTISEND(version)
 
         active_provider.set_code(
-            MULTISEND_CALL_ONLY_ADDRESSES[0], MULTISEND_CALL_ONLY.get_runtime_bytecode()
+            "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
+            MultiSend.contract_type.get_runtime_bytecode(),
         )
 
     @cached_property
     def contract(self) -> "ContractInstance":
-        for address in MULTISEND_CALL_ONLY_ADDRESSES:
-            if self.provider.get_code(address) == MULTISEND_CALL_ONLY.get_runtime_bytecode():
-                return self.chain_manager.contracts.instance_at(
-                    address, contract_type=MULTISEND_CALL_ONLY
+        chain_id = self.network_manager.active_provider.chain_id
+        try:
+            return get_multisend(chain_id, self.version)
+
+        except KeyError:
+            try:
+                return PackageType.MULTISEND(self.version).at(
+                    "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D"
                 )
 
-        raise UnsupportedChainError()
+            except Exception as e:
+                raise UnsupportedChainError() from e
 
     @property
     def handler(self) -> "ContractTransactionHandler":

@@ -30,7 +30,7 @@ class PackageType(str, Enum):
     SINGLETON = "SafeSingleton"
     PROXY = "SafeProxy"
     PROXY_FACTORY = "SafeProxyFactory"
-    MULTISEND = "Multisend"
+    MULTISEND = "MultiSend"
 
     def __call__(self, version: Union[Version, str]) -> "ContractContainer":
         if not isinstance(version, Version):
@@ -39,7 +39,11 @@ class PackageType(str, Enum):
         package = get_manifest(version)
 
         if self is PackageType.MULTISEND:
-            return package.MultiSend
+            if version == Version("1.1.1"):
+                return package.MultiSend
+
+            # NOTE: Always use `MultiSendCallOnly` to prevent against delegatecall issues
+            return package.MultiSendCallOnly
 
         elif self is PackageType.PROXY_FACTORY:
             if version == Version("1.1.1"):
@@ -90,16 +94,28 @@ BASE_ASSETS_URL = (
 )
 
 
-def get_singleton(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
+def get_deployment_artifact(
+    package_type: PackageType, chain_id: int, version: Union[Version, str]
+) -> "ContractInstance":
     if not isinstance(version, Version):
         version = Version(version.lstrip("v"))
 
+    if package_type is PackageType.SINGLETON:
+        deployment_filename = "gnosis_safe.json" if version <= Version("1.3.0") else "/safe.json"
+
+    elif package_type is PackageType.PROXY_FACTORY:
+        deployment_filename = (
+            "proxy_factory.json" if version <= Version("1.3.0") else "/safe_proxy_factory.json"
+        )
+
+    elif package_type is PackageType.MULTISEND:
+        deployment_filename = "multi_send.json"
+
+    else:
+        raise
+
     # TODO: Cache this to disk?
-    response = requests.get(
-        BASE_ASSETS_URL
-        + f"v{version}/"
-        + ("gnosis_safe.json" if version <= Version("1.3.0") else "/safe.json")
-    )
+    response = requests.get(BASE_ASSETS_URL + f"v{version}/{deployment_filename}")
     deployment_asset = DeploymentAsset.model_validate(response.json())
 
     if not (deployment_type := deployment_asset.networkAddresses.get(chain_id)):
@@ -109,28 +125,16 @@ def get_singleton(chain_id: int, version: Union[Version, str]) -> "ContractInsta
         deployment_type[0] if isinstance(deployment_type, list) else deployment_type
     ]
 
-    Singleton = PackageType.SINGLETON(version)
-    return Singleton.at(deployment_info.address)
+    return package_type(version).at(deployment_info.address)  # type: ignore[misc]
+
+
+def get_singleton(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
+    return get_deployment_artifact(PackageType.SINGLETON, chain_id, version)
 
 
 def get_factory(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
-    if not isinstance(version, Version):
-        version = Version(version.lstrip("v"))
+    return get_deployment_artifact(PackageType.PROXY_FACTORY, chain_id, version)
 
-    # TODO: Cache this to disk?
-    response = requests.get(
-        BASE_ASSETS_URL
-        + f"v{version}/"
-        + ("proxy_factory.json" if version <= Version("1.3.0") else "/safe_proxy_factory.json")
-    )
-    deployment_asset = DeploymentAsset.model_validate(response.json())
 
-    if not (deployment_type := deployment_asset.networkAddresses.get(chain_id)):
-        raise KeyError(f"Chain ID '{chain_id}' does not have a known deployment")
-
-    deployment_info = deployment_asset.deployments[
-        deployment_type[0] if isinstance(deployment_type, list) else deployment_type
-    ]
-
-    ProxyFactory = PackageType.PROXY_FACTORY(version)
-    return ProxyFactory.at(deployment_info.address)
+def get_multisend(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
+    return get_deployment_artifact(PackageType.MULTISEND, chain_id, version)

@@ -107,6 +107,6 @@ def foundry(networks):
 
 
 @pytest.fixture
-def multisend():
-    MultiSend.inject()
-    return MultiSend()
+def multisend(VERSION):
+    MultiSend.inject(VERSION)
+    return MultiSend(VERSION)
