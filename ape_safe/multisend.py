@@ -5,7 +5,6 @@ from ape import convert
 from ape.types import AddressType, HexBytes
 from ape.utils import ManagerAccessMixin, cached_property
 from eth_abi.packed import encode_packed
-from packaging.version import Version
 
 from .exceptions import UnsupportedChainError, ValueRequired
 from .packages import MANIFESTS_BY_VERSION, PackageType, get_multisend
@@ -13,6 +12,7 @@ from .packages import MANIFESTS_BY_VERSION, PackageType, get_multisend
 if TYPE_CHECKING:
     from ape.api import ReceiptAPI, TransactionAPI
     from ape.contracts.base import ContractInstance, ContractTransactionHandler
+    from packaging.version import Version
 
 
 class MultiSend(ManagerAccessMixin):
@@ -45,7 +45,7 @@ class MultiSend(ManagerAccessMixin):
         receipt = txn(sender=safe,gas=0)
     """
 
-    def __init__(self, version: Version = max(MANIFESTS_BY_VERSION)) -> None:
+    def __init__(self, version: "Version" = max(MANIFESTS_BY_VERSION)) -> None:
         """
         Initialize a new MultiSend session object. By default, there are no calls to make.
         """
@@ -53,7 +53,7 @@ class MultiSend(ManagerAccessMixin):
         self.version = version
 
     @classmethod
-    def inject(cls, version: Version = max(MANIFESTS_BY_VERSION)):
+    def inject(cls, version: "Version" = max(MANIFESTS_BY_VERSION)):
         """
         Create the multisend module contract on-chain, so we can use it.
         Must use a provider that supports ``debug_setCode``.
