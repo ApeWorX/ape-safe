@@ -2,13 +2,12 @@ from io import BytesIO
 from typing import TYPE_CHECKING
 
 from ape import convert
-from ape.exceptions import UnsupportedChainError
 from ape.types import AddressType, HexBytes
 from ape.utils import ManagerAccessMixin, cached_property
 from eth_abi.packed import encode_packed
 from packaging.version import Version
 
-from .exceptions import ValueRequired
+from .exceptions import UnsupportedChainError, ValueRequired
 from .packages import MANIFESTS_BY_VERSION, PackageType, get_multisend
 
 if TYPE_CHECKING:
