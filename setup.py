@@ -38,6 +38,9 @@ extras_require = {
         "IPython",  # Console for interacting
         "ipdb",  # Debugger (Must use `export PYTHONBREAKPOINT=ipdb.set_trace`)
     ],
+    "host": [  # Deps for self-hosting your own Safe API
+        "fastapi[standard]>=0.110",
+    ],
 }
 
 # NOTE: `pip install -e .[dev]` to install package
@@ -45,6 +48,7 @@ extras_require["dev"] = (
     extras_require["test"]
     + extras_require["lint"]
     + extras_require["release"]
+    + extras_require["host"]
     + extras_require["dev"]
 )
 
