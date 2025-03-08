@@ -96,3 +96,40 @@ def test_safe_account_convert(safe):
     convert = safe.conversion_manager.convert
     actual = convert(safe, AddressType)
     assert actual == safe.address
+
+
+def test_deployed_chain_ids(safe):
+    """
+    Test the deployed_chain_ids property.
+    """
+    # The deployed_chain_ids should match what's in the account file
+    assert safe.deployed_chain_ids == safe.account_file.get("deployed_chain_ids", [])
+
+
+def test_get_client(safe, monkeypatch):
+    """
+    Test getting a client for a specific chain ID.
+    """
+    # Create a test deployed_chain_ids list
+    test_chain_ids = [1, 10, 100]
+    monkeypatch.setattr(safe, "deployed_chain_ids", test_chain_ids)
+
+    # Should work for a specified chain ID
+    client = safe.get_client(chain_id=1)
+    assert client.chain_id == 1
+    assert hasattr(client, "use_client_gateway")
+    assert client.use_client_gateway is True
+
+    # Should use current chain if no chain ID is provided
+    current_chain_id = safe.provider.chain_id
+    client = safe.get_client()
+    assert client.chain_id == current_chain_id
+
+    # Should accept override_url
+    client = safe.get_client(override_url="https://example.com")
+    assert not client.use_client_gateway
+
+    # Should accept both chain_id and override_url
+    client = safe.get_client(chain_id=1, override_url="https://example.com")
+    assert client.chain_id == 1
+    assert not client.use_client_gateway
