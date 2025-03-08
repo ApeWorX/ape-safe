@@ -56,7 +56,6 @@ TRANSACTION_SERVICE_URL = {
     43114: "https://safe-transaction-avalanche.safe.global",
     84531: "https://safe-transaction-base-testnet.safe.global",
     11155111: "https://safe-transaction-sepolia.safe.global",
-    81457: "https://transaction.blast-safe.io",
 }
 
 
