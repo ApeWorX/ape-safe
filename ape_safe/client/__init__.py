@@ -40,23 +40,8 @@ APE_SAFE_USER_AGENT = f"Ape-Safe/{APE_SAFE_VERSION} {USER_AGENT}"
 ORIGIN = json.dumps(dict(url="https://apeworx.io", name="Ape Safe", ua=APE_SAFE_USER_AGENT))
 assert len(ORIGIN) <= 200  # NOTE: Must be less than 200 chars
 
-TRANSACTION_SERVICE_URL = {
-    # NOTE: If URLs need to be updated, a list of available service URLs can be found at
-    # https://docs.safe.global/safe-core-api/available-services.
-    # NOTE: There should be no trailing slashes at the end of the URL.
-    1: "https://safe-transaction-mainnet.safe.global",
-    10: "https://safe-transaction-optimism.safe.global",
-    56: "https://safe-transaction-bsc.safe.global",
-    100: "https://safe-transaction-gnosis-chain.safe.global",
-    137: "https://safe-transaction-polygon.safe.global",
-    250: "https://safe-txservice.fantom.network",
-    288: "https://safe-transaction.mainnet.boba.network",
-    8453: "https://safe-transaction-base.safe.global",
-    42161: "https://safe-transaction-arbitrum.safe.global",
-    43114: "https://safe-transaction-avalanche.safe.global",
-    84531: "https://safe-transaction-base-testnet.safe.global",
-    11155111: "https://safe-transaction-sepolia.safe.global",
-}
+# URL for the multichain client gateway
+SAFE_CLIENT_GATEWAY_URL = "https://safe-client.safe.global"
 
 
 class SafeClient(BaseSafeClient):
@@ -67,20 +52,18 @@ class SafeClient(BaseSafeClient):
         chain_id: Optional[int] = None,
     ) -> None:
         self.address = address
+        self.chain_id = chain_id
 
         if override_url:
-            tx_service_url = override_url
-
+            base_url = override_url
+            self.use_client_gateway = False
         elif chain_id:
-            if chain_id not in TRANSACTION_SERVICE_URL:
-                raise ClientUnsupportedChainError(chain_id)
-
-            tx_service_url = TRANSACTION_SERVICE_URL[chain_id]
-
+            base_url = SAFE_CLIENT_GATEWAY_URL
+            self.use_client_gateway = True
         else:
             raise ValueError("Must provide one of chain_id or override_url.")
 
-        super().__init__(tx_service_url)
+        super().__init__(base_url)
 
     @property
     def safe_details(self) -> SafeDetails:

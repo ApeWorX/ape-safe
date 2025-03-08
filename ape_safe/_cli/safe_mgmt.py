@@ -10,6 +10,7 @@ from ape.exceptions import ChainError, ProviderNotConnectedError
 from eth_typing import ChecksumAddress
 
 from ape_safe._cli.click_ext import SafeCliContext, safe_argument, safe_cli_ctx
+from ape_safe.client import SafeClient
 
 
 @click.command(name="list")
@@ -145,9 +146,8 @@ def all_txns(cli_ctx: SafeCliContext, account, confirmed):
         account = cli_ctx.account_manager.load(account)
 
     address = cli_ctx.conversion_manager.convert(account, AddressType)
-
-    # NOTE: Create a client to support non-local safes.
-    client = cli_ctx.safes.create_client(address)
+    chain_id = cli_ctx.provider.chain_id
+    client = SafeClient(address=address, chain_id=chain_id)
 
     for txn in client.get_transactions(confirmed=confirmed):
         if isinstance(txn, ExecutedTxData):
