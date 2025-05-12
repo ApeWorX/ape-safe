@@ -7,10 +7,8 @@ from typing import TYPE_CHECKING, Optional, Union
 import certifi
 import requests
 import urllib3
-from ape.api import AccountAPI
 from ape.types import AddressType, HexBytes, MessageSignature
 from eth_utils import keccak
-from requests import Response
 from requests.adapters import HTTPAdapter
 
 from ape_safe.client.types import (
@@ -26,7 +24,6 @@ from ape_safe.exceptions import ClientResponseError
 
 if TYPE_CHECKING:
     from ape.api import AccountAPI
-    from ape.types import AddressType, MessageSignature
     from requests import Response
 
 DEFAULT_HEADERS = {
@@ -56,19 +53,19 @@ class BaseSafeClient(ABC):
 
     @abstractmethod
     def post_transaction(
-        self, safe_tx: SafeTx, signatures: dict["AddressType", "MessageSignature"], **kwargs
+        self, safe_tx: SafeTx, signatures: dict[AddressType, MessageSignature], **kwargs
     ): ...
 
     @abstractmethod
     def post_signatures(
         self,
         safe_tx_or_hash: Union[SafeTx, SafeTxID],
-        signatures: dict["AddressType", "MessageSignature"],
+        signatures: dict[AddressType, MessageSignature],
     ): ...
 
     @abstractmethod
     def estimate_gas_cost(
-        self, receiver: "AddressType", value: int, data: bytes, operation: int = 0
+        self, receiver: AddressType, value: int, data: bytes, operation: int = 0
     ) -> Optional[int]: ...
 
     """Shared methods"""
@@ -79,7 +76,7 @@ class BaseSafeClient(ABC):
         starting_nonce: int = 0,
         ending_nonce: Optional[int] = None,
         filter_by_ids: Optional[set[SafeTxID]] = None,
-        filter_by_missing_signers: Optional[set["AddressType"]] = None,
+        filter_by_missing_signers: Optional[set[AddressType]] = None,
     ) -> Iterator[SafeApiTxData]:
         """
         confirmed: Confirmed if True, not confirmed if False, both if None
@@ -127,13 +124,13 @@ class BaseSafeClient(ABC):
         return HexBytes(keccak(text=(delegate + str(totp))))
 
     @abstractmethod
-    def get_delegates(self) -> dict["AddressType", list["AddressType"]]: ...
+    def get_delegates(self) -> dict[AddressType, list[AddressType]]: ...
 
     @abstractmethod
-    def add_delegate(self, delegate: "AddressType", label: str, delegator: "AccountAPI"): ...
+    def add_delegate(self, delegate: AddressType, label: str, delegator: "AccountAPI"): ...
 
     @abstractmethod
-    def remove_delegate(self, delegate: "AddressType", delegator: "AccountAPI"): ...
+    def remove_delegate(self, delegate: AddressType, delegator: "AccountAPI"): ...
 
     """Request methods"""
 

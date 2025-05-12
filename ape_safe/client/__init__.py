@@ -4,7 +4,6 @@ from datetime import datetime
 from functools import reduce
 from typing import TYPE_CHECKING, Optional, Union, cast
 
-from ape.api import AccountAPI
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import USER_AGENT, get_package_version
 from eip712.common import SafeTxV1, SafeTxV2
