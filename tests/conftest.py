@@ -101,12 +101,6 @@ def vault(deployer: SafeAccount, token):
 
 
 @pytest.fixture
-def foundry(networks):
-    with networks.ethereum.local.use_provider("foundry") as provider:
-        yield provider
-
-
-@pytest.fixture
 def multisend(VERSION):
     MultiSend.inject(VERSION)
     return MultiSend(VERSION)

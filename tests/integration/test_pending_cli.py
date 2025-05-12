@@ -34,7 +34,7 @@ def test_propose(runner, cli, safe_account, receiver, chain):
     assert safe_account.next_nonce == nonce_at_start
 
 
-def test_propose_with_sender(runner, cli, safe_account, receiver, chain, foundry):
+def test_propose_with_sender(runner, cli, safe_account, receiver, chain):
     # First, fund the safe so the tx does not fail.
     receiver.transfer(safe_account, "1 ETH")
 
