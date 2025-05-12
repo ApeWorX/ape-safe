@@ -60,3 +60,8 @@ def exec_transaction(mode, safe):
             return safe.submit_safe_tx(safe_tx)
 
     return exec_transaction
+
+
+@pytest.fixture(scope="session")
+def guard(project, deployer):
+    return project.Guard.deploy(sender=deployer)
