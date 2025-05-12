@@ -43,7 +43,7 @@ def exec_transaction(mode, safe):
             pending_txns = list(safe.client.get_transactions(confirmed=False))
             assert len(pending_txns) == 1
             assert len(pending_txns[0].confirmations) >= 1
-            safe_tx_hash = add_0x_prefix(f"{pending_txns[0].safe_tx_hash}")
+            safe_tx_hash = add_0x_prefix(pending_txns[0].safe_tx_hash)
 
             safe_tx_data = pending_txns[0]
             safe_tx = safe.create_safe_tx(**safe_tx_data.model_dump(by_alias=True, mode="json"))
