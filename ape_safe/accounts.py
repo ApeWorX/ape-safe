@@ -253,6 +253,25 @@ class SafeAccount(AccountAPI):
             self.chain_manager.contracts.instance_at(address) if address != ZERO_ADDRESS else None
         )
 
+    @property
+    def guard(self) -> Optional["ContractInstance"]:
+        slot = keccak(text="guard_manager.guard.address")
+        value = self.provider.get_storage(self.address, slot)
+        address = self.network_manager.ecosystem.decode_address(value[-20:])
+        return (
+            self.chain_manager.contracts.instance_at(address) if address != ZERO_ADDRESS else None
+        )
+
+    def set_guard(
+        self,
+        new_guard: Union[str, AddressType, "BaseAddress"] = ZERO_ADDRESS,
+        **tx_args,
+    ) -> ReceiptAPI:
+        if "sender" not in tx_args:
+            tx_args["sender"] = self
+
+        return self.contract.setGuard(new_guard, **tx_args)
+
     @cached_property
     def client(self) -> BaseSafeClient:
         chain_id = self.provider.chain_id
