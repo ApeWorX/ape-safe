@@ -60,6 +60,19 @@ safe:
   default_safe: my-safe
 ```
 
+or via `pyproject.toml`:
+
+```toml
+[tool.ape.safe]
+default_safe = "my-safe"
+```
+
+To specify via environment variable, do:
+
+```sh
+APE_SAFE_DEFAULT_SAFE="my-safe"
+```
+
 **NOTE**: Also, to avoid always needing to specify `--network`, you can set a default ecosystem, network, and provider in your config file.
 The rest of the guide with not specify `--network` on each command but assume the correct one is set in the config file.
 Here is an example:
@@ -154,9 +167,9 @@ txn(sender=safe,gas=0)
 
 ## Cloud Usage
 
-To use this plugin in a cloud environment, such as with the [Silverback Platform](https://silverback.apeworx.io), you will need to make sure that you ahve configured your Safe to exist within the environment.
+To use this plugin in a cloud environment, such as with the [Silverback Platform](https://silverback.apeworx.io), you will need to make sure that you have configured your Safe to exist within the environment.
 The easiest way to do this is to use the `require` configuration item.
-To specify a required Safe in your `ape-config.yaml` to add into your `~/.ape/safe` folder (if it doesn't exist), use:
+To specify a required Safe in your `ape-config.yaml` (which adds it into your `~/.ape/safe` folder if it doesn't exist), use:
 
 ```yaml
 safe:
@@ -164,6 +177,20 @@ safe:
     my-safe:
       address: "0x1234...AbCd"
       deployed_chain_ids: [1, ...]
+```
+
+or in `pyproject.toml`:
+
+```toml
+[tool.ape.safe.require."my-safe"]
+address = "0x1234...AbCd"
+deployed_chain_ids = [1, ...]
+```
+
+To specify via environment variable, do:
+
+```sh
+APE_SAFE_REQUIRE='{"my-safe":{"address":"0x1234...AbCd","deployed_chain_ids":[1,...]}}'
 ```
 
 ```{notice}
