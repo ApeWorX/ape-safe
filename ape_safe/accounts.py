@@ -57,7 +57,7 @@ class SafeContainer(AccountContainerAPI):
             # NOTE: If alias `required_safe` already exists, skip overwriting it
             if required_safe not in map(lambda p: p.stem, account_files):
                 safe_cache_file = self.data_folder / f"{required_safe}.json"
-                safe_cache_file.write_text(safe_cache_data.model_dump_json())
+                safe_cache_file.write_text(safe_cache_data.model_dump_json(), encoding="utf-8")
                 account_files.append(safe_cache_file)
 
         yield from account_files
@@ -221,7 +221,7 @@ class SafeAccount(AccountAPI):
 
     @property
     def account_file(self) -> SafeCacheData:
-        return SafeCacheData.model_validate_json(self.account_file_path.read_text())
+        return SafeCacheData.model_validate_json(self.account_file_path.read_text(encoding="utf-8"))
 
     @cached_property
     def address(self) -> AddressType:
