@@ -32,6 +32,7 @@ from .exceptions import (
 )
 from .factory import SafeFactory
 from .packages import PackageType
+from .types import SafeCacheData
 from .utils import get_safe_tx_hash, order_by_signer
 
 if TYPE_CHECKING:
@@ -204,8 +205,8 @@ class SafeAccount(AccountAPI):
         return self.account_file_path.stem
 
     @property
-    def account_file(self) -> dict:
-        return json.loads(self.account_file_path.read_text())
+    def account_file(self) -> SafeCacheData:
+        return SafeCacheData.model_validate_json(self.account_file_path.read_text())
 
     @property
     def address(self) -> AddressType:
@@ -214,7 +215,7 @@ class SafeAccount(AccountAPI):
         except ProviderNotConnectedError:
             ecosystem = self.network_manager.ethereum
 
-        return ecosystem.decode_address(self.account_file["address"])
+        return ecosystem.decode_address(self.account_file.address)
 
     @cached_property
     def contract(self) -> "ContractInstance":
@@ -280,7 +281,7 @@ class SafeAccount(AccountAPI):
         if self.provider.network.is_local:
             return MockSafeClient(contract=self.contract)
 
-        elif chain_id in self.account_file["deployed_chain_ids"]:
+        elif chain_id in self.account_file.deployed_chain_ids:
             return SafeClient(
                 address=self.address, chain_id=self.provider.chain_id, override_url=override_url
             )
@@ -288,7 +289,7 @@ class SafeAccount(AccountAPI):
         elif (
             self.provider.network.name.endswith("-fork")
             and isinstance(self.provider.network, ForkedNetworkAPI)
-            and self.provider.network.upstream_chain_id in self.account_file["deployed_chain_ids"]
+            and self.provider.network.upstream_chain_id in self.account_file.deployed_chain_ids
         ):
             return SafeClient(
                 address=self.address,
