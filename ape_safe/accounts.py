@@ -22,6 +22,7 @@ from ethpm_types.abi import ABIType, MethodABI
 from packaging.version import Version
 
 from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation, SafeTxID
+from .config import SafeConfig
 from .exceptions import (
     ApeSafeError,
     NoLocalSigners,
@@ -44,8 +45,21 @@ class SafeContainer(AccountContainerAPI):
     _accounts: dict[str, "SafeAccount"] = {}
 
     @property
+    def config(self) -> SafeConfig:
+        return cast(SafeConfig, self.config_manager["safe"])
+
+    @property
     def _account_files(self) -> Iterator[Path]:
-        yield from self.data_folder.glob("*.json")
+        account_files = list(self.data_folder.glob("*.json"))
+
+        # NOTE: Make sure these Safes exist in our local cache
+        for required_safe, safe_cache_data in self.config.require.items():
+            if required_safe not in map(lambda p: p.stem, account_files):
+                safe_cache_file = self.data_folder / f"{required_safe}.json"
+                safe_cache_file.write_text(safe_cache_data.model_dump_json())
+                account_files.append(safe_cache_file)
+
+        yield from account_files
 
     @property
     def aliases(self) -> Iterator[str]:

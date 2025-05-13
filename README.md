@@ -152,6 +152,24 @@ txn.add(vault.deposit, amount)
 txn(sender=safe,gas=0)
 ```
 
+## Cloud Usage
+
+To use this plugin in a cloud environment, such as with the [Silverback Platform](https://silverback.apeworx.io), you will need to make sure that you ahve configured your Safe to exist within the environment.
+The easiest way to do this is to use the `require` configuration item.
+To specify a required Safe in your `ape-config.yaml` to add into your `~/.ape/safe` folder (if it doesn't exist), use:
+
+```yaml
+safe:
+  require:
+    my-safe:
+      address: "0x1234...AbCd"
+      deployed_chain_ids: [1, ...]
+```
+
+```{notice}
+If a safe with the same alias as an entry in `require` exists in your local environment, this will skip adding it, even if the existing alias points to a different address than the one in the config item.
+```
+
 ## Development
 
 Please see the [contributing guide](CONTRIBUTING.md) to learn more how to contribute to this project.
