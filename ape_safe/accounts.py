@@ -222,7 +222,7 @@ class SafeAccount(AccountAPI):
     def account_file(self) -> SafeCacheData:
         return SafeCacheData.model_validate_json(self.account_file_path.read_text())
 
-    @property
+    @cached_property
     def address(self) -> AddressType:
         try:
             ecosystem = self.provider.network.ecosystem
