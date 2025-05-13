@@ -9,4 +9,4 @@ class SafeCacheData(BaseModel):
     """Address of the Safe"""
 
     deployed_chain_ids: list[int] = []
-    """Networks (by chain ID) that Safe is deployed on"""
+    """Networks (by chain ID) this Safe is deployed on"""
