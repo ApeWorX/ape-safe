@@ -54,6 +54,7 @@ class SafeContainer(AccountContainerAPI):
 
         # NOTE: Make sure these Safes exist in our local cache
         for required_safe, safe_cache_data in self.config.require.items():
+            # NOTE: If alias `required_safe` already exists, skip overwriting it
             if required_safe not in map(lambda p: p.stem, account_files):
                 safe_cache_file = self.data_folder / f"{required_safe}.json"
                 safe_cache_file.write_text(safe_cache_data.model_dump_json())
