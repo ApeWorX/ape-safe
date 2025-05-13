@@ -43,6 +43,11 @@ def receiver(accounts):
     return accounts[9]
 
 
+@pytest.fixture(scope="session")
+def delegate(accounts):
+    return accounts[8]
+
+
 @pytest.fixture(scope="session", params=["1/1", "1/2", "2/2", "2/3", "3/3"])
 def MULTISIG_TYPE(request):
     # Param is `M/N`, but encoded as a string for repr in pytest

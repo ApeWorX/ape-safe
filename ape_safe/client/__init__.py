@@ -2,7 +2,7 @@ import json
 from collections.abc import Iterator
 from datetime import datetime
 from functools import reduce
-from typing import Optional, Union, cast
+from typing import TYPE_CHECKING, Optional, Union, cast
 
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import USER_AGENT, get_package_version
@@ -12,6 +12,7 @@ from eth_utils import to_hex
 from ape_safe.client.base import BaseSafeClient
 from ape_safe.client.mock import MockSafeClient
 from ape_safe.client.types import (
+    DelegateInfo,
     ExecutedTxData,
     OperationType,
     SafeApiTxData,
@@ -23,11 +24,15 @@ from ape_safe.client.types import (
     UnexecutedTxData,
 )
 from ape_safe.exceptions import (
+    ActionNotPerformedError,
     ClientResponseError,
     ClientUnsupportedChainError,
     MultisigTransactionNotFoundError,
 )
 from ape_safe.utils import get_safe_tx_hash, order_by_signer
+
+if TYPE_CHECKING:
+    from ape.api import AccountAPI
 
 APE_SAFE_VERSION = get_package_version(__name__)
 APE_SAFE_USER_AGENT = f"Ape-Safe/{APE_SAFE_VERSION} {USER_AGENT}"
@@ -80,7 +85,7 @@ class SafeClient(BaseSafeClient):
 
     @property
     def safe_details(self) -> SafeDetails:
-        response = self._get(f"safes/{self.address}")
+        response = self._get(f"safes/{self.address}/")
         return SafeDetails.model_validate(response.json())
 
     def get_next_nonce(self) -> int:
@@ -91,7 +96,7 @@ class SafeClient(BaseSafeClient):
         Get all transactions from safe, both confirmed and unconfirmed
         """
 
-        url = f"safes/{self.address}/all-transactions"
+        url = f"safes/{self.address}/all-transactions/"
         while url:
             response = self._get(url)
             data = response.json()
@@ -110,7 +115,7 @@ class SafeClient(BaseSafeClient):
             url = data.get("next")
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
-        url = f"multisig-transactions/{str(safe_tx_hash)}/confirmations"
+        url = f"multisig-transactions/{str(safe_tx_hash)}/confirmations/"
         while url:
             response = self._get(url)
             data = response.json()
@@ -129,7 +134,7 @@ class SafeClient(BaseSafeClient):
                 b"",
             )
         )
-        post_dict: dict = {"signature": to_hex(signature), "origin": ORIGIN}
+        post_dict: dict = {"signature": signature.hex() if signature else None, "origin": ORIGIN}
 
         for key, value in tx_data.model_dump(by_alias=True, mode="json").items():
             if isinstance(value, HexBytes):
@@ -148,7 +153,7 @@ class SafeClient(BaseSafeClient):
             # Signature handled above.
             post_dict.pop("signatures")
 
-        url = f"safes/{tx_data.safe}/multisig-transactions"
+        url = f"safes/{tx_data.safe}/multisig-transactions/"
         response = self._post(url, json=post_dict)
         return response
 
@@ -164,7 +169,7 @@ class SafeClient(BaseSafeClient):
             safe_tx_hash = safe_tx_or_hash
 
         safe_tx_hash = cast(SafeTxID, to_hex(HexBytes(safe_tx_hash)))
-        url = f"multisig-transactions/{safe_tx_hash}/confirmations"
+        url = f"multisig-transactions/{safe_tx_hash}/confirmations/"
         signature = to_hex(
             HexBytes(b"".join([x.encode_rsv() for x in order_by_signer(signatures)]))
         )
@@ -179,7 +184,7 @@ class SafeClient(BaseSafeClient):
     def estimate_gas_cost(
         self, receiver: AddressType, value: int, data: bytes, operation: int = 0
     ) -> Optional[int]:
-        url = f"safes/{self.address}/multisig-transactions/estimations"
+        url = f"safes/{self.address}/multisig-transactions/estimations/"
         request: dict = {
             "to": receiver,
             "value": value,
@@ -189,6 +194,53 @@ class SafeClient(BaseSafeClient):
         result = self._post(url, json=request).json()
         gas = result.get("safeTxGas")
         return int(to_hex(HexBytes(gas)), 16)
+
+    def get_delegates(self) -> dict["AddressType", list["AddressType"]]:
+        url = "delegates/"
+        delegates: dict[AddressType, list[AddressType]] = {}
+
+        while url:
+            response = self._get(url, params={"safe": self.address})
+            data = response.json()
+
+            for delegate_info in map(DelegateInfo.model_validate, data.get("results", [])):
+                if delegate_info.delegator not in delegates:
+                    delegates[delegate_info.delegator] = [delegate_info.delegate]
+                else:
+                    delegates[delegate_info.delegator].append(delegate_info.delegate)
+
+            url = data.get("next")
+
+        return delegates
+
+    def add_delegate(self, delegate: "AddressType", label: str, delegator: "AccountAPI"):
+        msg_hash = self.create_delegate_message(delegate)
+
+        # NOTE: This is required as Safe API uses an antiquated .signHash method
+        if not (sig := delegator.sign_raw_msghash(msg_hash)):
+            raise ActionNotPerformedError("Did not sign delegate approval")
+
+        payload = {
+            "safe": self.address,
+            "delegate": delegate,
+            "delegator": delegator.address,
+            "label": label,
+            "signature": sig.encode_rsv().hex(),
+        }
+        self._post("delegates/", json=payload)
+
+    def remove_delegate(self, delegate: "AddressType", delegator: "AccountAPI"):
+        msg_hash = self.create_delegate_message(delegate)
+
+        # NOTE: This is required as Safe API uses an antiquated .signHash method
+        if not (sig := delegator.sign_raw_msghash(msg_hash)):
+            raise ActionNotPerformedError("Did not sign delegate removal")
+
+        payload = {
+            "delegator": delegator.address,
+            "signature": sig.encode_rsv().hex(),
+        }
+        self._delete(f"delegates/{delegate}/", json=payload)
 
 
 __all__ = [
