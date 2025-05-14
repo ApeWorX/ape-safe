@@ -22,6 +22,7 @@ from ethpm_types.abi import ABIType, MethodABI
 from packaging.version import Version
 
 from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation, SafeTxID
+from .config import SafeConfig
 from .exceptions import (
     ApeSafeError,
     NoLocalSigners,
@@ -32,6 +33,7 @@ from .exceptions import (
 )
 from .factory import SafeFactory
 from .packages import PackageType
+from .types import SafeCacheData
 from .utils import get_safe_tx_hash, order_by_signer
 
 if TYPE_CHECKING:
@@ -43,8 +45,22 @@ class SafeContainer(AccountContainerAPI):
     _accounts: dict[str, "SafeAccount"] = {}
 
     @property
+    def config(self) -> SafeConfig:
+        return cast(SafeConfig, self.config_manager["safe"])
+
+    @property
     def _account_files(self) -> Iterator[Path]:
-        yield from self.data_folder.glob("*.json")
+        account_files = list(self.data_folder.glob("*.json"))
+
+        # NOTE: Make sure these Safes exist in our local cache
+        for required_safe, safe_cache_data in self.config.require.items():
+            # NOTE: If alias `required_safe` already exists, skip overwriting it
+            if required_safe not in map(lambda p: p.stem, account_files):
+                safe_cache_file = self.data_folder / f"{required_safe}.json"
+                safe_cache_file.write_text(safe_cache_data.model_dump_json(), encoding="utf-8")
+                account_files.append(safe_cache_file)
+
+        yield from account_files
 
     @property
     def aliases(self) -> Iterator[str]:
@@ -204,17 +220,17 @@ class SafeAccount(AccountAPI):
         return self.account_file_path.stem
 
     @property
-    def account_file(self) -> dict:
-        return json.loads(self.account_file_path.read_text())
+    def account_file(self) -> SafeCacheData:
+        return SafeCacheData.model_validate_json(self.account_file_path.read_text(encoding="utf-8"))
 
-    @property
+    @cached_property
     def address(self) -> AddressType:
         try:
             ecosystem = self.provider.network.ecosystem
         except ProviderNotConnectedError:
             ecosystem = self.network_manager.ethereum
 
-        return ecosystem.decode_address(self.account_file["address"])
+        return ecosystem.decode_address(self.account_file.address)
 
     @cached_property
     def contract(self) -> "ContractInstance":
@@ -280,7 +296,7 @@ class SafeAccount(AccountAPI):
         if self.provider.network.is_local:
             return MockSafeClient(contract=self.contract)
 
-        elif chain_id in self.account_file["deployed_chain_ids"]:
+        elif chain_id in self.account_file.deployed_chain_ids:
             return SafeClient(
                 address=self.address, chain_id=self.provider.chain_id, override_url=override_url
             )
@@ -288,7 +304,7 @@ class SafeAccount(AccountAPI):
         elif (
             self.provider.network.name.endswith("-fork")
             and isinstance(self.provider.network, ForkedNetworkAPI)
-            and self.provider.network.upstream_chain_id in self.account_file["deployed_chain_ids"]
+            and self.provider.network.upstream_chain_id in self.account_file.deployed_chain_ids
         ):
             return SafeClient(
                 address=self.address,
