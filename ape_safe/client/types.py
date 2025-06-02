@@ -131,12 +131,12 @@ class ExecutedTxData(UnexecutedTxData):
     is_executed: bool = Field(alias="isExecuted")
     is_successful: bool = Field(alias="isSuccessful")
     eth_gas_price: int = Field(alias="ethGasPrice")
-    max_fee_per_gas: Optional[int] = Field(alias="maxFeePerGas")
-    max_priority_fee_per_gas: Optional[int] = Field(alias="maxPriorityFeePerGas")
+    max_fee_per_gas: Optional[int] = Field(default=None, alias="maxFeePerGas")
+    max_priority_fee_per_gas: Optional[int] = Field(default=None, alias="maxPriorityFeePerGas")
     gas_used: int = Field(alias="gasUsed")
     fee: int
     origin: str
-    data_decoded: Optional[dict] = Field(alias="dataDecoded")
+    data_decoded: Optional[dict] = Field(default=None, alias="dataDecoded")
 
 
 SafeApiTxData = Union[ExecutedTxData, UnexecutedTxData]
