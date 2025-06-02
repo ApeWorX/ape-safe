@@ -163,19 +163,18 @@ class BaseSafeClient(ABC):
         api_version = kwargs.pop("api_version", "v1")
 
         # NOTE: paged requests include full url already
-        if url.startswith(f"{self.base_url}/"):
+        if url.startswith(self.base_url):
             api_url = url
+
+        elif (
+            hasattr(self, "use_client_gateway")
+            and self.use_client_gateway
+            and hasattr(self, "chain_id")
+        ):
+            api_url = f"{self.base_url}/{api_version}/chains/{self.chain_id}{url}"
+
         else:
-            if (
-                hasattr(self, "use_client_gateway")
-                and self.use_client_gateway
-                and hasattr(self, "chain_id")
-            ):
-                # **WARNING**: The trailing slash in the URL is CRITICAL!
-                # If you remove it, things will not work as expected.
-                api_url = f"{self.base_url}/{api_version}/chains/{self.chain_id}/{url}/"
-            else:
-                api_url = f"{self.base_url}/api/v1/{url}/"
+            api_url = f"{self.base_url}/{api_version}{url}"
 
         do_fail = not kwargs.pop("allow_failure", False)
 
