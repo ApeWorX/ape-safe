@@ -204,7 +204,7 @@ class SafeAccount(AccountAPI):
 
     @property
     def deployed_chain_ids(self) -> list[int]:
-        return self.account_file.get("deployed_chain_ids", [])
+        return self.account_file.deployed_chain_ids
 
     @cached_property
     def address(self) -> AddressType:
@@ -425,6 +425,7 @@ class SafeAccount(AccountAPI):
 
         if submitter is not None and not isinstance(submitter, AccountAPI):
             submitter = self.load_submitter(submitter)
+            assert isinstance(submitter, AccountAPI)  # NOTE: mypy happy
 
         if (
             submitter is not None
