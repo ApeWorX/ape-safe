@@ -26,7 +26,6 @@ from ape_safe.client.types import (
 from ape_safe.exceptions import (
     ActionNotPerformedError,
     ClientResponseError,
-    ClientUnsupportedChainError,
     MultisigTransactionNotFoundError,
 )
 from ape_safe.utils import get_safe_tx_hash, order_by_signer
