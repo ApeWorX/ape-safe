@@ -683,6 +683,7 @@ class SafeAccount(AccountAPI):
 
         if not isinstance(submitter, AccountAPI):
             submitter = self.load_submitter(submitter)
+            assert isinstance(submitter, AccountAPI)  # NOTE: mypy happy
 
         return submitter.call(txn)
 
