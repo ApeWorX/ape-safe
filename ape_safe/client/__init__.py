@@ -78,7 +78,7 @@ class SafeClient(BaseSafeClient):
         Get all transactions from safe, both confirmed and unconfirmed
         """
 
-        url = f"/safes/{self.address}/all-transactions"
+        url = f"/safes/{self.address}/multisig-transactions/raw"
         while url:
             response = self._get(url)
             data = response.json()
