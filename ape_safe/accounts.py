@@ -199,12 +199,12 @@ class SafeAccount(AccountAPI):
         return self.account_file_path.stem
 
     @property
-    def account_file(self) -> SafeCacheData:
+    def account_data(self) -> SafeCacheData:
         return SafeCacheData.model_validate_json(self.account_file_path.read_text(encoding="utf-8"))
 
     @property
     def deployed_chain_ids(self) -> list[int]:
-        return self.account_file.deployed_chain_ids
+        return self.account_data.deployed_chain_ids
 
     @cached_property
     def address(self) -> AddressType:
@@ -213,7 +213,7 @@ class SafeAccount(AccountAPI):
         except ProviderNotConnectedError:
             ecosystem = self.network_manager.ethereum
 
-        return ecosystem.decode_address(self.account_file.address)
+        return ecosystem.decode_address(self.account_data.address)
 
     @cached_property
     def contract(self) -> "ContractInstance":
