@@ -29,7 +29,7 @@ class SafeDetails(BaseModel):
     nonce: int
     threshold: int
     owners: list[Address]
-    master_copy: Address = Field(alias="implementation")
+    master_copy: Address = Field(alias="masterCopy")
     modules: list[Address] = []
     fallback_handler: Address = Field(alias="fallbackHandler")
     guard: AddressType

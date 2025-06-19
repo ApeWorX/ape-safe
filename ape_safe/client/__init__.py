@@ -1,4 +1,5 @@
 import json
+import os
 from collections.abc import Iterator
 from datetime import datetime
 from functools import reduce
@@ -32,6 +33,7 @@ from ape_safe.utils import get_safe_tx_hash, order_by_signer
 
 if TYPE_CHECKING:
     from ape.api import AccountAPI
+    from requests import Response
 
 APE_SAFE_VERSION = get_package_version(__name__)
 APE_SAFE_USER_AGENT = f"Ape-Safe/{APE_SAFE_VERSION} {USER_AGENT}"
@@ -40,7 +42,31 @@ ORIGIN = json.dumps(dict(url="https://apeworx.io", name="Ape Safe", ua=APE_SAFE_
 assert len(ORIGIN) <= 200  # NOTE: Must be less than 200 chars
 
 # URL for the multichain client gateway
-SAFE_CLIENT_GATEWAY_URL = "https://safe-client.safe.global"
+SAFE_CLIENT_GATEWAY_URL = "https://api.safe.global/tx-service"
+GATEWAY_API_KEY = os.environ.get("APE_SAFE_GATEWAY_API_KEY")
+EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID = {
+    1: "eth",  # Ethereum Mainnet
+    11155111: "sep",  # Ethereum Sepolia
+    10: "oeth",  # Optimism Mainnet
+    42161: "arb1",  # Arbitrum One Mainnet
+    56: "bnb",  # Binance Smart Chain
+    146: "sonic",
+    5000: "mantle",
+    43114: "avax",
+    1313161554: "aurora",
+    8453: "base",  # Base Mainnet
+    84532: "basesep",  # Base Sepolia
+    42220: "celo",  # Celo Mainnet
+    100: "gno",  # Gnosis Chain
+    59144: "linea",  # Linea Mainnet
+    137: "pol",  # Polygon
+    534352: "scr",  # Scroll
+    130: "unichain",  # Unichain Mainnet
+    480: "wc",  # Worldchain Mainnet
+    324: "zksync",  # zkSync Mainnet
+    57073: "ink",  # Ink Mainnet
+    800094: "berachain",  # Berachain Mainnet
+}
 
 
 class SafeClient(BaseSafeClient):
@@ -55,14 +81,26 @@ class SafeClient(BaseSafeClient):
 
         if override_url:
             base_url = override_url
-            self.use_client_gateway = False
         elif chain_id:
-            base_url = SAFE_CLIENT_GATEWAY_URL
-            self.use_client_gateway = True
+            if chain_id not in EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID:
+                raise ValueError(f"Chain ID {chain_id} is not a supported chain.")
+
+            elif not GATEWAY_API_KEY:
+                raise ValueError("Must provide API key via 'APE_SAFE_GATEWAY_API_KEY='.")
+
+            base_url = (
+                f"{SAFE_CLIENT_GATEWAY_URL}/{EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID[chain_id]}/api"
+            )
         else:
             raise ValueError("Must provide one of chain_id or override_url.")
 
         super().__init__(base_url)
+
+    def _request(self, method: str, url: str, json: Optional[dict] = None, **kwargs) -> "Response":
+        # NOTE: Add authorization header
+        headers = kwargs.pop("headers", {})
+        headers.update(dict(Authorization=f"Bearer {GATEWAY_API_KEY}"))
+        return super()._request(method, url, json=json, headers=headers, **kwargs)
 
     @property
     def safe_details(self) -> SafeDetails:
@@ -77,7 +115,7 @@ class SafeClient(BaseSafeClient):
         Get all transactions from safe, both confirmed and unconfirmed
         """
 
-        url = f"/safes/{self.address}/multisig-transactions/raw"
+        url = f"/safes/{self.address}/multisig-transactions"
         while url:
             response = self._get(url)
             data = response.json()

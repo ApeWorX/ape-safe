@@ -43,7 +43,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             nonce=self.get_next_nonce(),
             threshold=self.contract.getThreshold(),
             owners=self.contract.getOwners(),
-            implementation=self.contract.masterCopy(),
+            masterCopy=self.contract.masterCopy(),
             modules=self.modules,
             # TODO: Add fallback handler getter
             fallbackHandler=fallback_address,

@@ -166,13 +166,6 @@ class BaseSafeClient(ABC):
         if url.startswith(self.base_url):
             api_url = url
 
-        elif (
-            hasattr(self, "use_client_gateway")
-            and self.use_client_gateway
-            and hasattr(self, "chain_id")
-        ):
-            api_url = f"{self.base_url}/{api_version}/chains/{self.chain_id}{url}"
-
         else:
             api_url = f"{self.base_url}/{api_version}{url}"
 
