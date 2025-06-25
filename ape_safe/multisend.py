@@ -8,7 +8,7 @@ from eth_abi.packed import encode_packed
 
 from ape_safe.client.types import OperationType, SafeTxID
 
-from .accounts import SafeAccount
+from .accounts import SafeAccount, get_signatures
 from .exceptions import ApeSafeException, UnsupportedChainError, ValueRequired
 from .packages import MANIFESTS_BY_VERSION, PackageType, get_multisend
 
@@ -188,7 +188,7 @@ class MultiSend(ManagerAccessMixin):
                 safe_tx_kwargs[field] = txn_kwargs.pop(field)
 
         safe_tx = self.as_safe_tx(sender, **safe_tx_kwargs)
-        signatures = {} if impersonate else sender.add_signatures(safe_tx)
+        signatures = {} if impersonate else get_signatures(safe_tx, sender.local_signers)
         return sender.create_execute_transaction(safe_tx, signatures=signatures, **txn_kwargs)
 
     def __call__(self, sender: Any = None, **txn_kwargs) -> "ReceiptAPI":
