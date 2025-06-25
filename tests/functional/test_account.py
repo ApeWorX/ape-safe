@@ -96,3 +96,17 @@ def test_safe_account_convert(safe):
     convert = safe.conversion_manager.convert
     actual = convert(safe, AddressType)
     assert actual == safe.address
+
+
+def test_get_client(safe):
+    """
+    Test getting a client for a specific chain ID.
+    """
+    # Create a test deployed_chain_ids list
+    safe_data = safe.account_data
+    safe_data.deployed_chain_ids = [1, 10, 100]
+    safe.account_file_path.write_text(safe_data.model_dump_json())
+
+    # Should work for a specified chain ID
+    client = safe.get_client(chain_id=1)
+    assert "/eth/" in client.base_url

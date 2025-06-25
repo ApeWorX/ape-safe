@@ -169,27 +169,6 @@ class SafeContainer(AccountContainerAPI):
         """
         self._get_path(alias).unlink(missing_ok=True)
 
-    def create_client(self, key: str) -> BaseSafeClient:
-        if key in self.aliases:
-            safe = self.load_account(key)
-            return safe.client
-
-        elif key in self.addresses:
-            account = cast(SafeAccount, self[cast(AddressType, key)])
-            return account.client
-
-        elif key in self.aliases:
-            return self.load_account(key).client
-
-        else:
-            address = self.conversion_manager.convert(key, AddressType)
-            if address in self.addresses:
-                account = cast(SafeAccount, self[cast(AddressType, key)])
-                return account.client
-
-            # Is not locally managed.
-            return SafeClient(address=address, chain_id=self.chain_manager.provider.chain_id)
-
     def _get_path(self, alias: str) -> Path:
         return self.data_folder.joinpath(f"{alias}.json")
 
@@ -220,8 +199,12 @@ class SafeAccount(AccountAPI):
         return self.account_file_path.stem
 
     @property
-    def account_file(self) -> SafeCacheData:
+    def account_data(self) -> SafeCacheData:
         return SafeCacheData.model_validate_json(self.account_file_path.read_text(encoding="utf-8"))
+
+    @property
+    def deployed_chain_ids(self) -> list[int]:
+        return self.account_data.deployed_chain_ids
 
     @cached_property
     def address(self) -> AddressType:
@@ -230,7 +213,7 @@ class SafeAccount(AccountAPI):
         except ProviderNotConnectedError:
             ecosystem = self.network_manager.ethereum
 
-        return ecosystem.decode_address(self.account_file.address)
+        return ecosystem.decode_address(self.account_data.address)
 
     @cached_property
     def contract(self) -> "ContractInstance":
@@ -288,34 +271,32 @@ class SafeAccount(AccountAPI):
 
         return self.contract.setGuard(new_guard, **tx_args)
 
+    def get_client(
+        self, chain_id: Optional[int] = None, override_url: Optional[str] = None
+    ) -> BaseSafeClient:
+        if chain_id is None:
+            chain_id = self.provider.chain_id
+
+        if override_url is None:
+            env_override = os.environ.get("SAFE_TRANSACTION_SERVICE_URL")
+            if env_override:
+                override_url = env_override
+
+        if chain_id == 0 or (self.provider.network.is_local and self.provider.chain_id == chain_id):
+            return MockSafeClient(contract=self.contract)
+
+        return SafeClient(address=self.address, chain_id=chain_id, override_url=override_url)
+
     @cached_property
     def client(self) -> BaseSafeClient:
-        chain_id = self.provider.chain_id
-        override_url = os.environ.get("SAFE_TRANSACTION_SERVICE_URL")
-
-        if self.provider.network.is_local:
-            return MockSafeClient(contract=self.contract)
-
-        elif chain_id in self.account_file.deployed_chain_ids:
-            return SafeClient(
-                address=self.address, chain_id=self.provider.chain_id, override_url=override_url
-            )
-
-        elif (
+        if (
             self.provider.network.name.endswith("-fork")
             and isinstance(self.provider.network, ForkedNetworkAPI)
-            and self.provider.network.upstream_chain_id in self.account_file.deployed_chain_ids
+            and self.provider.network.upstream_chain_id in self.deployed_chain_ids
         ):
-            return SafeClient(
-                address=self.address,
-                chain_id=self.provider.network.upstream_chain_id,
-                override_url=override_url,
-            )
+            return self.get_client(chain_id=self.provider.network.upstream_chain_id)
 
-        elif self.provider.network.is_dev:
-            return MockSafeClient(contract=self.contract)
-
-        return SafeClient(address=self.address, chain_id=self.provider.chain_id)
+        return self.get_client()
 
     @property
     def version(self) -> Version:
@@ -444,6 +425,7 @@ class SafeAccount(AccountAPI):
 
         if submitter is not None and not isinstance(submitter, AccountAPI):
             submitter = self.load_submitter(submitter)
+            assert isinstance(submitter, AccountAPI)  # NOTE: mypy happy
 
         if (
             submitter is not None
@@ -701,6 +683,7 @@ class SafeAccount(AccountAPI):
 
         if not isinstance(submitter, AccountAPI):
             submitter = self.load_submitter(submitter)
+            assert isinstance(submitter, AccountAPI)  # NOTE: mypy happy
 
         return submitter.call(txn)
 

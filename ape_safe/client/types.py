@@ -1,12 +1,12 @@
 from datetime import datetime, timezone
 from enum import Enum
-from typing import NewType, Optional, Union, cast
+from typing import Annotated, NewType, Optional, Union, cast
 
 from ape.types import AddressType, HexBytes
 from eip712.common import SafeTxV1, SafeTxV2
 from eth_typing import HexStr
 from eth_utils import add_0x_prefix, to_hex
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
 from ape_safe.utils import get_safe_tx_hash
 
@@ -14,16 +14,32 @@ SafeTx = Union[SafeTxV1, SafeTxV2]
 SafeTxID = NewType("SafeTxID", str)
 
 
+def clean_api_address(data: Union[AddressType, dict]) -> AddressType:
+    # NOTE: Safe API returns `{'value':'<addr>', ...}` object
+    if isinstance(data, dict):
+        return data["value"]
+    return data
+
+
+Address = Annotated[AddressType, BeforeValidator(clean_api_address)]
+
+
 class SafeDetails(BaseModel):
-    address: AddressType
+    address: Address
     nonce: int
     threshold: int
-    owners: list[AddressType]
-    master_copy: AddressType = Field(alias="masterCopy")
-    modules: list[AddressType]
-    fallback_handler: AddressType = Field(alias="fallbackHandler")
+    owners: list[Address]
+    master_copy: Address = Field(alias="masterCopy")
+    modules: list[Address] = []
+    fallback_handler: Address = Field(alias="fallbackHandler")
     guard: AddressType
     version: str
+
+    @field_validator("modules", mode="before")
+    def convert_none_to_empty_list(cls, value):
+        if not value:
+            return []
+        return value
 
 
 class SignatureType(str, Enum):
@@ -115,12 +131,12 @@ class ExecutedTxData(UnexecutedTxData):
     is_executed: bool = Field(alias="isExecuted")
     is_successful: bool = Field(alias="isSuccessful")
     eth_gas_price: int = Field(alias="ethGasPrice")
-    max_fee_per_gas: Optional[int] = Field(alias="maxFeePerGas")
-    max_priority_fee_per_gas: Optional[int] = Field(alias="maxPriorityFeePerGas")
+    max_fee_per_gas: Optional[int] = Field(default=None, alias="maxFeePerGas")
+    max_priority_fee_per_gas: Optional[int] = Field(default=None, alias="maxPriorityFeePerGas")
     gas_used: int = Field(alias="gasUsed")
     fee: int
     origin: str
-    data_decoded: Optional[dict] = Field(alias="dataDecoded")
+    data_decoded: Optional[dict] = Field(default=None, alias="dataDecoded")
 
 
 SafeApiTxData = Union[ExecutedTxData, UnexecutedTxData]

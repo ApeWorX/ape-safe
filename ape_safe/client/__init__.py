@@ -1,4 +1,5 @@
 import json
+import os
 from collections.abc import Iterator
 from datetime import datetime
 from functools import reduce
@@ -26,13 +27,13 @@ from ape_safe.client.types import (
 from ape_safe.exceptions import (
     ActionNotPerformedError,
     ClientResponseError,
-    ClientUnsupportedChainError,
     MultisigTransactionNotFoundError,
 )
 from ape_safe.utils import get_safe_tx_hash, order_by_signer
 
 if TYPE_CHECKING:
     from ape.api import AccountAPI
+    from requests import Response
 
 APE_SAFE_VERSION = get_package_version(__name__)
 APE_SAFE_USER_AGENT = f"Ape-Safe/{APE_SAFE_VERSION} {USER_AGENT}"
@@ -40,23 +41,31 @@ APE_SAFE_USER_AGENT = f"Ape-Safe/{APE_SAFE_VERSION} {USER_AGENT}"
 ORIGIN = json.dumps(dict(url="https://apeworx.io", name="Ape Safe", ua=APE_SAFE_USER_AGENT))
 assert len(ORIGIN) <= 200  # NOTE: Must be less than 200 chars
 
-TRANSACTION_SERVICE_URL = {
-    # NOTE: If URLs need to be updated, a list of available service URLs can be found at
-    # https://docs.safe.global/safe-core-api/available-services.
-    # NOTE: There should be no trailing slashes at the end of the URL.
-    1: "https://safe-transaction-mainnet.safe.global",
-    10: "https://safe-transaction-optimism.safe.global",
-    56: "https://safe-transaction-bsc.safe.global",
-    100: "https://safe-transaction-gnosis-chain.safe.global",
-    137: "https://safe-transaction-polygon.safe.global",
-    250: "https://safe-txservice.fantom.network",
-    288: "https://safe-transaction.mainnet.boba.network",
-    8453: "https://safe-transaction-base.safe.global",
-    42161: "https://safe-transaction-arbitrum.safe.global",
-    43114: "https://safe-transaction-avalanche.safe.global",
-    84531: "https://safe-transaction-base-testnet.safe.global",
-    11155111: "https://safe-transaction-sepolia.safe.global",
-    81457: "https://transaction.blast-safe.io",
+# URL for the multichain client gateway
+SAFE_CLIENT_GATEWAY_URL = "https://api.safe.global/tx-service"
+GATEWAY_API_KEY = os.environ.get("APE_SAFE_GATEWAY_API_KEY")
+EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID = {
+    1: "eth",  # Ethereum Mainnet
+    11155111: "sep",  # Ethereum Sepolia
+    10: "oeth",  # Optimism Mainnet
+    42161: "arb1",  # Arbitrum One Mainnet
+    56: "bnb",  # Binance Smart Chain
+    146: "sonic",
+    5000: "mantle",
+    43114: "avax",
+    1313161554: "aurora",
+    8453: "base",  # Base Mainnet
+    84532: "basesep",  # Base Sepolia
+    42220: "celo",  # Celo Mainnet
+    100: "gno",  # Gnosis Chain
+    59144: "linea",  # Linea Mainnet
+    137: "pol",  # Polygon
+    534352: "scr",  # Scroll
+    130: "unichain",  # Unichain Mainnet
+    480: "wc",  # Worldchain Mainnet
+    324: "zksync",  # zkSync Mainnet
+    57073: "ink",  # Ink Mainnet
+    800094: "berachain",  # Berachain Mainnet
 }
 
 
@@ -68,24 +77,34 @@ class SafeClient(BaseSafeClient):
         chain_id: Optional[int] = None,
     ) -> None:
         self.address = address
+        self.chain_id = chain_id
 
         if override_url:
-            tx_service_url = override_url
-
+            base_url = override_url
         elif chain_id:
-            if chain_id not in TRANSACTION_SERVICE_URL:
-                raise ClientUnsupportedChainError(chain_id)
+            if chain_id not in EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID:
+                raise ValueError(f"Chain ID {chain_id} is not a supported chain.")
 
-            tx_service_url = TRANSACTION_SERVICE_URL[chain_id]
+            elif not GATEWAY_API_KEY:
+                raise ValueError("Must provide API key via 'APE_SAFE_GATEWAY_API_KEY='.")
 
+            base_url = (
+                f"{SAFE_CLIENT_GATEWAY_URL}/{EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID[chain_id]}/api"
+            )
         else:
             raise ValueError("Must provide one of chain_id or override_url.")
 
-        super().__init__(tx_service_url)
+        super().__init__(base_url)
+
+    def _request(self, method: str, url: str, json: Optional[dict] = None, **kwargs) -> "Response":
+        # NOTE: Add authorization header
+        headers = kwargs.pop("headers", {})
+        headers.update(dict(Authorization=f"Bearer {GATEWAY_API_KEY}"))
+        return super()._request(method, url, json=json, headers=headers, **kwargs)
 
     @property
     def safe_details(self) -> SafeDetails:
-        response = self._get(f"safes/{self.address}/")
+        response = self._get(f"/safes/{self.address}")
         return SafeDetails.model_validate(response.json())
 
     def get_next_nonce(self) -> int:
@@ -96,7 +115,7 @@ class SafeClient(BaseSafeClient):
         Get all transactions from safe, both confirmed and unconfirmed
         """
 
-        url = f"safes/{self.address}/all-transactions/"
+        url = f"/safes/{self.address}/multisig-transactions"
         while url:
             response = self._get(url)
             data = response.json()
@@ -115,12 +134,9 @@ class SafeClient(BaseSafeClient):
             url = data.get("next")
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
-        url = f"multisig-transactions/{str(safe_tx_hash)}/confirmations/"
-        while url:
-            response = self._get(url)
-            data = response.json()
-            yield from map(SafeTxConfirmation.model_validate, data.get("results"))
-            url = data.get("next")
+        response = self._get(f"/multisig-transactions/{safe_tx_hash}/raw")
+        data = response.json()
+        yield from map(SafeTxConfirmation.model_validate, data.get("confirmations", []))
 
     def post_transaction(
         self, safe_tx: SafeTx, signatures: dict[AddressType, MessageSignature], **kwargs
@@ -153,7 +169,7 @@ class SafeClient(BaseSafeClient):
             # Signature handled above.
             post_dict.pop("signatures")
 
-        url = f"safes/{tx_data.safe}/multisig-transactions/"
+        url = f"/transactions/{tx_data.safe}/propose"
         response = self._post(url, json=post_dict)
         return response
 
@@ -169,7 +185,7 @@ class SafeClient(BaseSafeClient):
             safe_tx_hash = safe_tx_or_hash
 
         safe_tx_hash = cast(SafeTxID, to_hex(HexBytes(safe_tx_hash)))
-        url = f"multisig-transactions/{safe_tx_hash}/confirmations/"
+        url = f"/transactions/{safe_tx_hash}/confirmations"
         signature = to_hex(
             HexBytes(b"".join([x.encode_rsv() for x in order_by_signer(signatures)]))
         )
@@ -184,7 +200,7 @@ class SafeClient(BaseSafeClient):
     def estimate_gas_cost(
         self, receiver: AddressType, value: int, data: bytes, operation: int = 0
     ) -> Optional[int]:
-        url = f"safes/{self.address}/multisig-transactions/estimations/"
+        url = f"/safes/{self.address}/multisig-transactions/estimations"
         request: dict = {
             "to": receiver,
             "value": value,
@@ -196,7 +212,7 @@ class SafeClient(BaseSafeClient):
         return int(to_hex(HexBytes(gas)), 16)
 
     def get_delegates(self) -> dict["AddressType", list["AddressType"]]:
-        url = "delegates/"
+        url = "/delegates"
         delegates: dict[AddressType, list[AddressType]] = {}
 
         while url:
@@ -227,7 +243,7 @@ class SafeClient(BaseSafeClient):
             "label": label,
             "signature": sig.encode_rsv().hex(),
         }
-        self._post("delegates/", json=payload)
+        self._post("/delegates", json=payload)
 
     def remove_delegate(self, delegate: "AddressType", delegator: "AccountAPI"):
         msg_hash = self.create_delegate_message(delegate)
@@ -240,7 +256,7 @@ class SafeClient(BaseSafeClient):
             "delegator": delegator.address,
             "signature": sig.encode_rsv().hex(),
         }
-        self._delete(f"delegates/{delegate}/", json=payload)
+        self._delete(f"/delegates/{delegate}", json=payload)
 
 
 __all__ = [

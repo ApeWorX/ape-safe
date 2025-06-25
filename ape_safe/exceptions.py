@@ -113,11 +113,6 @@ class SafeClientException(ApeSafeException):
     pass
 
 
-class ClientUnsupportedChainError(SafeClientException):
-    def __init__(self, chain_id: int):
-        super().__init__(f"Unsupported Chain ID '{chain_id}'.")
-
-
 class ActionNotPerformedError(SafeClientException):
     def __init__(self, message: str):
         super().__init__(message)
