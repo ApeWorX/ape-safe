@@ -104,7 +104,6 @@ class MultiSend(ManagerAccessMixin):
         call,
         *args,
         value: int = 0,
-        operation: OperationType = OperationType.CALL,
     ) -> "MultiSend":
         """
         Append a call to the MultiSend session object.
@@ -123,7 +122,6 @@ class MultiSend(ManagerAccessMixin):
 
         self.calls.append(
             {
-                "operation": OperationType(operation),  # NOTE: Raises `ValueError` if invalid
                 "target": call.contract.address,
                 "value": value,
                 "callData": call.encode_input(*args),
@@ -142,7 +140,8 @@ class MultiSend(ManagerAccessMixin):
             encode_packed(
                 ["uint8", "address", "uint256", "uint256", "bytes"],
                 [
-                    call["operation"],
+                    # NOTE: Only allow doing CALL because of `MultiSendCallOnly`
+                    int(OperationType.CALL),
                     call["target"],
                     call["value"],
                     len(call["callData"]),
