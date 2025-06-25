@@ -1,17 +1,21 @@
 from io import BytesIO
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ape import convert
 from ape.types import AddressType, HexBytes
 from ape.utils import ManagerAccessMixin, cached_property
 from eth_abi.packed import encode_packed
 
-from .exceptions import UnsupportedChainError, ValueRequired
+from ape_safe.client.types import OperationType, SafeTxID
+
+from .accounts import SafeAccount
+from .exceptions import ApeSafeException, UnsupportedChainError, ValueRequired
 from .packages import MANIFESTS_BY_VERSION, PackageType, get_multisend
 
 if TYPE_CHECKING:
     from ape.api import ReceiptAPI, TransactionAPI
     from ape.contracts.base import ContractInstance, ContractTransactionHandler
+    from eip712.common import SafeTx
     from packaging.version import Version
 
 
@@ -99,7 +103,8 @@ class MultiSend(ManagerAccessMixin):
         self,
         call,
         *args,
-        value=0,
+        value: int = 0,
+        operation: OperationType = OperationType.CALL,
     ) -> "MultiSend":
         """
         Append a call to the MultiSend session object.
@@ -110,30 +115,26 @@ class MultiSend(ManagerAccessMixin):
         Args:
             call: :class:`ContractMethodHandler` The method to call.
             *args: The arguments to invoke the method with.
-            value: int The amount of ether to forward with the call.
+            value: int The amount of ether to forward with the call. Defaults to 0.
+            operation: :enum:`OperationType` The type of the operation. Defaults to 0.
         """
+        if value < 0:
+            raise ValueError("`value=` must be positive.")
+
         self.calls.append(
             {
-                "operation": 0,
+                "operation": OperationType(operation),  # NOTE: Raises `ValueError` if invalid
                 "target": call.contract.address,
-                "value": value or 0,
+                "value": value,
                 "callData": call.encode_input(*args),
             }
         )
         return self
 
-    def _validate_calls(self, **txn_kwargs) -> None:
+    def _validate_safe_tx(self, safe_tx: "SafeTx") -> None:
         required_value = sum(call["value"] for call in self.calls)
-        if required_value > 0:
-            if "value" not in txn_kwargs:
-                raise ValueRequired(required_value)
-
-            value = self.conversion_manager.convert(txn_kwargs["value"], int)
-
-            if required_value < value:
-                raise ValueRequired(required_value)
-
-        # NOTE: Won't fail if `value` is provided otherwise (won't do anything either)
+        if required_value > safe_tx.value:
+            raise ValueRequired(required_value)
 
     @property
     def encoded_calls(self):
@@ -151,7 +152,47 @@ class MultiSend(ManagerAccessMixin):
             for call in self.calls
         ]
 
-    def __call__(self, **txn_kwargs) -> "ReceiptAPI":
+    def as_safe_tx(self, safe: SafeAccount, **safe_tx_kwargs) -> "SafeTx":
+        return safe.safe_tx_def(  # type: ignore[call-arg]
+            to=self.contract.address,
+            data=self.handler.encode_input(b"".join(self.encoded_calls)),
+            operation=OperationType.DELEGATECALL,
+            nonce=safe_tx_kwargs.pop("nonce", None) or safe.new_nonce,
+            **safe_tx_kwargs,
+        )
+
+    def propose(
+        self,
+        safe: SafeAccount,
+        **safe_tx_kwargs,
+    ) -> SafeTxID:
+        submitter = safe_tx_kwargs.pop("submitter", None)
+        safe_tx = self.as_safe_tx(safe, **safe_tx_kwargs)
+        self._validate_safe_tx(safe_tx)
+        return safe.propose_safe_tx(safe_tx, submitter=submitter)
+
+    def as_transaction(
+        self, sender: Any = None, impersonate: bool = False, **txn_kwargs
+    ) -> "TransactionAPI":
+        """
+        Encode the MultiSend transaction as a ``TransactionAPI`` object, but do not execute it.
+
+        Returns:
+            :class:`~ape.api.transactions.TransactionAPI`
+        """
+        if not isinstance(sender, SafeAccount):
+            raise ApeSafeException("Must be a SafeAccount to use Multisend")
+
+        safe_tx_kwargs = {}
+        for field in sender.safe_tx_def.__annotations__:
+            if field in txn_kwargs:
+                safe_tx_kwargs[field] = txn_kwargs.pop(field)
+
+        safe_tx = self.as_safe_tx(sender, **safe_tx_kwargs)
+        signatures = {} if impersonate else sender.add_signatures(safe_tx)
+        return sender.create_execute_transaction(safe_tx, signatures=signatures, **txn_kwargs)
+
+    def __call__(self, sender: Any = None, **txn_kwargs) -> "ReceiptAPI":
         """
         Execute the MultiSend transaction. The transaction will broadcast again every time
         the ``Transaction`` object is called.
@@ -166,27 +207,10 @@ class MultiSend(ManagerAccessMixin):
         Returns:
             :class:`~ape.api.transactions.ReceiptAPI`
         """
-        self._validate_calls(**txn_kwargs)
-        if "operation" not in txn_kwargs and not txn_kwargs.get("impersonate", False):
-            txn_kwargs["operation"] = 1
-        return self.handler(b"".join(self.encoded_calls), **txn_kwargs)
-
-    def as_transaction(self, **txn_kwargs) -> "TransactionAPI":
-        """
-        Encode the MultiSend transaction as a ``TransactionAPI`` object, but do not execute it.
-
-        Returns:
-            :class:`~ape.api.transactions.TransactionAPI`
-        """
-        self._validate_calls(**txn_kwargs)
-        # NOTE: Will fail using `self.handler.as_transaction` because handler
-        #       expects to be called only via delegatecall
-        if "operation" not in txn_kwargs and not txn_kwargs.get("impersonate", False):
-            txn_kwargs["operation"] = 1
-        return self.network_manager.ecosystem.create_transaction(
-            receiver=self.handler.contract.address,
-            data=self.handler.encode_input(b"".join(self.encoded_calls)),
-            **txn_kwargs,
+        impersonate = txn_kwargs.pop("impersonate", False)
+        return sender.call(
+            self.as_transaction(sender=sender, impersonate=impersonate, **txn_kwargs),
+            impersonate=impersonate,
         )
 
     def add_from_calldata(self, calldata: bytes):
