@@ -1,12 +1,14 @@
-def test_asset(vault, token):
+def test_default_operation(safe, token, vault, multisend, mode):
     assert vault.asset() == token
-
-
-def test_default_operation(safe, token, vault, multisend):
     amount = token.balanceOf(safe)
     multisend.add(token.approve, vault, 123)
     multisend.add(vault.transfer, safe, amount)
-    receipt = multisend(sender=safe)
+    if mode == "api":
+        multisend.propose(safe)
+        receipt = safe.submit_safe_tx(multisend.as_safe_tx(safe))
+
+    else:
+        receipt = multisend(sender=safe, impersonate=mode == "impersonate")
     assert receipt.txn_hash
 
 
