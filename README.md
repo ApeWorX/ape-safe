@@ -92,6 +92,11 @@ Once you have a safe, you can view pending transactions:
 ape safe pending list
 ```
 
+```{note}
+You must specify the environment variable `APE_SAFE_GATEWAY_API_KEY=` to use the Safe Gateway API.
+Get an API key at https://developer.safe.global/.
+```
+
 It should show transactions like this:
 
 ```sh
