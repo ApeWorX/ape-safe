@@ -216,7 +216,7 @@ class SafeClient(BaseSafeClient):
         delegates: dict[AddressType, list[AddressType]] = {}
 
         while url:
-            response = self._get(url, params={"safe": self.address})
+            response = self._get(url, params={"safe": self.address}, api_version="v2")
             data = response.json()
 
             for delegate_info in map(DelegateInfo.model_validate, data.get("results", [])):
@@ -243,7 +243,7 @@ class SafeClient(BaseSafeClient):
             "label": label,
             "signature": sig.encode_rsv().hex(),
         }
-        self._post("/delegates", json=payload)
+        self._post("/delegates", json=payload, api_version="v2")
 
     def remove_delegate(self, delegate: "AddressType", delegator: "AccountAPI"):
         msg_hash = self.create_delegate_message(delegate)
@@ -256,7 +256,7 @@ class SafeClient(BaseSafeClient):
             "delegator": delegator.address,
             "signature": sig.encode_rsv().hex(),
         }
-        self._delete(f"/delegates/{delegate}", json=payload)
+        self._delete(f"/delegates/{delegate}", json=payload, api_version="v2")
 
 
 __all__ = [
