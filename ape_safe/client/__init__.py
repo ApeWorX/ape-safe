@@ -134,7 +134,7 @@ class SafeClient(BaseSafeClient):
             url = data.get("next")
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
-        response = self._get(f"/multisig-transactions/{safe_tx_hash}/raw")
+        response = self._get(f"/multisig-transactions/{safe_tx_hash}", api_version="v2")
         data = response.json()
         yield from map(SafeTxConfirmation.model_validate, data.get("confirmations", []))
 
@@ -169,8 +169,8 @@ class SafeClient(BaseSafeClient):
             # Signature handled above.
             post_dict.pop("signatures")
 
-        url = f"/transactions/{tx_data.safe}/propose"
-        response = self._post(url, json=post_dict)
+        url = f"/safes/{tx_data.safe}/multisig-transactions"
+        response = self._post(url, json=post_dict, api_version="v2")
         return response
 
     def post_signatures(
@@ -185,7 +185,7 @@ class SafeClient(BaseSafeClient):
             safe_tx_hash = safe_tx_or_hash
 
         safe_tx_hash = cast(SafeTxID, to_hex(HexBytes(safe_tx_hash)))
-        url = f"/transactions/{safe_tx_hash}/confirmations"
+        url = f"/multisig-transactions/{safe_tx_hash}/confirmations"
         signature = to_hex(
             HexBytes(b"".join([x.encode_rsv() for x in order_by_signer(signatures)]))
         )
