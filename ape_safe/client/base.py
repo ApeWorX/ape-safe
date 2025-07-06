@@ -146,8 +146,8 @@ class BaseSafeClient(ABC):
         session.mount("https://", adapter)
         return session
 
-    def _get(self, url: str, params: Optional[dict] = None) -> "Response":
-        return self._request("GET", url, params=params)
+    def _get(self, url: str, params: Optional[dict] = None, **kwargs) -> "Response":
+        return self._request("GET", url, params=params, **kwargs)
 
     def _post(self, url: str, json: Optional[dict] = None, **kwargs) -> "Response":
         return self._request("POST", url, json=json, **kwargs)
