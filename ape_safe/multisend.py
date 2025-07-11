@@ -215,6 +215,7 @@ class MultiSend(ManagerAccessMixin):
         return sender.call(
             self.as_transaction(sender=sender, impersonate=impersonate, **txn_kwargs),
             impersonate=impersonate,
+            **txn_kwargs,
         )
 
     def add_from_calldata(self, calldata: bytes):
