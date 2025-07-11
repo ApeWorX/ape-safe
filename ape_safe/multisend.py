@@ -166,9 +166,14 @@ class MultiSend(ManagerAccessMixin):
         **safe_tx_kwargs,
     ) -> SafeTxID:
         submitter = safe_tx_kwargs.pop("submitter", None)
+        sigs_by_signer = safe_tx_kwargs.pop("sigs_by_signer", None)
         safe_tx = self.as_safe_tx(safe, **safe_tx_kwargs)
         self._validate_safe_tx(safe_tx)
-        return safe.propose_safe_tx(safe_tx, submitter=submitter)
+        return safe.propose_safe_tx(
+            safe_tx,
+            submitter=submitter,
+            sigs_by_signer=sigs_by_signer,
+        )
 
     def as_transaction(
         self, sender: Any = None, impersonate: bool = False, **txn_kwargs
