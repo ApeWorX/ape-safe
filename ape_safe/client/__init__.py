@@ -9,6 +9,7 @@ from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import USER_AGENT, get_package_version
 from eip712.common import SafeTxV1, SafeTxV2
 from eth_utils import to_hex
+from pydantic import TypeAdapter
 
 from ape_safe.client.base import BaseSafeClient
 from ape_safe.client.mock import MockSafeClient
@@ -133,10 +134,12 @@ class SafeClient(BaseSafeClient):
 
             url = data.get("next")
 
-    def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
+    def get_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeApiTxData:
         response = self._get(f"/multisig-transactions/{safe_tx_hash}", api_version="v2")
-        data = response.json()
-        yield from map(SafeTxConfirmation.model_validate, data.get("confirmations", []))
+        return TypeAdapter(SafeApiTxData).validate_json(response.text)
+
+    def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
+        yield from self.get_safe_tx(safe_tx_hash).confirmations
 
     def post_transaction(
         self, safe_tx: SafeTx, signatures: dict[AddressType, MessageSignature], **kwargs

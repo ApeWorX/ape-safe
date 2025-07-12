@@ -49,6 +49,9 @@ class BaseSafeClient(ABC):
     def _all_transactions(self) -> Iterator[SafeApiTxData]: ...
 
     @abstractmethod
+    def get_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeApiTxData: ...
+
+    @abstractmethod
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]: ...
 
     @abstractmethod

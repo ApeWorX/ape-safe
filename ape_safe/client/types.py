@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Annotated, NewType, Optional, Union, cast
 
 from ape.types import AddressType, HexBytes
-from eip712.common import SafeTxV1, SafeTxV2
+from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
 from eth_typing import HexStr
 from eth_utils import add_0x_prefix, to_hex
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
@@ -90,6 +90,26 @@ class UnexecutedTxData(BaseModel):
             confirmationsRequired=confirmations_required,
             safeTxHash=get_safe_tx_hash(safe_tx),
             **safe_tx._body_["message"],
+        )
+
+    def as_safe_tx(self, version: str, chain_id: Optional[int] = None) -> SafeTx:
+        tx_def = create_safe_tx_def(
+            version=version,
+            contract_address=self.safe,
+            chain_id=chain_id,
+        )
+
+        return tx_def(  # type: ignore[call-arg]
+            to=self.to,
+            value=self.value,
+            data=self.data,
+            operation=self.operation,
+            gasToken=self.gas_token,
+            safeTxGas=self.safe_tx_gas,
+            baseGas=self.base_gas,
+            gasPrice=self.gas_price,
+            refundReceiver=self.refund_receiver,
+            nonce=self.nonce,
         )
 
     @property

@@ -72,6 +72,18 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
                 if tx:
                     yield tx
 
+    def get_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeApiTxData:
+        tx_hash = cast(SafeTxID, to_hex(HexBytes(safe_tx_hash)))
+
+        if safe_tx := self.transactions.get(tx_hash):
+            return safe_tx
+
+        for safe_tx in self._all_transactions():
+            if safe_tx.safe_tx_hash == safe_tx_hash:
+                return safe_tx
+
+        raise SafeClientException(f"Unable to find SafeTx '{safe_tx_hash}'.")
+
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
         tx_hash = cast(SafeTxID, to_hex(HexBytes(safe_tx_hash)))
         if safe_tx_data := self.transactions.get(tx_hash):
