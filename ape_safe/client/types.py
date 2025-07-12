@@ -92,7 +92,7 @@ class UnexecutedTxData(BaseModel):
             **safe_tx._body_["message"],
         )
 
-    def as_safe_tx(self, version: str, chain_id: int | None = None) -> SafeTx:
+    def as_safe_tx(self, version: str, chain_id: Optional[int] = None) -> SafeTx:
         tx_def = create_safe_tx_def(
             version=version,
             contract_address=self.safe,

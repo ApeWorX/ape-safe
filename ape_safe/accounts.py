@@ -631,7 +631,7 @@ class SafeAccount(AccountAPI):
 
     def get_api_confirmations(
         self,
-        safe_tx: SafeTx | SafeTxID,
+        safe_tx: Union[SafeTx, SafeTxID],
     ) -> dict[AddressType, MessageSignature]:
         if isinstance(safe_tx, (SafeTxV1, SafeTxV2)):
             safe_tx_id = get_safe_tx_hash(safe_tx)
@@ -671,7 +671,7 @@ class SafeAccount(AccountAPI):
 
     def submit_safe_tx(
         self,
-        safe_tx: SafeTx | SafeTxID,
+        safe_tx: Union[SafeTx, SafeTxID],
         submitter: Union[AccountAPI, AddressType, str, None] = None,
         **txn_options,
     ) -> ReceiptAPI:
@@ -841,7 +841,7 @@ class SafeAccount(AccountAPI):
 
     def add_signatures(
         self,
-        safe_tx: SafeTx | SafeTxID,
+        safe_tx: Union[SafeTx, SafeTxID],
         confirmations: Optional[list[SafeTxConfirmation]] = None,
     ) -> dict[AddressType, MessageSignature]:
         if not isinstance(safe_tx, (SafeTxV1, SafeTxV2)):
