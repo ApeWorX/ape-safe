@@ -1,4 +1,4 @@
-# Ape Safe
+# Overview
 
 Account plugin for the [Safe](https://safe.global/) multisig wallet (previously known as Gnosis Safe) for the [Ape Framework](https://github.com/ApeWorX/ape).
 
