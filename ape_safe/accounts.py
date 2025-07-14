@@ -15,7 +15,7 @@ from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.proxies import ProxyInfo, ProxyType
 from ape_ethereum.transactions import TransactionType
-from eip712.common import create_safe_tx_def
+from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
 from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 from ethpm_types.abi import ABIType, MethodABI
@@ -629,8 +629,16 @@ class SafeAccount(AccountAPI):
 
         return super().call(txn, **call_kwargs)
 
-    def get_api_confirmations(self, safe_tx: SafeTx) -> dict[AddressType, MessageSignature]:
-        safe_tx_id = get_safe_tx_hash(safe_tx)
+    def get_api_confirmations(
+        self,
+        safe_tx: Union[SafeTx, SafeTxID],
+    ) -> dict[AddressType, MessageSignature]:
+        if isinstance(safe_tx, (SafeTxV1, SafeTxV2)):
+            safe_tx_id = get_safe_tx_hash(safe_tx)
+
+        else:
+            safe_tx_id = safe_tx
+
         try:
             client_confirmations = self.client.get_confirmations(safe_tx_id)
         except SafeClientException as err:
@@ -663,7 +671,7 @@ class SafeAccount(AccountAPI):
 
     def submit_safe_tx(
         self,
-        safe_tx: SafeTx,
+        safe_tx: Union[SafeTx, SafeTxID],
         submitter: Union[AccountAPI, AddressType, str, None] = None,
         **txn_options,
     ) -> ReceiptAPI:
@@ -678,6 +686,16 @@ class SafeAccount(AccountAPI):
         Returns:
             ``ReceiptAPI``
         """
+        if not isinstance(safe_tx, (SafeTxV1, SafeTxV2)):
+            safe_tx_id = safe_tx
+            safe_tx = self.client.get_safe_tx(safe_tx_id).as_safe_tx(
+                version=str(self.version), chain_id=self.chain_manager.chain_id
+            )
+
+        else:
+            safe_tx_id = get_safe_tx_hash(safe_tx)
+
+        assert isinstance(safe_tx, (SafeTxV1, SafeTxV2))
         signatures = self._all_approvals(safe_tx)
         txn = self.create_execute_transaction(safe_tx, signatures, **txn_options)
 
@@ -822,33 +840,48 @@ class SafeAccount(AccountAPI):
         return None
 
     def add_signatures(
-        self, safe_tx: SafeTx, confirmations: Optional[list[SafeTxConfirmation]] = None
+        self,
+        safe_tx: Union[SafeTx, SafeTxID],
+        confirmations: Optional[list[SafeTxConfirmation]] = None,
     ) -> dict[AddressType, MessageSignature]:
-        confirmations = confirmations or []
-        if not self.local_signers:
-            raise ApeSafeError("Cannot sign without local signers.")
+        if not isinstance(safe_tx, (SafeTxV1, SafeTxV2)):
+            safe_tx_id = safe_tx
+            safe_tx = self.client.get_safe_tx(safe_tx_id).as_safe_tx(
+                version=str(self.version), chain_id=self.chain_manager.chain_id
+            )
 
-        amount_needed = self.confirmations_required - len(confirmations)
-        signers = [
-            acc for acc in self.local_signers if acc.address not in [c.owner for c in confirmations]
-        ][:amount_needed]
+        else:
+            safe_tx_id = get_safe_tx_hash(safe_tx)
 
-        safe_tx_hash = _get_safe_tx_id(safe_tx, confirmations)
-        signatures = get_signatures(safe_tx, signers)
-        if signatures:
-            self.client.post_signatures(safe_tx_hash, signatures)
+        assert isinstance(safe_tx, (SafeTxV1, SafeTxV2))
+        confirmations = confirmations or list(self.client.get_confirmations(safe_tx_id))
+        if (confirmations_needed := self.confirmations_required - len(confirmations)) <= 0:
+            raise ApeSafeError("Transaction has enough confirmations.")
 
-        return signatures
+        elif not (
+            available_signers := [
+                acc
+                for acc in self.local_signers
+                if acc.address not in set(c.owner for c in confirmations)
+            ]
+        ):
+            raise ApeSafeError("No local signers available to sign.")
+
+        new_signatures = {}
+        for acc in available_signers:
+            if signature := acc.sign_message(safe_tx):
+                new_signatures[acc.address] = signature
+                confirmations_needed -= 1
+                if confirmations_needed <= 0:
+                    break
+
+            # else: didn't want to sign
+
+        if new_signatures:
+            self.client.post_signatures(safe_tx_id, new_signatures)
+
+        # NOTE: Return all signatures, both new and existing
+        return {**{c.owner: c.signature for c in confirmations}, **new_signatures}
 
     def select_signer(self, for_: str = "submitter") -> AccountAPI:
         return select_account(prompt_message=f"Select a {for_}", key=self.local_signers)
-
-
-def _get_safe_tx_id(safe_tx: SafeTx, confirmations: list[SafeTxConfirmation]) -> SafeTxID:
-    if tx_hash_result := next((c.transaction_hash for c in confirmations), None):
-        return cast(SafeTxID, tx_hash_result)
-
-    elif value := get_safe_tx_hash(safe_tx):
-        return value
-
-    raise ApeSafeError("Failed to get transaction hash.")

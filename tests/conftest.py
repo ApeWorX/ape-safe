@@ -106,6 +106,10 @@ def vault(deployer: SafeAccount, token):
 
 
 @pytest.fixture
-def multisend(VERSION):
+def new_multisend(VERSION):
     MultiSend.inject(VERSION)
-    return MultiSend(VERSION)
+
+    def new_multisend():
+        return MultiSend(VERSION)
+
+    return new_multisend
