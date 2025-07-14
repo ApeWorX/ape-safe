@@ -872,7 +872,7 @@ class SafeAccount(AccountAPI):
             if signature := acc.sign_message(safe_tx):
                 new_signatures[acc.address] = signature
                 confirmations_needed -= 1
-                if confirmations_needed == 0:
+                if confirmations_needed <= 0:
                     break
 
             # else: didn't want to sign
