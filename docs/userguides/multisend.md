@@ -1,49 +1,30 @@
 # MultiSend
 
-The `MultiSend` feature allows you to batch multiple transactions into a single transaction, which is more gas-efficient and ensures atomic execution (all operations succeed or all fail).
+The `MultiSend` feature allows you to batch multiple transactions into a single transaction, which is more gas-efficient and ensures atomic execution (all operations succeed or fail together).
 
 ## Basic Usage
 
 ```python
-from ape_safe import multisend
 from ape import accounts
-
-# Load your Safe
-safe = accounts.load("my-safe")
-
-# Create a MultiSend transaction
-txn = multisend.MultiSend()
-
-# Add transactions to the batch
-txn.add(safe.transfer, "0xRecipient1", "1 ether")
-txn.add(safe.transfer, "0xRecipient2", "0.5 ether")
-
-# Execute the batch (collects signatures and submits)
-txn(sender=safe)
-```
-
-## Working with Contracts
-
-MultiSend is particularly useful for contract interactions:
-
-```python
 from ape_safe import multisend
-from ape import accounts
 from ape_tokens import tokens
 
-# Load Safe and contracts
+me = accounts.load("my-key")
 safe = accounts.load("my-safe")
+
+# Load some contracts using ape-tokens
 dai = tokens["DAI"]
 vault = tokens["yvDAI"]
-amount = dai.balanceOf(safe)
+amount = dai.balanceOf(safe)  # How much we want to deposit
 
-# Create batch with approval and deposit
-txn = multisend.MultiSend()
-txn.add(dai.approve, vault, amount)
-txn.add(vault.deposit, amount)
+# Create a multisend batch transaction
+batch = safe.create_batch()
+batch.add(dai.approve, vault, amount)
+batch.add(vault.deposit, amount)
 
-# Execute
-txn(sender=safe)
+# Fetch signatures from local signer(s)
+# NOTE: will broadcast unless `submit=False`
+batch(submitter=me)
 ```
 
 ## Adding ETH Value to Calls
@@ -60,7 +41,7 @@ txn.add(contract.deposit, value="1 ether")
 # Add another call without value
 txn.add(contract.stake, amount)
 
-# Execute
+# Execute (will send Ether from `safe.balance`)
 txn(sender=safe)
 ```
 
@@ -70,18 +51,19 @@ You can create the transaction without executing it immediately:
 
 ```python
 # Create MultiSend transaction
-txn = multisend.MultiSend()
-txn.add(dai.approve, vault, amount)
-txn.add(vault.deposit, amount)
+batch = safe.create_batch()
+
+batch.add(dai.approve, vault, amount)
+batch.add(vault.deposit, amount)
 
 # Convert to a transaction object
-tx = txn.as_transaction(sender=safe)
+safe_tx = batch.propose(submitter=me)
 
 # Manually handle the signing process
-signatures = safe.add_signatures(tx)
+signatures = safe.add_signatures(safe_tx)
 
 # Later execute when ready
-receipt = safe.submit_safe_tx(tx)
+receipt = safe.submit_safe_tx(safe_tx)
 ```
 
 ## Decoding Existing MultiSend Transactions
@@ -107,14 +89,22 @@ for call in txn.calls:
 
 ## MultiSend Contract Detection
 
-The MultiSend functionality automatically detects the appropriate MultiSend contract on the current chain:
+The MultiSend functionality automatically detects the appropriate MultiSend contract on the current chain when using `safe.create_batch`:
+
+```python
+# Print the MultiSend contract address for the current chain
+ms = safe.create_batch()
+print(f"MultiSend contract: {ms.contract.address}")
+```
+
+For testing purposes, you may also inject the correct version in order to use it:
 
 ```python
 from ape_safe import multisend
 
-# Print the MultiSend contract address for the current chain
-txn = multisend.MultiSend()
-print(f"MultiSend contract: {txn.contract.address}")
+multisend.MultiSend.inject("1.3.0")
+ms = safe.create_batch()
+print(f"MultiSend contract: {ms.contract.address}")
 ```
 
 ## Handling Errors
@@ -125,23 +115,17 @@ When using MultiSend, remember:
 2. Some operations may not be compatible with batching
 3. Gas estimation may be challenging for complex batches
 
-To handle potential issues:
+Typically the most common issues have to do with gas estimation, which you can set directly:
 
 ```python
-from ape_safe import multisend
-from ape.exceptions import TransactionError
-
-# Load your Safe
-safe = accounts.load("my-safe")
-
 # Create a MultiSend transaction
-txn = multisend.MultiSend()
-txn.add(contract1.method1)
-txn.add(contract2.method2)
+ms = safe.create_batch()
+ms.add(contract1.method1)
+ms.add(contract2.method2)
 
-try:
-    # Try to execute with manual gas limit if estimation fails
-    txn(sender=safe, gas=1000000)
-except TransactionError as e:
-    print(f"Transaction failed: {e}")
+# raises `ape.exceptions.TransactionError`
+ms()
+
+# Try to execute with manual gas limit if estimation fails
+ms(gas_limit=1_000_000)
 ```
