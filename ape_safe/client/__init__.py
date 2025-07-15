@@ -134,12 +134,17 @@ class SafeClient(BaseSafeClient):
 
             url = data.get("next")
 
-    def get_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeApiTxData:
-        response = self._get(f"/multisig-transactions/{safe_tx_hash}", api_version="v2")
+    def get_safe_tx(self, safe_tx_hash: SafeTxID) -> Optional[SafeApiTxData]:
+        try:
+            response = self._get(f"/multisig-transactions/{safe_tx_hash}", api_version="v2")
+        except ClientResponseError:
+            return None
+
         return TypeAdapter(SafeApiTxData).validate_json(response.text)
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
-        yield from self.get_safe_tx(safe_tx_hash).confirmations
+        if safe_tx := self.get_safe_tx(safe_tx_hash):
+            yield from safe_tx.confirmations
 
     def post_transaction(
         self, safe_tx: SafeTx, signatures: dict[AddressType, MessageSignature], **kwargs
