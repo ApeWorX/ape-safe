@@ -1,8 +1,8 @@
 .. dynamic-toc-tree::
     :userguides:
         - quickstart
-        - safe_management
         - transactions
+        - safe_management
         - multisend
     :commands:
         - mgmt
