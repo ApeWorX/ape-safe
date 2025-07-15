@@ -85,7 +85,7 @@ safe_tx_hash = "0x123abc..."
 ape safe pending show-confs safe_tx_hash
 ```
 
-## Adding Confirmations (Approving)
+## Adding Confirmations to Transactions
 
 ### Via Python API
 
@@ -95,7 +95,7 @@ for tx, _ in safe.pending_transactions():
     if tx.nonce == 42:  # The nonce you're looking for
         # Add signatures from local signers
         signatures = safe.add_signatures(tx)
-        
+
         # Check if we have enough signatures to execute
         if len(signatures) >= safe.confirmations_required:
             print("Transaction ready to execute")
