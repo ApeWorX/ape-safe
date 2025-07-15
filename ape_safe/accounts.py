@@ -196,6 +196,30 @@ class SafeAccount(AccountAPI):
     account_file_path: Path  # NOTE: Cache any relevant data here
     _factory: ClassVar[SafeFactory] = SafeFactory()
 
+    def __dir__(self) -> list[str]:
+        return [
+            "contract",
+            "fallback_handler",
+            "guard",
+            "set_guard",
+            "version",
+            "confirmations_required",
+            "signers",
+            "local_signers",
+            "safe_tx_def",
+            "create_safe_tx",
+            "propose_safe_tx",
+            "submit_safe_tx",
+            "client",
+            "propose",
+            "pending_transactions",
+            "add_signatures",
+            "create_execute_transaction",
+            "create_batch",
+            "all_delegates",
+            *super().__dir__(),
+        ]
+
     @property
     def alias(self) -> str:
         return self.account_file_path.stem
