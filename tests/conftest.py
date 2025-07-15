@@ -7,7 +7,6 @@ from ape.contracts import ContractContainer
 from ethpm_types import ContractType
 from packaging.version import Version
 
-from ape_safe import MultiSend
 from ape_safe.accounts import SafeAccount
 from ape_safe.factory import SafeFactory
 
@@ -103,13 +102,3 @@ def vault(deployer: SafeAccount, token):
     text = (contracts_directory / "VyperVault.json").read_text()
     vault = ContractContainer(ContractType.model_validate_json(text))
     return deployer.deploy(vault, token)
-
-
-@pytest.fixture
-def new_multisend(VERSION):
-    MultiSend.inject(VERSION)
-
-    def new_multisend():
-        return MultiSend(VERSION)
-
-    return new_multisend
