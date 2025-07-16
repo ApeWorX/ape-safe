@@ -27,7 +27,7 @@ extras_require = {
         "mdformat-pyproject>=0.0.2",  # Allows configuring in pyproject.toml
     ],
     "docs": [
-        "sphinx-ape @ git+https://github.com/ApeWorX/sphinx-ape.git",
+        "sphinx-ape>=0.1,<1",  # Use dependencies of our custom docs plugin
     ],
     "release": [  # `release` GitHub Action job uses this
         "setuptools>=75.6.0",  # Installation tool
