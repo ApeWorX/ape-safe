@@ -40,6 +40,8 @@ if TYPE_CHECKING:
     from ape.api.address import BaseAddress
     from ape.contracts import ContractInstance
 
+    from ape_safe.multisend import MultiSend
+
 
 class SafeContainer(AccountContainerAPI):
     _accounts: dict[str, "SafeAccount"] = {}
@@ -193,6 +195,30 @@ def _safe_tx_exec_args(safe_tx: SafeTx) -> list:
 class SafeAccount(AccountAPI):
     account_file_path: Path  # NOTE: Cache any relevant data here
     _factory: ClassVar[SafeFactory] = SafeFactory()
+
+    def __dir__(self) -> list[str]:
+        return [
+            "contract",
+            "fallback_handler",
+            "guard",
+            "set_guard",
+            "version",
+            "confirmations_required",
+            "signers",
+            "local_signers",
+            "safe_tx_def",
+            "create_safe_tx",
+            "propose_safe_tx",
+            "submit_safe_tx",
+            "client",
+            "propose",
+            "pending_transactions",
+            "add_signatures",
+            "create_execute_transaction",
+            "create_batch",
+            "all_delegates",
+            *super().__dir__(),
+        ]
 
     @property
     def alias(self) -> str:
@@ -402,6 +428,11 @@ class SafeAccount(AccountAPI):
             **{k: v for k, v in safe_tx_kwargs.items() if k in safe_tx and v is not None},
         }
         return self.safe_tx_def(**safe_tx)
+
+    def create_batch(self) -> "MultiSend":
+        from ape_safe.multisend import MultiSend
+
+        return MultiSend(safe=self, version=self.version)
 
     def all_delegates(self) -> Iterator[AddressType]:
         for delegates in self.client.get_delegates().values():

@@ -1,10 +1,11 @@
 from io import BytesIO
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from ape import convert
 from ape.types import AddressType, HexBytes
 from ape.utils import ManagerAccessMixin, cached_property
 from eth_abi.packed import encode_packed
+from packaging.version import Version
 
 from ape_safe.client.types import OperationType, SafeTxID
 
@@ -16,7 +17,6 @@ if TYPE_CHECKING:
     from ape.api import ReceiptAPI, TransactionAPI
     from ape.contracts.base import ContractInstance, ContractTransactionHandler
     from eip712.common import SafeTx
-    from packaging.version import Version
 
 
 class MultiSend(ManagerAccessMixin):
@@ -49,15 +49,20 @@ class MultiSend(ManagerAccessMixin):
         receipt = txn(sender=safe,gas=0)
     """
 
-    def __init__(self, version: "Version" = max(MANIFESTS_BY_VERSION)) -> None:
+    def __init__(
+        self,
+        safe: Optional[SafeAccount] = None,
+        version: Union[Version, str] = max(MANIFESTS_BY_VERSION),
+    ) -> None:
         """
         Initialize a new MultiSend session object. By default, there are no calls to make.
         """
         self.calls: list[dict] = []
-        self.version = version
+        self.safe = safe
+        self.version = version if isinstance(version, Version) else Version(version)
 
     @classmethod
-    def inject(cls, version: "Version" = max(MANIFESTS_BY_VERSION)):
+    def inject(cls, version: Union[Version, str] = max(MANIFESTS_BY_VERSION)):
         """
         Create the multisend module contract on-chain, so we can use it.
         Must use a provider that supports ``debug_setCode``.
@@ -115,7 +120,6 @@ class MultiSend(ManagerAccessMixin):
             call: :class:`ContractMethodHandler` The method to call.
             *args: The arguments to invoke the method with.
             value: int The amount of ether to forward with the call. Defaults to 0.
-            operation: :enum:`OperationType` The type of the operation. Defaults to 0.
         """
         if value < 0:
             raise ValueError("`value=` must be positive.")
@@ -151,7 +155,13 @@ class MultiSend(ManagerAccessMixin):
             for call in self.calls
         ]
 
-    def as_safe_tx(self, safe: SafeAccount, **safe_tx_kwargs) -> "SafeTx":
+    def as_safe_tx(self, safe: Optional[SafeAccount] = None, **safe_tx_kwargs) -> "SafeTx":
+        if not (safe or (safe := self.safe)):
+            raise ValueError("Must provide `safe=` to call this function")
+
+        elif not isinstance(safe, SafeAccount):
+            raise ApeSafeException("`safe=` must be a SafeAccount to use Multisend")
+
         return safe.safe_tx_def(  # type: ignore[call-arg]
             to=self.contract.address,
             data=self.handler.encode_input(b"".join(self.encoded_calls)),
@@ -162,9 +172,15 @@ class MultiSend(ManagerAccessMixin):
 
     def propose(
         self,
-        safe: SafeAccount,
+        safe: Optional[SafeAccount] = None,
         **safe_tx_kwargs,
     ) -> SafeTxID:
+        if not (safe or (safe := self.safe)):
+            raise ValueError("Must provide `safe=` to call this function")
+
+        elif not isinstance(safe, SafeAccount):
+            raise ApeSafeException("`safe=` must be a SafeAccount to use Multisend")
+
         submitter = safe_tx_kwargs.pop("submitter", None)
         sigs_by_signer = safe_tx_kwargs.pop("sigs_by_signer", None)
         safe_tx = self.as_safe_tx(safe, **safe_tx_kwargs)
@@ -184,8 +200,8 @@ class MultiSend(ManagerAccessMixin):
         Returns:
             :class:`~ape.api.transactions.TransactionAPI`
         """
-        if not isinstance(sender, SafeAccount):
-            raise ApeSafeException("Must be a SafeAccount to use Multisend")
+        if not isinstance(sender or (sender := self.safe), SafeAccount):
+            raise ApeSafeException("`sender=` must be a SafeAccount to use Multisend")
 
         safe_tx_kwargs = {}
         for field in sender.safe_tx_def.__annotations__:
