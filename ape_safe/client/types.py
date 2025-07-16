@@ -21,6 +21,32 @@ def clean_api_address(data: Union[AddressType, dict]) -> AddressType:
     return data
 
 
+def remove_null_params(data):
+    if isinstance(data, dict):
+        return {
+            k: (remove_null_params(v) if isinstance(v, (dict, list, tuple)) else v)
+            for k, v in data.items()
+            if v is not None
+        }
+
+    elif isinstance(data, list):
+        return [
+            remove_null_params(v) if isinstance(v, (dict, list, tuple)) else v
+            for v in data
+            if v is not None
+        ]
+
+    elif isinstance(data, tuple):
+        return tuple(
+            remove_null_params(v) if isinstance(v, (dict, list, tuple)) else v
+            for v in data
+            if v is not None
+        )
+
+    else:
+        raise ValueError("Can only supply dict, list, or tuple type")
+
+
 Address = Annotated[AddressType, BeforeValidator(clean_api_address)]
 
 
