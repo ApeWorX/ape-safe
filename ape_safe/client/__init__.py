@@ -24,6 +24,7 @@ from ape_safe.client.types import (
     SafeTxID,
     SignatureType,
     UnexecutedTxData,
+    remove_null_params,
 )
 from ape_safe.exceptions import (
     ActionNotPerformedError,
@@ -140,7 +141,8 @@ class SafeClient(BaseSafeClient):
         except ClientResponseError:
             return None
 
-        return TypeAdapter(SafeApiTxData).validate_json(response.text)
+        data = remove_null_params(response.json())
+        return TypeAdapter(SafeApiTxData).validate_python(data)
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
         if safe_tx := self.get_safe_tx(safe_tx_hash):
