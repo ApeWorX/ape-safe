@@ -32,6 +32,7 @@ from .exceptions import (
     handle_safe_logic_error,
 )
 from .factory import SafeFactory
+from .modules import SafeModuleManager
 from .packages import PackageType
 from .types import SafeCacheData
 from .utils import get_safe_tx_hash, order_by_signer
@@ -200,6 +201,7 @@ class SafeAccount(AccountAPI):
         return [
             "contract",
             "fallback_handler",
+            "modules",
             "guard",
             "set_guard",
             "version",
@@ -277,6 +279,10 @@ class SafeAccount(AccountAPI):
         return (
             self.chain_manager.contracts.instance_at(address) if address != ZERO_ADDRESS else None
         )
+
+    @cached_property
+    def modules(self) -> SafeModuleManager:
+        return SafeModuleManager(self)
 
     @property
     def guard(self) -> Optional["ContractInstance"]:
