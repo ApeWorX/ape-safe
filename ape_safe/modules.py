@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, Optional, Union
 
 from ape.types import AddressType
-from ape.utils import ManagerAccessMixin
+from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
+from eth_utils import to_checksum_address
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -66,7 +67,15 @@ class SafeModuleManager(ManagerAccessMixin):
 
     @property
     def guard(self) -> Optional["ContractInstance"]:
-        if not (module_guard_address := self._safe.contract.getModuleGuard()):
+        if (
+            module_guard_address := to_checksum_address(
+                self.provider.get_storage(
+                    self._safe.contract.address,
+                    # NOTE: `keccak256("module_manager.module_guard.address")`
+                    "0xb104e0b93118902c651344349b610029d694cfdec91c589c91ebafbcd0289947",
+                )[12:]
+            )
+        ) == ZERO_ADDRESS:
             return None
 
         return self.chain_manager.contracts.instance_at(module_guard_address)
