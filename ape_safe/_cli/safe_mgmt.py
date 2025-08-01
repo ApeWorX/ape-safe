@@ -11,6 +11,7 @@ from eth_typing import ChecksumAddress
 
 from ape_safe._cli.click_ext import SafeCliContext, safe_argument, safe_cli_ctx
 from ape_safe.client import SafeClient
+from ape_safe.exceptions import NoVersionDetected
 
 
 @click.command(name="list")
@@ -49,7 +50,7 @@ def _list(cli_ctx: SafeCliContext, network, provider, verbose):
             output: str = ""
             try:
                 extras.append(f"version: '{safe.version}'")
-            except (ChainError, ProviderNotConnectedError):
+            except (ChainError, ProviderNotConnectedError, NoVersionDetected):
                 # Not connected to the network where safe is deployed
                 extras.append("version: (not connected)")
 
