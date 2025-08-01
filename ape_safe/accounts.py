@@ -28,6 +28,7 @@ from .exceptions import (
     NoLocalSigners,
     NotASigner,
     NotEnoughSignatures,
+    NoVersionDetected,
     SafeClientException,
     handle_safe_logic_error,
 )
@@ -344,12 +345,8 @@ class SafeAccount(AccountAPI):
         if isinstance(version := ContractCall(VERSION_ABI, address=self.address)(), str):
             return Version(version)
 
-        # NOTE: If `eth_call` returns nothing, it will be rendered as randomly
-        raise ContractNotFoundError(
-            self.address,
-            bool(self.provider.network.explorer),
-            self.provider.network_choice,
-        )
+        # NOTE: If `eth_call` returns nothing, the safe is likely not on the correct network
+        raise NoVersionDetected(self.address)
 
     @property
     def signers(self) -> list[AddressType]:
