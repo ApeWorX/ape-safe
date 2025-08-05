@@ -1,3 +1,4 @@
+import itertools
 import json
 import os
 from collections.abc import Iterable, Iterator, Mapping
@@ -10,7 +11,6 @@ from ape.cli import select_account
 from ape.contracts import ContractCall
 from ape.exceptions import ContractNotFoundError, ProviderNotConnectedError
 from ape.logging import logger
-from ape.managers.accounts import AccountManager, TestAccountManager
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.proxies import ProxyInfo, ProxyType
@@ -503,20 +503,24 @@ class SafeAccount(AccountAPI):
         # NOTE: Is not ordered by signing order
         # TODO: Skip per user config
         # TODO: Order per user config
-        container: Union[AccountManager, TestAccountManager]
+        accounts: Iterable[AccountAPI]
         if self.network_manager.active_provider and self.provider.network.is_dev:
-            container = self.account_manager.test_accounts
+            accounts = itertools.chain(
+                iter(self.account_manager),
+                iter(self.account_manager.test_accounts),
+            )
+
         else:
-            container = self.account_manager
+            accounts = iter(self.account_manager)
 
         # Ensure the contract is available before continuing.
         # Else, return an empty list
         try:
-            _ = self.contract
+            signers = self.signers
         except ContractNotFoundError:
             return []
 
-        return list(container[address] for address in self.signers if address in container)
+        return list(filter(lambda a: a in signers, accounts))
 
     @handle_safe_logic_error()
     def create_execute_transaction(
