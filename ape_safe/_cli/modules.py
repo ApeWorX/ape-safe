@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import click
-from ape.cli import ConnectedProviderCommand
+from ape.cli import ConnectedProviderCommand, network_option
 
 from ape_safe._cli.click_ext import safe_cli_ctx, safe_option
 
@@ -18,20 +18,20 @@ def modules():
 
 
 @modules.command("list", cls=ConnectedProviderCommand)
+@network_option()
 @safe_cli_ctx()
 @safe_option
-@click.option("--verbose", is_flag=True)
-def _list(cli_ctx, safe: "SafeAccount", verbose: bool) -> None:
+def _list(cli_ctx, safe: "SafeAccount") -> None:
     """List all modules enabled for SAFE"""
     for module in safe.modules:
         click.echo(repr(module))
 
 
 @modules.command(cls=ConnectedProviderCommand)
+@network_option()
 @safe_cli_ctx()
 @safe_option
-@click.option("--verbose", is_flag=True)
-def guard(cli_ctx, safe: "SafeAccount", verbose: bool) -> None:
+def guard(cli_ctx, safe: "SafeAccount") -> None:
     """Show module guard (if enabled) for SAFE"""
     if guard := safe.modules.guard:
         click.echo(f"Guard: {guard}")
