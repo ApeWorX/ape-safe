@@ -21,9 +21,8 @@ def modules():
 
 @modules.command("list", cls=ConnectedProviderCommand)
 @network_option()
-@safe_cli_ctx()
-@safe_option
-def _list(cli_ctx, safe: "SafeAccount") -> None:
+@safe_argument
+def _list(safe: "SafeAccount"):
     """List all modules enabled for SAFE"""
     for module in safe.modules:
         click.echo(repr(module))
@@ -31,9 +30,8 @@ def _list(cli_ctx, safe: "SafeAccount") -> None:
 
 @modules.command(cls=ConnectedProviderCommand)
 @network_option()
-@safe_cli_ctx()
-@safe_option
-def guard(cli_ctx, safe: "SafeAccount") -> None:
+@safe_argument
+def guard(safe: "SafeAccount"):
     """Show module guard (if enabled) for SAFE"""
     if guard := safe.modules.guard:
         click.echo(f"Guard: {guard}")
