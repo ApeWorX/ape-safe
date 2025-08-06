@@ -7,10 +7,11 @@ from eth_utils import to_checksum_address
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from ape.api import ReceiptAPI
+    from ape.api import AccountAPI, ReceiptAPI
     from ape.contracts import ContractInstance
 
     from ape_safe.accounts import SafeAccount
+    from ape_safe.client import SafeTxID
 
 
 class SafeModuleManager(ManagerAccessMixin):
@@ -27,9 +28,23 @@ class SafeModuleManager(ManagerAccessMixin):
         return self._safe.contract.isModuleEnabled(module)
 
     def enable(
-        self, module: Union[str, AddressType, "ContractInstance"], **txn_kwargs
-    ) -> "ReceiptAPI":
-        return self._safe.contract.enableModule(module, sender=self._safe, **txn_kwargs)
+        self,
+        module: Union[str, AddressType, "ContractInstance"],
+        submitter: Union["AccountAPI", AddressType, str, None] = None,
+        propose: bool = False,
+        **txn_kwargs,
+    ) -> Union["ReceiptAPI", "SafeTxID"]:
+        if propose:
+            txn = self._safe.contract.enableModule.as_transaction(module, **txn_kwargs)
+            return self._safe.propose(txn=txn, submitter=submitter)
+
+        else:
+            return self._safe.contract.enableModule(
+                module,
+                sender=self._safe,
+                submitter=submitter,
+                **txn_kwargs,
+            )
 
     def __iter__(self) -> "Iterator[ContractInstance]":
         start_module = self.SENTINEL
@@ -56,14 +71,27 @@ class SafeModuleManager(ManagerAccessMixin):
         raise AssertionError(f"Module {module} not in Safe modules for {self._safe}")
 
     def disable(
-        self, module: Union[str, AddressType, "ContractInstance"], **txn_kwargs
-    ) -> "ReceiptAPI":
-        return self._safe.contract.disableModule(
-            self._get_previous_module(module),
-            module,
-            sender=self._safe,
-            **txn_kwargs,
-        )
+        self,
+        module: Union[str, AddressType, "ContractInstance"],
+        submitter: Union["AccountAPI", AddressType, str, None] = None,
+        propose: bool = False,
+        **txn_kwargs,
+    ) -> Union["ReceiptAPI", "SafeTxID"]:
+        if propose:
+            txn = self._safe.contract.disableModule.as_transaction(
+                self._get_previous_module(module),
+                module,
+                **txn_kwargs,
+            )
+            return self._safe.propose(txn=txn, submitter=submitter)
+
+        else:
+            return self._safe.contract.disableModule(
+                self._get_previous_module(module),
+                module,
+                sender=self._safe,
+                **txn_kwargs,
+            )
 
     @property
     def guard(self) -> Optional["ContractInstance"]:
@@ -81,6 +109,15 @@ class SafeModuleManager(ManagerAccessMixin):
         return self.chain_manager.contracts.instance_at(module_guard_address)
 
     def set_guard(
-        self, guard: Union[str, AddressType, "ContractInstance"], **txn_kwargs
-    ) -> "ReceiptAPI":
-        return self._safe.contract.setModuleGuard(guard, sender=self._safe, **txn_kwargs)
+        self,
+        guard: Union[str, AddressType, "ContractInstance"],
+        submitter: Union["AccountAPI", AddressType, str, None] = None,
+        propose: bool = False,
+        **txn_kwargs,
+    ) -> Union["ReceiptAPI", "SafeTxID"]:
+        if propose:
+            txn = self._safe.contract.setModuleGuard.as_transaction(guard, **txn_kwargs)
+            return self._safe.propose(txn=txn, submitter=submitter)
+
+        else:
+            return self._safe.contract.setModuleGuard(guard, sender=self._safe, **txn_kwargs)

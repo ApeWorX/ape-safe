@@ -44,25 +44,27 @@ def guard(safe: "SafeAccount"):
 @network_option()
 @account_option()
 @safe_argument
+@click.option("--propose", is_flag=True, default=False)
 @click.argument("module", type=AddressType)
-def enable(safe: "SafeAccount", account: "AccountAPI", module: AddressType):
+def enable(safe: "SafeAccount", account: "AccountAPI", module: AddressType, propose: bool):
     """
     Enable MODULE for SAFE
 
     **WARNING**: This is a potentially destructive action, and may make your safe vulnerable.
     """
-    safe.modules.enable(module, submitter=account)
+    safe.modules.enable(module, submitter=account, propose=propose)
 
 
 @modules.command(cls=ConnectedProviderCommand)
 @network_option()
 @account_option()
 @safe_argument
+@click.option("--propose", is_flag=True, default=False)
 @click.argument("module", type=AddressType)
-def disable(safe: "SafeAccount", account: "AccountAPI", module: AddressType):
+def disable(safe: "SafeAccount", account: "AccountAPI", module: AddressType, propose: bool):
     """
     Disable MODULE for SAFE
 
     **WARNING**: This is a potentially destructive action, and may impact operations of your safe.
     """
-    safe.modules.disable(module, submitter=account)
+    safe.modules.disable(module, submitter=account, propose=propose)
