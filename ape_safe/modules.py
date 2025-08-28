@@ -121,3 +121,6 @@ class SafeModuleManager(ManagerAccessMixin):
 
         else:
             return self._safe.contract.setModuleGuard(guard, sender=self._safe, **txn_kwargs)
+
+    def remove_guard(self, **txn_kwargs) -> Union["ReceiptAPI", "SafeTxID"]:
+        return self.set_guard(ZERO_ADDRESS, **txn_kwargs)
