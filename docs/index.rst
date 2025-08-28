@@ -8,3 +8,4 @@
         - mgmt
         - pending
         - delegates
+        - modules
