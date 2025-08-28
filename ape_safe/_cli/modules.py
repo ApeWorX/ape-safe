@@ -1,15 +1,10 @@
-from typing import TYPE_CHECKING
-
 import click
+from ape.api import AccountAPI  # noqa: TC002
 from ape.cli import ConnectedProviderCommand, account_option, network_option
 from ape.types import AddressType
 
 from ape_safe._cli.click_ext import safe_argument
-
-if TYPE_CHECKING:
-    from ape.api import AccountAPI
-
-    from ape_safe.accounts import SafeAccount
+from ape_safe.accounts import SafeAccount  # noqa: TC001
 
 
 @click.group()
@@ -22,7 +17,7 @@ def modules():
 @modules.command("list", cls=ConnectedProviderCommand)
 @network_option()
 @safe_argument
-def _list(safe: "SafeAccount"):
+def _list(safe: SafeAccount):
     """List all modules enabled for SAFE"""
     for module in safe.modules:
         click.echo(repr(module))
@@ -31,7 +26,7 @@ def _list(safe: "SafeAccount"):
 @modules.command(cls=ConnectedProviderCommand)
 @network_option()
 @safe_argument
-def guard(safe: "SafeAccount"):
+def guard(safe: SafeAccount):
     """Show module guard (if enabled) for SAFE"""
     if guard := safe.modules.guard:
         click.echo(f"Guard: {guard}")
@@ -46,7 +41,7 @@ def guard(safe: "SafeAccount"):
 @safe_argument
 @click.option("--propose", is_flag=True, default=False)
 @click.argument("module", type=AddressType)
-def enable(safe: "SafeAccount", account: "AccountAPI", module: AddressType, propose: bool):
+def enable(safe: SafeAccount, account: AccountAPI, module: AddressType, propose: bool):
     """
     Enable MODULE for SAFE
 
@@ -61,7 +56,7 @@ def enable(safe: "SafeAccount", account: "AccountAPI", module: AddressType, prop
 @safe_argument
 @click.option("--propose", is_flag=True, default=False)
 @click.argument("module", type=AddressType)
-def disable(safe: "SafeAccount", account: "AccountAPI", module: AddressType, propose: bool):
+def disable(safe: SafeAccount, account: AccountAPI, module: AddressType, propose: bool):
     """
     Disable MODULE for SAFE
 
