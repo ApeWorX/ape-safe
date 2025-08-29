@@ -41,7 +41,7 @@ def enable(cli_ctx, safe, account, module, propose):
     """
     Enable MODULE for SAFE
 
-    **WARNING**: This is a potentially destructive action, and may make your safe vulnerable.
+    **WARNING**: This is a potentially destructive action and may make your safe vulnerable.
     """
     module = cli_ctx.conversion_manager.convert(module, AddressType)
     safe.modules.enable(module, submitter=account, propose=propose)
@@ -57,7 +57,7 @@ def disable(cli_ctx, safe, account, module, propose):
     """
     Disable MODULE for SAFE
 
-    **WARNING**: This is a potentially destructive action, and may impact operations of your safe.
+    **WARNING**: This is a potentially destructive action and may impact operations of your safe.
     """
     module = cli_ctx.conversion_manager.convert(module, AddressType)
     safe.modules.disable(module, submitter=account, propose=propose)
