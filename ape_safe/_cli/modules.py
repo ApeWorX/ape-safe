@@ -1,5 +1,5 @@
 import click
-from ape.cli import ConnectedProviderCommand, account_option, ape_cli_context, network_option
+from ape.cli import ConnectedProviderCommand, account_option, ape_cli_context
 from ape.types import AddressType
 
 from ape_safe._cli.click_ext import safe_argument
@@ -13,7 +13,6 @@ def modules():
 
 
 @modules.command("list", cls=ConnectedProviderCommand)
-@network_option()
 @safe_argument
 def _list(safe):
     """List all modules enabled for SAFE"""
@@ -22,7 +21,6 @@ def _list(safe):
 
 
 @modules.command(cls=ConnectedProviderCommand)
-@network_option()
 @safe_argument
 def guard(safe):
     """Show module guard (if enabled) for SAFE"""
@@ -35,7 +33,6 @@ def guard(safe):
 
 @modules.command(cls=ConnectedProviderCommand)
 @ape_cli_context()
-@network_option()
 @account_option()
 @safe_argument
 @click.option("--propose", is_flag=True, default=False)
@@ -52,7 +49,6 @@ def enable(cli_ctx, safe, account, module, propose):
 
 @modules.command(cls=ConnectedProviderCommand)
 @ape_cli_context()
-@network_option()
 @account_option()
 @safe_argument
 @click.option("--propose", is_flag=True, default=False)
