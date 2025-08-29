@@ -4,7 +4,9 @@
         - transactions
         - safe_management
         - multisend
+        - modules
     :commands:
         - mgmt
         - pending
         - delegates
+        - modules

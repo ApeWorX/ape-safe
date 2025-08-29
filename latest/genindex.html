@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=397bb51e" />
-    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=add26080" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=d48c410d" />
     <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +27,7 @@
       <img class="dark-logo" src="_static/logo_green.svg" alt="ape-safe" height="28" loading="lazy" />
       <strong>ape-safe</strong>
     </a>
-    <div class="sy-head-nav" id="HeadNav">
+    <div class="sy-head-nav" id="head-nav">
       <nav class="sy-head-links"></nav>
       <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
   <input type="text" name="q" placeholder="Search" />
@@ -39,7 +39,7 @@ data-aria-auto="Switch to light color mode"
 data-aria-light="Switch to dark color mode"
 data-aria-dark="Switch to auto color mode">
 <i class="i-lucide theme-icon"></i>
-</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="HeadNav" aria-expanded="false">
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
         <div class="hamburger">
           <span class="hamburger_1"></span>
           <span class="hamburger_2 -translate-x-2"></span>
@@ -84,6 +84,10 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/delegates.html#cmdoption-ape-safe-delegates-add-account">ape-safe-delegates-add command line option</a>
 </li>
         <li><a href="commands/delegates.html#cmdoption-ape-safe-delegates-remove-account">ape-safe-delegates-remove command line option</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-account">ape-safe-modules-disable command line option</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-account">ape-safe-modules-enable command line option</a>
 </li>
       </ul></li>
       <li>
@@ -132,6 +136,15 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/pending.html#cmdoption-ape-safe-pending-execute-nonce">ape-safe-pending-execute command line option</a>
 </li>
         <li><a href="commands/pending.html#cmdoption-ape-safe-pending-propose-nonce">ape-safe-pending-propose command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --propose
+
+      <ul>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-propose">ape-safe-modules-disable command line option</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-propose">ape-safe-modules-enable command line option</a>
 </li>
       </ul></li>
       <li>
@@ -210,6 +223,10 @@ data-aria-dark="Switch to auto color mode">
 </li>
         <li><a href="commands/mgmt.html#cmdoption-ape-safe-list-v">ape-safe-list command line option</a>
 </li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-v">ape-safe-modules-disable command line option</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-v">ape-safe-modules-enable command line option</a>
+</li>
         <li><a href="commands/pending.html#cmdoption-ape-safe-pending-approve-v">ape-safe-pending-approve command line option</a>
 </li>
         <li><a href="commands/pending.html#cmdoption-ape-safe-pending-execute-v">ape-safe-pending-execute command line option</a>
@@ -247,6 +264,10 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/delegates.html#cmdoption-ape-safe-delegates-remove-v">ape-safe-delegates-remove command line option</a>
 </li>
         <li><a href="commands/mgmt.html#cmdoption-ape-safe-list-v">ape-safe-list command line option</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-v">ape-safe-modules-disable command line option</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-v">ape-safe-modules-enable command line option</a>
 </li>
         <li><a href="commands/pending.html#cmdoption-ape-safe-pending-approve-v">ape-safe-pending-approve command line option</a>
 </li>
@@ -394,6 +415,56 @@ data-aria-dark="Switch to auto color mode">
 </li>
       </ul></li>
       <li>
+    ape-safe-modules-disable command line option
+
+      <ul>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-account">--account</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-propose">--propose</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-v">--verbosity</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-v">-v</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-arg-MODULE">MODULE</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-arg-SAFE">SAFE</a>
+</li>
+      </ul></li>
+      <li>
+    ape-safe-modules-enable command line option
+
+      <ul>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-account">--account</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-propose">--propose</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-v">--verbosity</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-v">-v</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-arg-MODULE">MODULE</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-arg-SAFE">SAFE</a>
+</li>
+      </ul></li>
+      <li>
+    ape-safe-modules-guard command line option
+
+      <ul>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-guard-arg-SAFE">SAFE</a>
+</li>
+      </ul></li>
+      <li>
+    ape-safe-modules-list command line option
+
+      <ul>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-list-arg-SAFE">SAFE</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
     ape-safe-pending-approve command line option
 
       <ul>
@@ -425,8 +496,6 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/pending.html#cmdoption-ape-safe-pending-execute-arg-NONCE_OR_SAFE_TX_HASH-s">NONCE_OR_SAFE_TX_HASH(s)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     ape-safe-pending-list command line option
 
@@ -650,6 +719,15 @@ data-aria-dark="Switch to auto color mode">
       <li><a href="methoddocs/client.html#ape_safe.client.MockSafeClient">MockSafeClient (class in ape_safe.client)</a>
 </li>
       <li>
+    MODULE
+
+      <ul>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-arg-MODULE">ape-safe-modules-disable command line option</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-arg-MODULE">ape-safe-modules-enable command line option</a>
+</li>
+      </ul></li>
+      <li>
     module
 
       <ul>
@@ -703,6 +781,8 @@ data-aria-dark="Switch to auto color mode">
 </li>
       <li><a href="methoddocs/exceptions.html#ape_safe.exceptions.NotEnoughSignatures">NotEnoughSignatures</a>
 </li>
+      <li><a href="methoddocs/exceptions.html#ape_safe.exceptions.NoVersionDetected">NoVersionDetected</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -747,6 +827,14 @@ data-aria-dark="Switch to auto color mode">
       <ul>
         <li><a href="commands/delegates.html#cmdoption-ape-safe-delegates-list-arg-SAFE">ape-safe-delegates-list command line option</a>
 </li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-disable-arg-SAFE">ape-safe-modules-disable command line option</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-enable-arg-SAFE">ape-safe-modules-enable command line option</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-guard-arg-SAFE">ape-safe-modules-guard command line option</a>
+</li>
+        <li><a href="commands/modules.html#cmdoption-ape-safe-modules-list-arg-SAFE">ape-safe-modules-list command line option</a>
+</li>
         <li><a href="commands/mgmt.html#cmdoption-ape-safe-remove-arg-SAFE">ape-safe-remove command line option</a>
 </li>
       </ul></li>
@@ -758,12 +846,12 @@ data-aria-dark="Switch to auto color mode">
 </li>
       <li><a href="methoddocs/exceptions.html#ape_safe.exceptions.SafeClientException">SafeClientException</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="methoddocs/config.html#ape_safe.config.SafeConfig">SafeConfig (class in ape_safe.config)</a>
 </li>
       <li><a href="methoddocs/accounts.html#ape_safe.accounts.SafeContainer">SafeContainer (class in ape_safe.accounts)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="methoddocs/client.html#ape_safe.client.SafeDetails">SafeDetails (class in ape_safe.client)</a>
 </li>
       <li><a href="methoddocs/factory.html#ape_safe.factory.SafeFactory">SafeFactory (class in ape_safe.factory)</a>
@@ -846,5 +934,5 @@ data-aria-dark="Switch to auto color mode">
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="_static/shibuya.js?v=1d2088d1"></script></body>
+      <script src="_static/shibuya.js?v=e730760c"></script></body>
 </html>

@@ -2,8 +2,8 @@
 <html lang="en" data-accent-color="lime" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>MultiSend - ape-safe documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Modules" href="modules.html" /><link rel="prev" title="Safe Management" href="safe_management.html" />
-      <link rel="canonical" href="ape-safe/userguides/multisend.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Modules - ape-safe documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Local Safe Management" href="../commands/mgmt.html" /><link rel="prev" title="MultiSend" href="multisend.html" />
+      <link rel="canonical" href="ape-safe/userguides/modules.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=397bb51e" />
@@ -19,8 +19,8 @@
 }
 </style>
     <meta property="og:type" content="website"/>
-<meta property="og:url" content="ape-safe/userguides/multisend.html"/>
-<meta property="og:title" content="MultiSend"/>
+<meta property="og:url" content="ape-safe/userguides/modules.html"/>
+<meta property="og:title" content="Modules"/>
 <meta name="twitter:card" content="summary"/>
   </head>
 <body><div class="sy-head">
@@ -62,8 +62,8 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="transactions.html">Transaction Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="safe_management.html">Safe Management</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">MultiSend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multisend.html">MultiSend</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Modules</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
 <ul>
@@ -120,11 +120,7 @@ data-aria-dark="Switch to auto color mode">
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
-<li><a class="reference internal" href="#adding-eth-value-to-calls">Adding ETH Value to Calls</a></li>
-<li><a class="reference internal" href="#advanced-control">Advanced Control</a></li>
-<li><a class="reference internal" href="#decoding-existing-multisend-transactions">Decoding Existing MultiSend Transactions</a></li>
-<li><a class="reference internal" href="#multisend-contract-detection">MultiSend Contract Detection</a></li>
-<li><a class="reference internal" href="#handling-errors">Handling Errors</a></li>
+<li><a class="reference internal" href="#advanced-usage">Advanced Usage</a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -142,7 +138,7 @@ data-aria-dark="Switch to auto color mode">
         <span>/</span>
         <meta itemprop="position" content="1" />
       </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-        <strong itemprop="name">MultiSend</strong>
+        <strong itemprop="name">Modules</strong>
         <meta itemprop="position" content="2" />
       </li></ol>
     <div class="xl:hidden ml-1">
@@ -155,11 +151,23 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
-          <section id="multisend">
-<h1>MultiSend<a class="headerlink" href="#multisend" title="Link to this heading"></a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">MultiSend</span></code> feature allows you to batch multiple transactions into a single transaction, which is more gas-efficient and ensures atomic execution (all operations succeed or fail together).</p>
+          <section id="modules">
+<h1>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h1>
+<p>The modules feature of your Safe account allows you to manage “extensions” to the behavior of your Safe,
+unlocking the ability to support automated actions or custom transaction logic <em>without signer approval</em>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Safe Modules can be very dangerous to enable on your Safe, as it allows the Module
+(and accounts with access to the Module) to completely bypass the authentication logic in your Safe smart contract.
+Use at your own risk.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Read more about Safe Modules in the <a class="reference external" href="https://docs.safe.global/advanced/smart-account-modules">docs</a>.</p>
+</div>
 <section id="basic-usage">
 <h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading"></a></h2>
+<p>To enable or disable a Module in your Safe, you can do so via:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">accounts</span>
 </span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe</span><span class="w"> </span><span class="kn">import</span> <span class="n">multisend</span>
 </span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_tokens</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokens</span>
@@ -167,115 +175,33 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="5"><span class="n">me</span> <span class="o">=</span> <span class="n">accounts</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;my-key&quot;</span><span class="p">)</span>
 </span><span data-line="6"><span class="n">safe</span> <span class="o">=</span> <span class="n">accounts</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;my-safe&quot;</span><span class="p">)</span>
 </span><span data-line="7">
-</span><span data-line="8"><span class="c1"># Load some contracts using ape-tokens</span>
-</span><span data-line="9"><span class="n">dai</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="s2">&quot;DAI&quot;</span><span class="p">]</span>
-</span><span data-line="10"><span class="n">vault</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="s2">&quot;yvDAI&quot;</span><span class="p">]</span>
-</span><span data-line="11"><span class="n">amount</span> <span class="o">=</span> <span class="n">dai</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">safe</span><span class="p">)</span>  <span class="c1"># How much we want to deposit</span>
+</span><span data-line="8"><span class="n">module</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># NOTE: Deploy it yourself, or use vetted Safe modules</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1"># Check if module is enabled</span>
+</span><span data-line="11"><span class="k">assert</span> <span class="n">module</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">safe</span><span class="o">.</span><span class="n">modules</span>
 </span><span data-line="12">
-</span><span data-line="13"><span class="c1"># Create a multisend batch transaction</span>
-</span><span data-line="14"><span class="n">batch</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
-</span><span data-line="15"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dai</span><span class="o">.</span><span class="n">approve</span><span class="p">,</span> <span class="n">vault</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
-</span><span data-line="16"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">vault</span><span class="o">.</span><span class="n">deposit</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
-</span><span data-line="17">
-</span><span data-line="18"><span class="c1"># Fetch signatures from local signer(s)</span>
-</span><span data-line="19"><span class="c1"># NOTE: will broadcast unless `submit=False`</span>
-</span><span data-line="20"><span class="n">batch</span><span class="p">(</span><span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+</span><span data-line="13"><span class="c1"># Then add it</span>
+</span><span data-line="14"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">enable</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+</span><span data-line="15"><span class="k">assert</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">safe</span><span class="o">.</span><span class="n">modules</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="c1"># You can always disable it later</span>
+</span><span data-line="18"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">disable</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
-<section id="adding-eth-value-to-calls">
-<h2>Adding ETH Value to Calls<a class="headerlink" href="#adding-eth-value-to-calls" title="Link to this heading"></a></h2>
-<p>You can include ETH value with transactions in the batch:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create a MultiSend transaction</span>
-</span><span data-line="2"><span class="n">txn</span> <span class="o">=</span> <span class="n">multisend</span><span class="o">.</span><span class="n">MultiSend</span><span class="p">()</span>
-</span><span data-line="3">
-</span><span data-line="4"><span class="c1"># Add a transaction that sends ETH with the call</span>
-</span><span data-line="5"><span class="n">txn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">deposit</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;1 ether&quot;</span><span class="p">)</span>
-</span><span data-line="6">
-</span><span data-line="7"><span class="c1"># Add another call without value</span>
-</span><span data-line="8"><span class="n">txn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">stake</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
-</span><span data-line="9">
-</span><span data-line="10"><span class="c1"># Execute (will send Ether from `safe.balance`)</span>
-</span><span data-line="11"><span class="n">txn</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">)</span>
-</span></pre></div>
-</div>
-</section>
-<section id="advanced-control">
-<h2>Advanced Control<a class="headerlink" href="#advanced-control" title="Link to this heading"></a></h2>
-<p>You can create the transaction without executing it immediately:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create MultiSend transaction</span>
-</span><span data-line="2"><span class="n">batch</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
-</span><span data-line="3">
-</span><span data-line="4"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dai</span><span class="o">.</span><span class="n">approve</span><span class="p">,</span> <span class="n">vault</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
-</span><span data-line="5"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">vault</span><span class="o">.</span><span class="n">deposit</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
-</span><span data-line="6">
-</span><span data-line="7"><span class="c1"># Convert to a transaction object</span>
-</span><span data-line="8"><span class="n">safe_tx</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">propose</span><span class="p">(</span><span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
-</span><span data-line="9">
-</span><span data-line="10"><span class="c1"># Manually handle the signing process</span>
-</span><span data-line="11"><span class="n">signatures</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">add_signatures</span><span class="p">(</span><span class="n">safe_tx</span><span class="p">)</span>
-</span><span data-line="12">
-</span><span data-line="13"><span class="c1"># Later execute when ready</span>
-</span><span data-line="14"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">submit_safe_tx</span><span class="p">(</span><span class="n">safe_tx</span><span class="p">)</span>
-</span></pre></div>
-</div>
-</section>
-<section id="decoding-existing-multisend-transactions">
-<h2>Decoding Existing MultiSend Transactions<a class="headerlink" href="#decoding-existing-multisend-transactions" title="Link to this heading"></a></h2>
-<p>You can decode and inspect existing MultiSend transactions:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe</span><span class="w"> </span><span class="kn">import</span> <span class="n">multisend</span>
+<section id="advanced-usage">
+<h2>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Link to this heading"></a></h2>
+<p>Safe Modules also come with a Module Guard functionality, similiar to your Safe’s Guard functionality.</p>
+<p>To set (or unset) a Module Guard, do so via:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">guard</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># NOTE: Deploy it yourself, or use a vetted Safe Module Guard</span>
 </span><span data-line="2">
-</span><span data-line="3"><span class="c1"># Create an empty MultiSend object</span>
-</span><span data-line="4"><span class="n">txn</span> <span class="o">=</span> <span class="n">multisend</span><span class="o">.</span><span class="n">MultiSend</span><span class="p">()</span>
-</span><span data-line="5">
-</span><span data-line="6"><span class="c1"># Add calls from existing calldata</span>
-</span><span data-line="7"><span class="n">calldata</span> <span class="o">=</span> <span class="s2">&quot;0x...&quot;</span>  <span class="c1"># MultiSend calldata from a transaction</span>
-</span><span data-line="8"><span class="n">txn</span><span class="o">.</span><span class="n">add_from_calldata</span><span class="p">(</span><span class="n">calldata</span><span class="p">)</span>
-</span><span data-line="9">
-</span><span data-line="10"><span class="c1"># Now you can inspect the calls</span>
-</span><span data-line="11"><span class="k">for</span> <span class="n">call</span> <span class="ow">in</span> <span class="n">txn</span><span class="o">.</span><span class="n">calls</span><span class="p">:</span>
-</span><span data-line="12">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;To: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">to</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span data-line="13">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Value: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span data-line="14">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></pre></div>
-</div>
-</section>
-<section id="multisend-contract-detection">
-<h2>MultiSend Contract Detection<a class="headerlink" href="#multisend-contract-detection" title="Link to this heading"></a></h2>
-<p>The MultiSend functionality automatically detects the appropriate MultiSend contract on the current chain when using <code class="docutils literal notranslate"><span class="pre">safe.create_batch</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Print the MultiSend contract address for the current chain</span>
-</span><span data-line="2"><span class="n">ms</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
-</span><span data-line="3"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MultiSend contract: </span><span class="si">{</span><span class="n">ms</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></pre></div>
-</div>
-<p>For testing purposes, you may also inject the correct version in order to use it:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe</span><span class="w"> </span><span class="kn">import</span> <span class="n">multisend</span>
-</span><span data-line="2">
-</span><span data-line="3"><span class="n">multisend</span><span class="o">.</span><span class="n">MultiSend</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="s2">&quot;1.3.0&quot;</span><span class="p">)</span>
-</span><span data-line="4"><span class="n">ms</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
-</span><span data-line="5"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MultiSend contract: </span><span class="si">{</span><span class="n">ms</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></pre></div>
-</div>
-</section>
-<section id="handling-errors">
-<h2>Handling Errors<a class="headerlink" href="#handling-errors" title="Link to this heading"></a></h2>
-<p>When using MultiSend, remember:</p>
-<ol class="arabic simple">
-<li><p>All operations are atomic - if one fails, all fail</p></li>
-<li><p>Some operations may not be compatible with batching</p></li>
-<li><p>Gas estimation may be challenging for complex batches</p></li>
-</ol>
-<p>Typically the most common issues have to do with gas estimation, which you can set directly:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create a MultiSend transaction</span>
-</span><span data-line="2"><span class="n">ms</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
-</span><span data-line="3"><span class="n">ms</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract1</span><span class="o">.</span><span class="n">method1</span><span class="p">)</span>
-</span><span data-line="4"><span class="n">ms</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract2</span><span class="o">.</span><span class="n">method2</span><span class="p">)</span>
-</span><span data-line="5">
-</span><span data-line="6"><span class="c1"># raises `ape.exceptions.TransactionError`</span>
-</span><span data-line="7"><span class="n">ms</span><span class="p">()</span>
-</span><span data-line="8">
-</span><span data-line="9"><span class="c1"># Try to execute with manual gas limit if estimation fails</span>
-</span><span data-line="10"><span class="n">ms</span><span class="p">(</span><span class="n">gas_limit</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">)</span>
+</span><span data-line="3"><span class="k">assert</span> <span class="ow">not</span> <span class="n">safe</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">guard</span>  <span class="c1"># NOTE: Not set by default</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Add a Module Guard</span>
+</span><span data-line="6"><span class="n">safe</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">set_guard</span><span class="p">(</span><span class="n">guard</span><span class="p">,</span> <span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Remove a Module Guard</span>
+</span><span data-line="9"><span class="n">safe</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">remove_guard</span><span class="p">(</span><span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
@@ -287,16 +213,16 @@ data-aria-dark="Switch to auto color mode">
   </svg>
   <span>Back to top</span>
 </button><div class="navigation flex print:hidden"><div class="navigation-prev">
-    <a href="safe_management.html">
+    <a href="multisend.html">
       <i class="i-lucide chevron-left"></i>
       <div class="page-info">
-        <span>Previous</span><div class="title">Safe Management</div></div>
+        <span>Previous</span><div class="title">MultiSend</div></div>
     </a>
   </div><div class="navigation-next">
-    <a href="modules.html">
+    <a href="../commands/mgmt.html">
       <div class="page-info">
         <span>Next</span>
-        <div class="title">Modules</div>
+        <div class="title">Local Safe Management</div>
       </div>
       <i class="i-lucide chevron-right"></i>
     </a>
