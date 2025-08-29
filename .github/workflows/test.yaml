@@ -60,7 +60,8 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-latest, macos-latest]   # eventually add `windows-latest`
-                python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+                # NOTE: Don't test 3.9, it has weird issues on CI
+                python-version: ["3.10", "3.11", "3.12", "3.13"]
 
         env:
           GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}

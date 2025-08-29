@@ -65,3 +65,11 @@ def exec_transaction(mode, safe):
 @pytest.fixture(scope="session")
 def guard(project, deployer):
     return project.Guard.deploy(sender=deployer)
+
+
+@pytest.fixture(scope="session")
+def create_module(project, deployer):
+    def fn():
+        return project.Module.deploy(sender=deployer)
+
+    return fn

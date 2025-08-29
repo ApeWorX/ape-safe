@@ -1,7 +1,13 @@
 from contextlib import ContextDecorator
 from typing import TYPE_CHECKING, Optional
 
-from ape.exceptions import AccountsError, ApeException, ContractLogicError, SignatureError
+from ape.exceptions import (
+    AccountsError,
+    ApeException,
+    ContractLogicError,
+    DecodingError,
+    SignatureError,
+)
 
 if TYPE_CHECKING:
     from ape.types import AddressType
@@ -16,6 +22,14 @@ class ApeSafeError(ApeSafeException, AccountsError):
     """
     An error to raise in place of AccountsError for the ``ape-safe`` plugin.
     """
+
+
+class NoVersionDetected(ApeSafeException, DecodingError):
+    def __init__(self, safe: "AddressType"):
+        super().__init__(
+            f"Could not detect `VERSION()` for {safe}.\n\n"
+            "**Are you sure you are on the right network?**"
+        )
 
 
 class NotASigner(ApeSafeException):
