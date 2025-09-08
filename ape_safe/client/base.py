@@ -8,7 +8,7 @@ import certifi
 import requests
 import urllib3
 from ape.types import AddressType, HexBytes, MessageSignature
-from eth_utils import keccak
+from faster_eth_utils import keccak
 from requests.adapters import HTTPAdapter
 
 from ape_safe.client.types import (
