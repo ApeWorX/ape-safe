@@ -2,7 +2,7 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, cast
 
 from eip712.messages import calculate_hash
-from eth_utils import to_hex, to_int
+from faster_eth_utils import to_hex, to_int
 
 if TYPE_CHECKING:
     from ape.types import AddressType, MessageSignature
