@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Optional, Union, cast
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import USER_AGENT, get_package_version
 from eip712.common import SafeTxV1, SafeTxV2
-from eth_utils import to_hex
+from faster_eth_utils import to_hex
 from pydantic import TypeAdapter
 
 from ape_safe.client.base import BaseSafeClient
