@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 from ape.exceptions import SignatureError
-from eth_utils import add_0x_prefix
+from faster_eth_utils import add_0x_prefix
 
 if TYPE_CHECKING:
     from ape.contracts import ContractTransactionHandler
