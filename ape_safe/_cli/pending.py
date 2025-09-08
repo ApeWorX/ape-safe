@@ -6,7 +6,7 @@ import rich
 from ape.cli import ConnectedProviderCommand
 from ape.exceptions import SignatureError
 from eth_typing import ChecksumAddress, Hash32
-from eth_utils import humanize_hash, to_hex
+from faster_eth_utils import humanize_hash, to_hex
 from hexbytes import HexBytes
 
 from ape_safe._cli.click_ext import (

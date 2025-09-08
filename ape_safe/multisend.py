@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 from ape import convert
 from ape.types import AddressType, HexBytes
 from ape.utils import ManagerAccessMixin, cached_property
-from eth_abi.packed import encode_packed
+from faster_eth_abi.packed import encode_packed
 from packaging.version import Version
 
 from ape_safe.client.types import OperationType, SafeTxID

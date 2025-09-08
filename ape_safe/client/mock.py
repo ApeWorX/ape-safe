@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional, Union, cast
 
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
-from eth_utils import keccak, to_hex
+from faster_eth_utils import keccak, to_hex
 from hexbytes import HexBytes
 
 from ape_safe.client.base import BaseSafeClient
