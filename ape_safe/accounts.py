@@ -16,9 +16,9 @@ from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.proxies import ProxyInfo, ProxyType
 from ape_ethereum.transactions import TransactionType
 from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
-from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 from ethpm_types.abi import ABIType, MethodABI
+from faster_eth_utils import keccak, to_bytes, to_int
 from packaging.version import Version
 
 from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation, SafeTxID
