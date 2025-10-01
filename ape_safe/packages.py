@@ -101,15 +101,17 @@ def get_deployment_artifact(
         version = Version(version.lstrip("v"))
 
     if package_type is PackageType.SINGLETON:
-        deployment_filename = "gnosis_safe.json" if version <= Version("1.3.0") else "/safe.json"
+        deployment_filename = "gnosis_safe.json" if version <= Version("1.3.0") else "safe.json"
 
     elif package_type is PackageType.PROXY_FACTORY:
         deployment_filename = (
-            "proxy_factory.json" if version <= Version("1.3.0") else "/safe_proxy_factory.json"
+            "proxy_factory.json" if version <= Version("1.3.0") else "safe_proxy_factory.json"
         )
 
     elif package_type is PackageType.MULTISEND:
-        deployment_filename = "multi_send.json"
+        deployment_filename = (
+            "multi_send.json" if version <= Version("1.1.1") else "multi_send_call_only.json"
+        )
 
     else:
         raise
