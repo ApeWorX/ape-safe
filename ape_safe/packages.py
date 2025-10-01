@@ -114,7 +114,7 @@ def get_deployment_artifact(
         )
 
     else:
-        raise
+        raise RuntimeError(f"Unsupported deployment lookup: '{package_type.value}'")
 
     # TODO: Cache this to disk?
     response = requests.get(BASE_ASSETS_URL + f"v{version}/{deployment_filename}")
