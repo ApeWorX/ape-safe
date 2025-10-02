@@ -101,18 +101,20 @@ def get_deployment_artifact(
         version = Version(version.lstrip("v"))
 
     if package_type is PackageType.SINGLETON:
-        deployment_filename = "gnosis_safe.json" if version <= Version("1.3.0") else "/safe.json"
+        deployment_filename = "gnosis_safe.json" if version <= Version("1.3.0") else "safe.json"
 
     elif package_type is PackageType.PROXY_FACTORY:
         deployment_filename = (
-            "proxy_factory.json" if version <= Version("1.3.0") else "/safe_proxy_factory.json"
+            "proxy_factory.json" if version <= Version("1.3.0") else "safe_proxy_factory.json"
         )
 
     elif package_type is PackageType.MULTISEND:
-        deployment_filename = "multi_send.json"
+        deployment_filename = (
+            "multi_send.json" if version <= Version("1.1.1") else "multi_send_call_only.json"
+        )
 
     else:
-        raise
+        raise RuntimeError(f"Unsupported deployment lookup: '{package_type.value}'")
 
     # TODO: Cache this to disk?
     response = requests.get(BASE_ASSETS_URL + f"v{version}/{deployment_filename}")
