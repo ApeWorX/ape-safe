@@ -203,6 +203,7 @@ class MultiSend(ManagerAccessMixin):
         Returns:
             :class:`~ape.api.transactions.TransactionAPI`
         """
+        # TODO: Update docstring to use `sender=safe` if not using `safe.create_batch`
         if not isinstance(sender or (sender := self.safe), SafeAccount):
             raise ApeSafeException("`sender=` must be a SafeAccount to use Multisend")
 
@@ -231,7 +232,8 @@ class MultiSend(ManagerAccessMixin):
             :class:`~ape.api.transactions.ReceiptAPI`
         """
         impersonate = txn_kwargs.pop("impersonate", False)
-        return sender.call(
+        # TODO: Update docstring to use `sender=safe` if not using `safe.create_batch`
+        return (sender or self.safe).call(
             self.as_transaction(sender=sender, impersonate=impersonate, **txn_kwargs),
             impersonate=impersonate,
             **txn_kwargs,
