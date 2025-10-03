@@ -68,6 +68,7 @@ setup(
     url="https://github.com/ApeWorX/ape-safe",
     include_package_data=True,
     install_requires=[
+        "cchecksum>=0.0.3,<1",
         "click>=8.1.7,<9",
         "eip712>=0.2.11,<3",
         "eth-ape>=0.8.28,<0.9",
