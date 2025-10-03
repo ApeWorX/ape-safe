@@ -162,7 +162,9 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, s
     while new_tx is None and timeout > 0:
         new_tx = next(
             safe.client.get_transactions(
-                starting_nonce=safe.next_nonce, confirmed=False, filter_by_ids=[safe_tx_hash]
+                starting_nonce=safe.next_nonce,
+                confirmed=False,
+                filter_by_ids=[safe_tx_hash],
             ),
             None,
         )
@@ -290,7 +292,7 @@ def reject(cli_ctx: SafeCliContext, safe, txn_ids, execute):
     """
     from ape.api import AccountAPI
 
-    submit = False if execute in (False, None) else True
+    submit = execute not in (False, None)
     submitter = execute if isinstance(execute, AccountAPI) else None
     if submitter is None and submit:
         submitter = safe.select_signer(for_="submitter")
@@ -315,7 +317,11 @@ def reject(cli_ctx: SafeCliContext, safe, txn_ids, execute):
         elif click.confirm(f"{txn}\nCancel Transaction?"):
             try:
                 safe.transfer(
-                    safe, 0, nonce=txn.nonce, submit_transaction=submit, submitter=submitter
+                    safe,
+                    0,
+                    nonce=txn.nonce,
+                    submit_transaction=submit,
+                    submitter=submitter,
                 )
             except SignatureError:
                 # These are expected because of how the plugin works

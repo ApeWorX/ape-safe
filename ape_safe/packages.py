@@ -130,13 +130,16 @@ def get_deployment_artifact(
     return package_type(version).at(deployment_info.address)  # type: ignore[misc]
 
 
+@cache
 def get_singleton(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
     return get_deployment_artifact(PackageType.SINGLETON, chain_id, version)
 
 
+@cache
 def get_factory(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
     return get_deployment_artifact(PackageType.PROXY_FACTORY, chain_id, version)
 
 
+@cache
 def get_multisend(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
     return get_deployment_artifact(PackageType.MULTISEND, chain_id, version)

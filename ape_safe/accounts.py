@@ -9,7 +9,11 @@ from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.networks import ForkedNetworkAPI
 from ape.cli import select_account
 from ape.contracts import ContractCall
-from ape.exceptions import ContractNotFoundError, ProviderNotConnectedError
+from ape.exceptions import (
+    ContractNotFoundError,
+    ProviderNotConnectedError,
+    SignatureError,
+)
 from ape.logging import logger
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS, cached_property
@@ -21,7 +25,14 @@ from ethpm_types import ContractType
 from ethpm_types.abi import ABIType, MethodABI
 from packaging.version import Version
 
-from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation, SafeTxID
+from .client import (
+    BaseSafeClient,
+    MockSafeClient,
+    SafeClient,
+    SafeTx,
+    SafeTxConfirmation,
+    SafeTxID,
+)
 from .config import SafeConfig
 from .exceptions import (
     ApeSafeError,
@@ -494,9 +505,10 @@ class SafeAccount(AccountAPI):
 
     def pending_transactions(self) -> Iterator[tuple[SafeTx, list[SafeTxConfirmation]]]:
         for executed_tx in self.client.get_transactions(confirmed=False):
-            yield self.create_safe_tx(
-                **executed_tx.model_dump(mode="json", by_alias=True)
-            ), executed_tx.confirmations
+            yield (
+                self.create_safe_tx(**executed_tx.model_dump(mode="json", by_alias=True)),
+                executed_tx.confirmations,
+            )
 
     @property
     def local_signers(self) -> list[AccountAPI]:
