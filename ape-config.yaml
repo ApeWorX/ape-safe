@@ -5,11 +5,8 @@ plugins:
   - name: foundry
   - name: solidity
   - name: etherscan
-  - name: alchemy
 
 ethereum:
-  mainnet:
-    default_provider: alchemy
   local:
     default_provider: foundry
 
@@ -73,13 +70,3 @@ dependencies:
         version: 0.7.6
         import_remapping:
           - "@openzeppelin/contracts=openzeppelin/v3.4.0"
-
-foundry:
-  fork:
-    ethereum:
-      mainnet:
-        upstream_provider: alchemy
-        block_number: 15776634
-      sepolia:
-        upstream_provider: alchemy
-        block_number: 3091950
