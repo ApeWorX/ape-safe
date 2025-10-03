@@ -135,7 +135,8 @@ class CallbackFactory:
             return False
 
         raise BadOptionUsage(
-            f"--{name}", f"`--{name}` value '{val}` not a boolean or account identifier."
+            f"--{name}",
+            f"`--{name}` value '{val}` not a boolean or account identifier.",
         )
 
 
@@ -143,7 +144,9 @@ callback_factory = CallbackFactory()
 safe_option = click.option("--safe", callback=callback_factory.safe_callback)
 safe_argument = click.argument("safe", callback=callback_factory.safe_callback)
 submitter_option = click.option(
-    "--submitter", help="Account to execute", callback=callback_factory.submitter_callback
+    "--submitter",
+    help="Account to execute",
+    callback=callback_factory.submitter_callback,
 )
 sender_option = click.option("--sender", callback=callback_factory.sender_callback)
 execute_option = click.option("--execute", callback=callback_factory.execute_callback)

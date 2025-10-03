@@ -52,17 +52,18 @@ class MultiSend(ManagerAccessMixin):
     def __init__(
         self,
         safe: Optional[SafeAccount] = None,
-        version: Union[Version, str] = max(MANIFESTS_BY_VERSION),
+        version: Union[Version, str, None] = None,
     ) -> None:
         """
         Initialize a new MultiSend session object. By default, there are no calls to make.
         """
+        version = version or max(MANIFESTS_BY_VERSION)
         self.calls: list[dict] = []
         self.safe = safe
         self.version = version if isinstance(version, Version) else Version(version)
 
     @classmethod
-    def inject(cls, version: Union[Version, str] = max(MANIFESTS_BY_VERSION)):
+    def inject(cls, version: Union[Version, str, None] = None):
         """
         Create the multisend module contract on-chain, so we can use it.
         Must use a provider that supports ``debug_setCode``.
@@ -71,11 +72,13 @@ class MultiSend(ManagerAccessMixin):
 
             from ape_safe.multisend import MultiSend
 
+
             @pytest.fixture(scope="session")
             def multisend():
                 MultiSend.inject()
                 return MultiSend()
         """
+        version = version or max(MANIFESTS_BY_VERSION)
         active_provider = cls.network_manager.active_provider
         assert active_provider, "Must be connected to an active network to deploy"
         MultiSend = PackageType.MULTISEND(version)

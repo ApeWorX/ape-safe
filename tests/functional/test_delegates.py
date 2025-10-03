@@ -36,6 +36,6 @@ def test_delegate_can_propose_safe_tx(safe, delegate, OWNERS):
     safe.propose_safe_tx(safe_tx, submitter=delegate)
 
     assert len(safe.get_api_confirmations(safe_tx)) == 0
-    assert list(
+    assert [
         (safe_tx.signable_message, confs) for safe_tx, confs in safe.pending_transactions()
-    ) == [(safe_tx.signable_message, [])]
+    ] == [(safe_tx.signable_message, [])]

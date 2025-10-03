@@ -101,7 +101,13 @@ def test_list_no_txns(runner, cli, safe_account, chain):
 
 def test_approve_transaction_not_found(runner, cli, safe_account, chain):
     tx_hash = "0x123"
-    arguments = ("pending", "approve", tx_hash, "--network", chain.provider.network_choice)
+    arguments = (
+        "pending",
+        "approve",
+        tx_hash,
+        "--network",
+        chain.provider.network_choice,
+    )
     result = runner.invoke(
         cli,
         arguments,
@@ -148,7 +154,13 @@ def test_approve(receiver, runner, cli, safe_account, chain):
         safe=safe_account.address,
     )
 
-    arguments = ("pending", "approve", tx_hash, "--network", chain.provider.network_choice)
+    arguments = (
+        "pending",
+        "approve",
+        tx_hash,
+        "--network",
+        chain.provider.network_choice,
+    )
     result = runner.invoke(
         cli,
         arguments,

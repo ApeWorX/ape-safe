@@ -30,7 +30,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         self.contract = contract
         self.transactions: dict[SafeTxID, SafeApiTxData] = {}
         self.transactions_by_nonce: dict[int, list[SafeTxID]] = {}
-        self.delegates: dict["AddressType", list["AddressType"]] = {}
+        self.delegates: dict[AddressType, list[AddressType]] = {}
 
     @property
     def safe_details(self) -> SafeDetails:
@@ -90,7 +90,10 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
             yield from safe_tx_data.confirmations
 
     def post_transaction(
-        self, safe_tx: SafeTx, signatures: dict["AddressType", "MessageSignature"], **kwargs
+        self,
+        safe_tx: SafeTx,
+        signatures: dict["AddressType", "MessageSignature"],
+        **kwargs,
     ):
         owners = self.safe_details.owners
 
