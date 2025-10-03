@@ -850,9 +850,11 @@ class SafeAccount(AccountAPI):
                 **gas_args,
                 nonce=submitter_account.nonce,
             )
-            txn = submitter_account.sign_transaction(exec_transaction, **signer_options)
+            if not (txn := submitter_account.sign_transaction(exec_transaction, **signer_options)):
+                raise SignatureError("Failed to sign transaction.")
+
             # NOTE: Because of `ape_ethereum.transactions.BaseTransaction.serialize_transaction`
-            #       doing a recovered signer check, and we gotta make sure the address matches
+            #       doing a recovered signer check, and we have to make sure the address matches
             #       the recovered address of the signed transaction.
             txn.sender = submitter_account.address
             return txn
