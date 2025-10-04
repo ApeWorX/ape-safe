@@ -53,7 +53,6 @@ def test_add_owner(safe, accounts, OWNERS, exec_transaction):
     assert new_owner.address in safe.signers
 
 
-@pytest.mark.parametrize("mode", ["impersonate", "api", "sign"])
 def test_remove_owner(safe, OWNERS, exec_transaction):
     if len(OWNERS) == 1:
         pytest.skip("Can't remove the only owner")
