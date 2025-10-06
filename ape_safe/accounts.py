@@ -867,12 +867,13 @@ class SafeAccount(AccountAPI):
             f"for Safe {self.address}#{safe_tx.nonce}"  # TODO: put URI
         )
 
-        self.propose_safe_tx(
-            safe_tx,
-            submitter=submitter_account,
-            sigs_by_signer=sigs_by_signer,
-            contractTransactionHash=safe_tx_hash,
-        )
+        if not self.provider.network.is_dev:
+            self.propose_safe_tx(
+                safe_tx,
+                submitter=submitter_account,
+                sigs_by_signer=sigs_by_signer,
+                contractTransactionHash=safe_tx_hash,
+            )
 
         # Return None so that Ape does not try to submit the transaction.
         return None
@@ -915,7 +916,7 @@ class SafeAccount(AccountAPI):
 
             # else: didn't want to sign
 
-        if new_signatures:
+        if new_signatures and not self.provider.network.is_dev:
             self.client.post_signatures(safe_tx_id, new_signatures)
 
         # NOTE: Return all signatures, both new and existing
