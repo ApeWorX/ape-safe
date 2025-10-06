@@ -879,12 +879,14 @@ class SafeAccount(AccountAPI):
             f"for Safe {self.address}#{safe_tx.nonce}"  # TODO: put URI
         )
 
-        self.propose_safe_tx(
-            safe_tx,
-            submitter=submitter_account,
-            sigs_by_signer=sigs_by_signer,
-            contractTransactionHash=safe_tx_hash,
-        )
+        # NOTE: Do not publish to API on a dev network (e.g. `mainnet-fork`) unless mocked
+        if not self.provider.network.is_dev or isinstance(self.client, MockSafeClient):
+            self.propose_safe_tx(
+                safe_tx,
+                submitter=submitter_account,
+                sigs_by_signer=sigs_by_signer,
+                contractTransactionHash=safe_tx_hash,
+            )
 
         # Return None so that Ape does not try to submit the transaction.
         return None
@@ -928,7 +930,9 @@ class SafeAccount(AccountAPI):
             # else: didn't want to sign
 
         if new_signatures:
-            self.client.post_signatures(safe_tx_id, new_signatures)
+            # NOTE: Do not publish to API on a dev network (e.g. `mainnet-fork`) unless mocked
+            if not self.provider.network.is_dev or isinstance(self.client, MockSafeClient):
+                self.client.post_signatures(safe_tx_id, new_signatures)
 
         # NOTE: Return all signatures, both new and existing
         return {**{c.owner: c.signature for c in confirmations}, **new_signatures}
