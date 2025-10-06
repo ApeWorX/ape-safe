@@ -729,19 +729,20 @@ class SafeAccount(AccountAPI):
 
         else:
             safe_tx_id = get_safe_tx_hash(safe_tx)
-
         assert isinstance(safe_tx, (SafeTxV1, SafeTxV2))
+
+        if not isinstance(submitter, AccountAPI):
+            submitter = self.load_submitter(submitter)
+            assert isinstance(submitter, AccountAPI)  # NOTE: mypy happy
+
         signatures = {} if impersonate else self._all_approvals(safe_tx)
         txn = self.create_execute_transaction(
             safe_tx,
             signatures,
             impersonate=impersonate,
+            sender=submitter.address,
             **txn_options,
         )
-
-        if not isinstance(submitter, AccountAPI):
-            submitter = self.load_submitter(submitter)
-            assert isinstance(submitter, AccountAPI)  # NOTE: mypy happy
 
         return submitter.call(txn)
 
@@ -857,6 +858,7 @@ class SafeAccount(AccountAPI):
                 sender=submitter_account.address,
             )
             # NOTE: If `submitter` does not sign, this returns `None` which raises downstream
+            assert exec_transaction.sender == submitter_account
             return submitter_account.sign_transaction(exec_transaction, **signer_options)
 
         elif submit:
