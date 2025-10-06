@@ -867,7 +867,8 @@ class SafeAccount(AccountAPI):
             f"for Safe {self.address}#{safe_tx.nonce}"  # TODO: put URI
         )
 
-        if not self.provider.network.is_dev:
+        # NOTE: Do not publish to API on a dev network (e.g. `mainnet-fork`) unless mocked
+        if not self.provider.network.is_dev or isinstance(self.client, MockSafeClient):
             self.propose_safe_tx(
                 safe_tx,
                 submitter=submitter_account,
@@ -916,8 +917,10 @@ class SafeAccount(AccountAPI):
 
             # else: didn't want to sign
 
-        if new_signatures and not self.provider.network.is_dev:
-            self.client.post_signatures(safe_tx_id, new_signatures)
+        if new_signatures:
+            # NOTE: Do not publish to API on a dev network (e.g. `mainnet-fork`) unless mocked
+            if not self.provider.network.is_dev or isinstance(self.client, MockSafeClient):
+                self.client.post_signatures(safe_tx_id, new_signatures)
 
         # NOTE: Return all signatures, both new and existing
         return {**{c.owner: c.signature for c in confirmations}, **new_signatures}
