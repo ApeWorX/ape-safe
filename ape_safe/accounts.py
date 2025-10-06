@@ -16,19 +16,12 @@ from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.proxies import ProxyInfo, ProxyType
 from ape_ethereum.transactions import TransactionType
 from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
-from eth_utils import keccak, to_bytes, to_int
+from eth_utils import keccak, to_bytes, to_canonical_address, to_int
 from ethpm_types import ContractType
 from ethpm_types.abi import ABIType, MethodABI
 from packaging.version import Version
 
-from .client import (
-    BaseSafeClient,
-    MockSafeClient,
-    SafeClient,
-    SafeTx,
-    SafeTxConfirmation,
-    SafeTxID,
-)
+from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation, SafeTxID
 from .config import SafeConfig
 from .exceptions import (
     ApeSafeError,
@@ -190,8 +183,7 @@ def get_signatures(
 ) -> dict[AddressType, MessageSignature]:
     signatures: dict[AddressType, MessageSignature] = {}
     for signer in signers:
-        signature = signer.sign_message(safe_tx)
-        if signature:
+        if signature := signer.sign_message(safe_tx):
             signatures[signer.address] = signature
 
     return signatures
@@ -530,13 +522,52 @@ class SafeAccount(AccountAPI):
 
         return list(filter(lambda a: a in signers, accounts))
 
+    def _preapproved_signature(
+        self, signer: Union[AddressType, "BaseAddress", str]
+    ) -> MessageSignature:
+        # Get the Safe-style "preapproval" signature type, which is a sentinel value used to denote
+        # when a signer approved via some other method, such as `approveHash` or being `msg.sender`
+        # TODO: Link documentation for this
+        return MessageSignature(
+            v=1,  # Approved hash (e.g. submitter is approved)
+            r=(
+                b"\x00" * 12
+                + to_canonical_address(self.conversion_manager.convert(signer, AddressType))
+            ),
+            s=b"\x00" * 32,
+        )
+
+    def _impersonate_approvals(self, safe_tx: SafeTx) -> dict[AddressType, MessageSignature]:
+        safe_tx_hash = self.contract.getTransactionHash(*safe_tx)
+
+        # Bypass signature collection logic and attempt to submit by impersonation
+        # NOTE: Only works for fork and local network providers that support `set_storage`
+        signatures = dict()
+        for signer_address in self.signers[: self.confirmations_required]:
+            # NOTE: `approvedHashes` is `address => safe_tx_hash => num_confs` @ slot 8
+            # TODO: Use native ape slot indexing, once available
+            #       e.g. `self.contract.approvedHashes[signer_address][safe_tx_hash] = 1`
+            address_bytes32 = to_bytes(hexstr=signer_address)
+            address_bytes32 = b"\x00" * (32 - len(address_bytes32)) + address_bytes32
+            key_hash = keccak(address_bytes32 + b"\x00" * 31 + to_bytes(8))
+            slot = to_int(keccak(safe_tx_hash + key_hash))
+            self.provider.set_storage(self.address, slot, b"\x00" * 31 + b"\x01")
+
+            signatures[signer_address] = self._preapproved_signature(signer_address)
+
+        return signatures
+
     @handle_safe_logic_error()
     def create_execute_transaction(
         self,
         safe_tx: SafeTx,
         signatures: Mapping[AddressType, MessageSignature],
+        impersonate: bool = False,
         **txn_options,
     ) -> TransactionAPI:
+        if impersonate:
+            signatures = self._impersonate_approvals(safe_tx)
+
         exec_args = _safe_tx_exec_args(safe_tx)[:-1]  # NOTE: Skip `nonce`
         encoded_signatures = encode_signatures(signatures)
 
@@ -601,56 +632,6 @@ class SafeAccount(AccountAPI):
             or 0
         )
 
-    def _preapproved_signature(
-        self, signer: Union[AddressType, "BaseAddress", str]
-    ) -> MessageSignature:
-        # Get the Safe-style "preapproval" signature type, which is a sentinel value used to denote
-        # when a signer approved via some other method, such as `approveHash` or being `msg.sender`
-        # TODO: Link documentation for this
-        return MessageSignature(
-            v=1,  # Approved hash (e.g. submitter is approved)
-            r=b"\x00" * 12 + to_bytes(hexstr=self.conversion_manager.convert(signer, AddressType)),
-            s=b"\x00" * 32,
-        )
-
-    @handle_safe_logic_error()
-    def _impersonated_call(self, txn: TransactionAPI, **safe_tx_and_call_kwargs) -> ReceiptAPI:
-        safe_tx = self.create_safe_tx(txn, **safe_tx_and_call_kwargs)
-        safe_tx_exec_args = _safe_tx_exec_args(safe_tx)
-        signatures = {}
-
-        # Bypass signature collection logic and attempt to submit by impersonation
-        # NOTE: Only works for fork and local network providers that support `set_storage`
-        safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
-        signer_address = None
-        for signer_address in self.signers[: self.confirmations_required]:
-            # NOTE: `approvedHashes` is `address => safe_tx_hash => num_confs` @ slot 8
-            # TODO: Use native ape slot indexing, once available
-            address_bytes32 = to_bytes(hexstr=signer_address)
-            address_bytes32 = b"\x00" * (32 - len(address_bytes32)) + address_bytes32
-            key_hash = keccak(address_bytes32 + b"\x00" * 31 + to_bytes(8))
-            slot = to_int(keccak(safe_tx_hash + key_hash))
-            self.provider.set_storage(self.address, slot, to_bytes(1))
-
-            signatures[signer_address] = self._preapproved_signature(signer_address)
-
-        # NOTE: Could raise a `SafeContractError`
-        safe_tx_and_call_kwargs["sender"] = safe_tx_and_call_kwargs.get(
-            "submitter",
-            # NOTE: Use whatever the last signer was if no `submitter`
-            self.account_manager.test_accounts[signer_address],
-        )
-        return self.contract.execTransaction(
-            *safe_tx_exec_args[:-1],  # NOTE: Skip nonce
-            HexBytes(
-                b"".join(
-                    sig.encode_rsv() if isinstance(sig, MessageSignature) else sig
-                    for sig in order_by_signer(signatures)
-                )
-            ),
-            **safe_tx_and_call_kwargs,
-        )
-
     @handle_safe_logic_error()
     def call(  # type: ignore[override]
         self,
@@ -660,13 +641,11 @@ class SafeAccount(AccountAPI):
     ) -> ReceiptAPI:
         # NOTE: This handles if given `submit=None'.
         default_submit = not impersonate
-        submit = (
+        call_kwargs["submit"] = (
             call_kwargs.pop("submit_transaction", call_kwargs.pop("submit", default_submit))
             or not default_submit
         )
-        call_kwargs["submit"] = submit
-        if impersonate:
-            return self._impersonated_call(txn, **call_kwargs)
+        call_kwargs["impersonate"] = impersonate
 
         return super().call(txn, **call_kwargs)
 
@@ -694,8 +673,7 @@ class SafeAccount(AccountAPI):
         }
 
     def _contract_approvals(self, safe_tx: SafeTx) -> Mapping[AddressType, MessageSignature]:
-        safe_tx_exec_args = _safe_tx_exec_args(safe_tx)
-        safe_tx_hash = self.contract.getTransactionHash(*safe_tx_exec_args)
+        safe_tx_hash = self.contract.getTransactionHash(*safe_tx)
 
         return {
             signer: self._preapproved_signature(signer)
@@ -710,10 +688,12 @@ class SafeAccount(AccountAPI):
         approvals.update(self._contract_approvals(safe_tx))
         return approvals
 
+    @handle_safe_logic_error()
     def submit_safe_tx(
         self,
         safe_tx: Union[SafeTx, SafeTxID],
         submitter: Union[AccountAPI, AddressType, str, None] = None,
+        impersonate: bool = False,
         **txn_options,
     ) -> ReceiptAPI:
         """
@@ -737,8 +717,13 @@ class SafeAccount(AccountAPI):
             safe_tx_id = get_safe_tx_hash(safe_tx)
 
         assert isinstance(safe_tx, (SafeTxV1, SafeTxV2))
-        signatures = self._all_approvals(safe_tx)
-        txn = self.create_execute_transaction(safe_tx, signatures, **txn_options)
+        signatures = {} if impersonate else self._all_approvals(safe_tx)
+        txn = self.create_execute_transaction(
+            safe_tx,
+            signatures,
+            impersonate=impersonate,
+            **txn_options,
+        )
 
         if not isinstance(submitter, AccountAPI):
             submitter = self.load_submitter(submitter)
