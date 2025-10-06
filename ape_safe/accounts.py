@@ -21,7 +21,14 @@ from ethpm_types import ContractType
 from ethpm_types.abi import ABIType, MethodABI
 from packaging.version import Version
 
-from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation, SafeTxID
+from .client import (
+    BaseSafeClient,
+    MockSafeClient,
+    SafeClient,
+    SafeTx,
+    SafeTxConfirmation,
+    SafeTxID,
+)
 from .config import SafeConfig
 from .exceptions import (
     ApeSafeError,
@@ -494,9 +501,10 @@ class SafeAccount(AccountAPI):
 
     def pending_transactions(self) -> Iterator[tuple[SafeTx, list[SafeTxConfirmation]]]:
         for executed_tx in self.client.get_transactions(confirmed=False):
-            yield self.create_safe_tx(
-                **executed_tx.model_dump(mode="json", by_alias=True)
-            ), executed_tx.confirmations
+            yield (
+                self.create_safe_tx(**executed_tx.model_dump(mode="json", by_alias=True)),
+                executed_tx.confirmations,
+            )
 
     @property
     def local_signers(self) -> list[AccountAPI]:
@@ -849,13 +857,13 @@ class SafeAccount(AccountAPI):
                 sigs_by_signer,
                 **gas_args,
                 nonce=submitter_account.nonce,
+                # NOTE: Because of `ape_ethereum.transactions.BaseTransaction.serialize_transaction`
+                #       doing a recovered signer check, and we have to make sure the address matches
+                #       the recovered address of the signed transaction.
+                sender=submitter_account.address,
             )
-            txn = submitter_account.sign_transaction(exec_transaction, **signer_options)
-            # NOTE: Because of `ape_ethereum.transactions.BaseTransaction.serialize_transaction`
-            #       doing a recovered signer check, and we gotta make sure the address matches
-            #       the recovered address of the signed transaction.
-            txn.sender = submitter_account.address
-            return txn
+            # NOTE: If `submitter` does not sign, this returns `None` which raises downstream
+            return submitter_account.sign_transaction(exec_transaction, **signer_options)
 
         elif submit:
             # NOTE: User wanted to submit transaction, but we can't, so don't publish to API

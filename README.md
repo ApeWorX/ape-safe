@@ -33,6 +33,21 @@ You can install the latest release via [`pip`](https://pypi.org/project/pip/):
 $ pip install ape-safe
 ```
 
+You can also install from source:
+
+```shell
+# Clone the source code.
+git clone git@github.com:ApeWorX/ape-safe.git
+cd ape-safe
+
+# Build the Safe manifests.
+ape pm compile
+ape run build
+
+# Install.
+pip install .
+```
+
 ### via `setuptools`
 
 You can clone the repository and use [`setuptools`](https://github.com/pypa/setuptools) for the most up-to-date version:

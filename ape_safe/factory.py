@@ -1,12 +1,17 @@
 import secrets
-from functools import cache
-from typing import TYPE_CHECKING, Iterable, Optional, Union
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Optional, Union
 
 from ape.types import AddressType
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
 from packaging.version import Version
 
-from ape_safe.packages import MANIFESTS_BY_VERSION, PackageType, get_factory, get_singleton
+from ape_safe.packages import (
+    MANIFESTS_BY_VERSION,
+    PackageType,
+    get_factory,
+    get_singleton,
+)
 
 if TYPE_CHECKING:
     from ape.api import AccountAPI, BaseAddress
@@ -22,7 +27,6 @@ class SafeFactory(ManagerAccessMixin):
         cls._singleton[version] = deployer.deploy(PackageType.SINGLETON(version))
         cls._factory[version] = deployer.deploy(PackageType.PROXY_FACTORY(version))
 
-    @cache
     def get_factory(self, version: Version) -> "ContractInstance":
         if injected_factory := self._factory.get(version):
             return injected_factory
@@ -33,7 +37,6 @@ class SafeFactory(ManagerAccessMixin):
     def contract(self) -> "ContractInstance":
         return self.get_factory(max(MANIFESTS_BY_VERSION))
 
-    @cache
     def get_singleton(self, version: Version) -> "ContractInstance":
         if injected_singleton := self._singleton.get(version):
             return injected_singleton

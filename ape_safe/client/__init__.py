@@ -160,7 +160,10 @@ class SafeClient(BaseSafeClient):
                 b"",
             )
         )
-        post_dict: dict = {"signature": signature.hex() if signature else None, "origin": ORIGIN}
+        post_dict: dict = {
+            "signature": signature.hex() if signature else None,
+            "origin": ORIGIN,
+        }
 
         for key, value in tx_data.model_dump(by_alias=True, mode="json").items():
             if isinstance(value, HexBytes):

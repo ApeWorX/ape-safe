@@ -6,7 +6,7 @@ from ape.types import AddressType
 def test_init(safe, OWNERS, THRESHOLD, safe_contract):
     assert safe.contract == safe_contract
     assert safe.confirmations_required == THRESHOLD
-    assert safe.signers == list(o.address for o in OWNERS)
+    assert safe.signers == [o.address for o in OWNERS]
     assert safe.next_nonce == 0
 
 
