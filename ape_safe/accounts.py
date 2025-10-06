@@ -9,11 +9,7 @@ from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.networks import ForkedNetworkAPI
 from ape.cli import select_account
 from ape.contracts import ContractCall
-from ape.exceptions import (
-    ContractNotFoundError,
-    ProviderNotConnectedError,
-    SignatureError,
-)
+from ape.exceptions import ContractNotFoundError, ProviderNotConnectedError
 from ape.logging import logger
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS, cached_property
