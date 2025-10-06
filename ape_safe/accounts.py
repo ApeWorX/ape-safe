@@ -21,6 +21,8 @@ from ethpm_types import ContractType
 from ethpm_types.abi import ABIType, MethodABI
 from packaging.version import Version
 
+from ape_safe.client.types import OperationType
+
 from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxConfirmation, SafeTxID
 from .config import SafeConfig
 from .exceptions import (
@@ -409,27 +411,39 @@ class SafeAccount(AccountAPI):
 
         Args:
             txn (Optional[``TransactionAPI``]): The transaction
-            **safe_tx_kwargs: The safe transactions specifications, such as ``submitter``.
+            **safe_tx_kwargs: The safe transaction specifications, such as ``operation``.
 
         Returns:
             :class:`~ape_safe.client.SafeTx`: The Safe Transaction to be used.
         """
-        safe_tx = {
-            "to": txn.receiver if txn else self.address,  # Self-call, e.g. rejection
-            "value": txn.value if txn else 0,
-            "data": (txn.data or b"") if txn else b"",
-            "nonce": self.new_nonce if txn is None or txn.nonce is None else txn.nonce,
-            "operation": 0,
-            "safeTxGas": 0,
-            "gasPrice": 0,
-            "gasToken": ZERO_ADDRESS,
-            "refundReceiver": ZERO_ADDRESS,
-        }
-        safe_tx = {
-            **safe_tx,
-            **{k: v for k, v in safe_tx_kwargs.items() if k in safe_tx and v is not None},
-        }
-        return self.safe_tx_def(**safe_tx)
+        return self.safe_tx_def(  # type: ignore[call-arg]
+            # NOTE: Use `txn` only for these 3 commonly-used params
+            to=(
+                txn.receiver
+                if txn
+                else self.conversion_manager.convert(
+                    safe_tx_kwargs.get("to", self.address), AddressType
+                )
+            ),
+            value=(
+                txn.value
+                if txn
+                else self.conversion_manager.convert(safe_tx_kwargs.get("value", 0), int)
+            ),
+            data=(txn.data or b"") if txn else safe_tx_kwargs.get("data", b""),
+            # ...then use only kwargs for the rest
+            # NOTE: Use `.new_nonce` to get latest nonce in off-chain txn queue
+            nonce=safe_tx_kwargs.get("nonce", self.new_nonce),
+            operation=safe_tx_kwargs.get("operation", OperationType.CALL),
+            safeTxGas=safe_tx_kwargs.get("safeTxGas", 0),
+            gasPrice=self.conversion_manager.convert(safe_tx_kwargs.get("gasPrice", 0), int),
+            gasToken=self.conversion_manager.convert(
+                safe_tx_kwargs.get("gasToken", ZERO_ADDRESS), AddressType
+            ),
+            refundReceiver=self.conversion_manager.convert(
+                safe_tx_kwargs.get("refundReceiver", ZERO_ADDRESS), AddressType
+            ),
+        )
 
     def create_batch(self) -> "MultiSend":
         from ape_safe.multisend import MultiSend
