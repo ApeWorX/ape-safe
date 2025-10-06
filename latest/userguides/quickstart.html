@@ -102,6 +102,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ValueRequired"><code class="docutils literal notranslate"><span class="pre">ValueRequired</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.handle_safe_logic_error"><code class="docutils literal notranslate"><span class="pre">handle_safe_logic_error</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/factory.html"><code class="docutils literal notranslate"><span class="pre">SafeFactory</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/multisend.html"><code class="docutils literal notranslate"><span class="pre">MultiSend</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html"><code class="docutils literal notranslate"><span class="pre">DeploymentAsset</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html#ape_safe.packages.DeploymentInfo"><code class="docutils literal notranslate"><span class="pre">DeploymentInfo</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html#ape_safe.packages.DeploymentType"><code class="docutils literal notranslate"><span class="pre">DeploymentType</span></code></a></li>
@@ -197,6 +198,19 @@ data-aria-dark="Switch to auto color mode">
 <h3>via <code class="docutils literal notranslate"><span class="pre">pip</span></code><a class="headerlink" href="#via-pip" title="Link to this heading"></a></h3>
 <p>You can install the latest release via <a class="reference external" href="https://pypi.org/project/pip/"><code class="docutils literal notranslate"><span class="pre">pip</span></code></a>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>ape-safe
+</span></pre></div>
+</div>
+<p>You can also install from source:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Clone the source code.</span>
+</span><span data-line="2">git<span class="w"> </span>clone<span class="w"> </span>git@github.com:ApeWorX/ape-safe.git
+</span><span data-line="3"><span class="nb">cd</span><span class="w"> </span>ape-safe
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Build the Safe manifests.</span>
+</span><span data-line="6">ape<span class="w"> </span>pm<span class="w"> </span>compile
+</span><span data-line="7">ape<span class="w"> </span>run<span class="w"> </span>build
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Install.</span>
+</span><span data-line="10">pip<span class="w"> </span>install<span class="w"> </span>.
 </span></pre></div>
 </div>
 </section>
