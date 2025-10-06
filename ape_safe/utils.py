@@ -14,6 +14,15 @@ def order_by_signer(signatures: Mapping[AddressType, MessageSignature]) -> list[
     return [signatures[signer] for signer in sorted(signatures, key=lambda a: to_int(hexstr=a))]
 
 
+def encode_signatures(signatures: Mapping[AddressType, MessageSignature]) -> HexBytes:
+    return HexBytes(
+        b"".join(
+            sig.encode_rsv() if isinstance(sig, MessageSignature) else sig
+            for sig in order_by_signer(signatures)
+        )
+    )
+
+
 def get_safe_tx_hash(safe_tx: "SafeTx") -> "SafeTxID":
     message_hash = calculate_hash(safe_tx.signable_message)
     return HexBytes(to_hex(message_hash))

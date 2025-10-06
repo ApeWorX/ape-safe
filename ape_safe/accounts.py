@@ -11,7 +11,7 @@ from ape.cli import select_account
 from ape.contracts import ContractCall
 from ape.exceptions import ContractNotFoundError, ProviderNotConnectedError
 from ape.logging import logger
-from ape.types import AddressType, HexBytes, MessageSignature
+from ape.types import AddressType, MessageSignature
 from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.proxies import ProxyInfo, ProxyType
 from ape_ethereum.transactions import TransactionType
@@ -43,7 +43,7 @@ from .factory import SafeFactory
 from .modules import SafeModuleManager
 from .packages import PackageType
 from .types import SafeCacheData
-from .utils import get_safe_tx_hash, order_by_signer
+from .utils import encode_signatures, get_safe_tx_hash
 
 if TYPE_CHECKING:
     from ape.api.address import BaseAddress
@@ -537,13 +537,8 @@ class SafeAccount(AccountAPI):
         signatures: Mapping[AddressType, MessageSignature],
         **txn_options,
     ) -> TransactionAPI:
-        exec_args = list(safe_tx._body_["message"].values())[:-1]  # NOTE: Skip `nonce`
-        encoded_signatures = HexBytes(
-            b"".join(
-                sig.encode_rsv() if isinstance(sig, MessageSignature) else sig
-                for sig in order_by_signer(signatures)
-            )
-        )
+        exec_args = _safe_tx_exec_args(safe_tx)[:-1]  # NOTE: Skip `nonce`
+        encoded_signatures = encode_signatures(signatures)
 
         # NOTE: executes a `ProviderAPI.prepare_transaction`, which may produce `ContractLogicError`
         return self.contract.execTransaction.as_transaction(
