@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from ape.types import AddressType, HexBytes, MessageSignature
 from eip712.messages import calculate_hash
+from eth_pydantic_types import HexStr
 from eth_utils import to_hex, to_int
 
 if TYPE_CHECKING:
@@ -25,4 +26,4 @@ def encode_signatures(signatures: Mapping[AddressType, MessageSignature]) -> Hex
 
 def get_safe_tx_hash(safe_tx: "SafeTx") -> "SafeTxID":
     message_hash = calculate_hash(safe_tx.signable_message)
-    return HexBytes(to_hex(message_hash))
+    return HexStr(to_hex(message_hash))
