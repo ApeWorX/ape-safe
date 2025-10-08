@@ -4,7 +4,7 @@ from typing import Annotated, NewType, Optional, Union, cast
 
 from ape.types import AddressType, HexBytes
 from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
-from eth_typing import HexStr
+from eth_pydantic_types import HexStr
 from eth_utils import add_0x_prefix, to_hex
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 

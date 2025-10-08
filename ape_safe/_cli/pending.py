@@ -152,7 +152,10 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, s
 
     sender = submitter if isinstance(submitter, AccountAPI) else safe.select_signer(for_="sender")
     safe.client.post_transaction(
-        safe_tx, signatures, sender=sender.address, contractTransactionHash=safe_tx_hash
+        safe_tx,
+        signatures,
+        submitter=sender.address,
+        contractTransactionHash=safe_tx_hash,
     )
 
     # Wait for new transaction to appear
@@ -277,6 +280,7 @@ def _execute(safe: "SafeAccount", txn: "UnexecutedTxData", submitter: "AccountAP
     signatures: dict[AddressType, MessageSignature] = {
         c.owner: MessageSignature.from_rsv(c.signature) for c in txn.confirmations
     }
+    tx_kwargs["submitter"] = submitter
     exc_tx = safe.create_execute_transaction(safe_tx, signatures, **tx_kwargs)
     submitter.call(exc_tx)
 

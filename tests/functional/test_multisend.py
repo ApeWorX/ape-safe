@@ -25,7 +25,7 @@ def test_default_operation(safe, deployer, token, vault, mode):
         receipt = safe.submit_safe_tx(safe_tx_id, submitter=deployer)
 
     else:
-        receipt = batch(sender=safe, impersonate=(mode == "impersonate"), safeTxGas=300_000)
+        receipt = batch(impersonate=(mode == "impersonate"), submitter=deployer)
 
     assert receipt.txn_hash
 
