@@ -435,7 +435,7 @@ class SafeAccount(AccountAPI):
             # NOTE: Use `.new_nonce` to get latest nonce in off-chain txn queue
             nonce=safe_tx_kwargs.get("nonce", self.new_nonce),
             operation=safe_tx_kwargs.get("operation", OperationType.CALL),
-            safeTxGas=safe_tx_kwargs.get("safeTxGas", 0),
+            safeTxGas=self.conversion_manager.convert(safe_tx_kwargs.get("safeTxGas", 0), int),
             gasPrice=self.conversion_manager.convert(safe_tx_kwargs.get("gasPrice", 0), int),
             gasToken=self.conversion_manager.convert(
                 safe_tx_kwargs.get("gasToken", ZERO_ADDRESS), AddressType
