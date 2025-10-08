@@ -582,6 +582,9 @@ class SafeAccount(AccountAPI):
         if impersonate:
             signatures = self._impersonate_approvals(safe_tx)
 
+        elif len(signatures) < self.confirmations_required:
+            raise NotEnoughSignatures(self.confirmations_required, len(signatures))
+
         exec_args = _safe_tx_exec_args(safe_tx)[:-1]  # NOTE: Skip `nonce`
         encoded_signatures = encode_signatures(signatures)
 
