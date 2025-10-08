@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Annotated, Optional, Union, cast
+from typing import Annotated, NewType, Optional, Union, cast
 
 from ape.types import AddressType, HexBytes
 from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
@@ -11,7 +11,7 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator
 from ape_safe.utils import get_safe_tx_hash
 
 SafeTx = Union[SafeTxV1, SafeTxV2]
-SafeTxID = HexStr
+SafeTxID = NewType("SafeTxID", str)
 
 
 def clean_api_address(data: Union[AddressType, dict]) -> AddressType:
