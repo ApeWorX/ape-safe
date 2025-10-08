@@ -66,10 +66,17 @@ class MultiSend(ManagerAccessMixin):
               The version of ``MultiSend``/``MultiSendCallOnly`` contract to use from SDK.
               Defaults to auto-detection if ``safe`` arg is present, or uses max available.
         """
-        version = version or max(MANIFESTS_BY_VERSION)
-        self.calls: list[dict] = []
         self.safe = safe
-        self.version = version if isinstance(version, Version) else Version(version)
+        if version is None:
+            if safe:
+                self.version = safe.version
+            else:
+                self.version = max(MANIFESTS_BY_VERSION)
+
+        else:
+            self.version = Version(version) if not isinstance(version, Version) else version
+
+        self.calls: list[dict] = []
 
     @classmethod
     def inject(cls, version: Union[Version, str, None] = None):
