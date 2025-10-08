@@ -30,6 +30,7 @@ class MultiSend(ManagerAccessMixin):
         from ape import accounts
 
         # load the safe
+        me = account.load("my-alias")
         safe = accounts.load("my-safe")
 
         txn = multisend.MultiSend()
@@ -46,7 +47,7 @@ class MultiSend(ManagerAccessMixin):
 
         # Stage the transaction to publish on-chain
         # NOTE: if not enough signers are available, publish to Safe API instead
-        receipt = txn(sender=safe,gas=0)
+        receipt = txn(submitter=me)
     """
 
     def __init__(
@@ -56,6 +57,14 @@ class MultiSend(ManagerAccessMixin):
     ) -> None:
         """
         Initialize a new MultiSend session object. By default, there are no calls to make.
+
+        Args:
+            safe (Optional[:class:`~ape_safe.accounts.SafeAccount`]):
+              The Safe account to use for executing this batch.
+              If not provided, then is required for other methods below.
+            version (Union[:class:`~packaging.version.Version`, str, None]):
+              The version of ``MultiSend``/``MultiSendCallOnly`` contract to use from SDK.
+              Defaults to auto-detection if ``safe`` arg is present, or uses max available.
         """
         version = version or max(MANIFESTS_BY_VERSION)
         self.calls: list[dict] = []
@@ -67,6 +76,11 @@ class MultiSend(ManagerAccessMixin):
         """
         Create the multisend module contract on-chain, so we can use it.
         Must use a provider that supports ``debug_setCode``.
+
+        Args:
+            version (Union[:class:`~versioning.Version`, str, None]):
+              The version of ``MultiSend``/``MultiSendCallOnly`` contract to use from SDK.
+              Defaults to max available from SDK.
 
         Usage example::
 
@@ -202,13 +216,16 @@ class MultiSend(ManagerAccessMixin):
         Encode the MultiSend transaction as a ``TransactionAPI`` object, but do not execute it.
 
         Args:
-            sender:
+            safe (Optional[:class:`~ape_safe.accounts.SafeAccount`]):
+              The Safe account to use for executing this batch.
+              If not provided, then it uses value provided to
+              :func:`~ape_safe.multisend.MultiSend.__init__`.
+            impersonate (bool): Whether to mock approvals for executing this transaction.
             **txn_kwargs: the kwargs to pass through to the transaction handler.
 
         Returns:
             :class:`~ape.api.transactions.TransactionAPI`
         """
-        # TODO: Update docstring to use `sender=safe` if not using `safe.create_batch`
         if not (safe or (safe := self.safe)):
             raise ValueError("Must provide `safe=` to call this function")
 
@@ -243,6 +260,10 @@ class MultiSend(ManagerAccessMixin):
               on the current chain at the expected address.
 
         Args:
+            safe (Optional[:class:`~ape_safe.accounts.SafeAccount`]):
+              The Safe account to use for executing this batch.
+              If not provided, then it uses value provided to
+              :func:`~ape_safe.multisend.MultiSend.__init__`.
             **txn_kwargs: the kwargs to pass through to the transaction handler.
 
         Returns:
@@ -255,7 +276,7 @@ class MultiSend(ManagerAccessMixin):
         Decode all calls from a multisend calldata and add them to this MultiSend.
 
         Args:
-            calldata: Calldata encoding the MultiSend.multiSend call
+            calldata: Calldata encoding the ``MultiSend.multiSend`` call.
         """
         _, args = self.contract.decode_input(calldata)
         buffer = BytesIO(args["transactions"])
