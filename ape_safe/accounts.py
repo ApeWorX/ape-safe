@@ -576,6 +576,7 @@ class SafeAccount(AccountAPI):
         self,
         safe_tx: SafeTx,
         signatures: Mapping[AddressType, MessageSignature],
+        submitter: Union[AccountAPI, AddressType, str, None] = None,
         impersonate: bool = False,
         **txn_options,
     ) -> TransactionAPI:
@@ -585,12 +586,19 @@ class SafeAccount(AccountAPI):
         elif len(signatures) < self.confirmations_required:
             raise NotEnoughSignatures(self.confirmations_required, len(signatures))
 
+        if not isinstance(submitter, AccountAPI):
+            submitter = self.load_submitter(submitter)
+            assert isinstance(submitter, AccountAPI)  # NOTE: mypy happy
+
         exec_args = _safe_tx_exec_args(safe_tx)[:-1]  # NOTE: Skip `nonce`
         encoded_signatures = encode_signatures(signatures)
 
         # NOTE: executes a `ProviderAPI.prepare_transaction`, which may produce `ContractLogicError`
         return self.contract.execTransaction.as_transaction(
-            *exec_args, encoded_signatures, **txn_options
+            *exec_args,
+            encoded_signatures,
+            **txn_options,
+            sender=submitter,
         )
 
     def compute_prev_signer(self, signer: Union[str, AddressType, "BaseAddress"]) -> AddressType:
@@ -709,7 +717,6 @@ class SafeAccount(AccountAPI):
     def submit_safe_tx(
         self,
         safe_tx: Union[SafeTx, SafeTxID],
-        submitter: Union[AccountAPI, AddressType, str, None] = None,
         impersonate: bool = False,
         **txn_options,
     ) -> ReceiptAPI:
@@ -734,20 +741,20 @@ class SafeAccount(AccountAPI):
             safe_tx_id = get_safe_tx_hash(safe_tx)
         assert isinstance(safe_tx, (SafeTxV1, SafeTxV2))
 
-        if not isinstance(submitter, AccountAPI):
-            submitter = self.load_submitter(submitter)
-            assert isinstance(submitter, AccountAPI)  # NOTE: mypy happy
+        if impersonate:
+            signatures = {}
 
-        signatures = {} if impersonate else self._all_approvals(safe_tx)
+        elif len(signatures := self._all_approvals(safe_tx)) < self.confirmations_required:
+            signatures = self.add_signatures(safe_tx)
+
         txn = self.create_execute_transaction(
             safe_tx,
             signatures,
             impersonate=impersonate,
-            sender=submitter.address,
             **txn_options,
         )
 
-        return submitter.call(txn)
+        return self.provider.send_transaction(txn)
 
     def sign_transaction(
         self,
@@ -854,14 +861,8 @@ class SafeAccount(AccountAPI):
                 safe_tx,
                 sigs_by_signer,
                 **gas_args,
-                nonce=submitter_account.nonce,
-                # NOTE: Because of `ape_ethereum.transactions.BaseTransaction.serialize_transaction`
-                #       doing a recovered signer check, and we have to make sure the address matches
-                #       the recovered address of the signed transaction.
-                sender=submitter_account.address,
+                submitter=submitter_account,
             )
-            # NOTE: If `submitter` does not sign, this returns `None` which raises downstream
-            assert exec_transaction.sender == submitter_account
             return submitter_account.sign_transaction(exec_transaction, **signer_options)
 
         elif submit:
