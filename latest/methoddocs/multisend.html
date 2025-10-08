@@ -164,23 +164,24 @@ via the MultiSend contract.</p>
 </span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">accounts</span>
 </span><span data-line="3">
 </span><span data-line="4"><span class="c1"># load the safe</span>
-</span><span data-line="5"><span class="n">safe</span> <span class="o">=</span> <span class="n">accounts</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;my-safe&quot;</span><span class="p">)</span>
-</span><span data-line="6">
-</span><span data-line="7"><span class="n">txn</span> <span class="o">=</span> <span class="n">multisend</span><span class="o">.</span><span class="n">MultiSend</span><span class="p">()</span>
-</span><span data-line="8"><span class="n">txn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">,</span> <span class="o">*</span><span class="n">call_args</span><span class="p">)</span>
+</span><span data-line="5"><span class="n">me</span> <span class="o">=</span> <span class="n">account</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;my-alias&quot;</span><span class="p">)</span>
+</span><span data-line="6"><span class="n">safe</span> <span class="o">=</span> <span class="n">accounts</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;my-safe&quot;</span><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="n">txn</span> <span class="o">=</span> <span class="n">multisend</span><span class="o">.</span><span class="n">MultiSend</span><span class="p">()</span>
 </span><span data-line="9"><span class="n">txn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">,</span> <span class="o">*</span><span class="n">call_args</span><span class="p">)</span>
-</span><span data-line="10"><span class="o">...</span>  <span class="c1"># Add as many calls as desired to execute</span>
-</span><span data-line="11"><span class="n">txn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">,</span> <span class="o">*</span><span class="n">call_args</span><span class="p">)</span>
-</span><span data-line="12"><span class="c1"># or, using a builder pattern:</span>
-</span><span data-line="13"><span class="n">txn</span> <span class="o">=</span> <span class="n">multisend</span><span class="o">.</span><span class="n">MultiSend</span><span class="p">()</span>
-</span><span data-line="14">    <span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">,</span> <span class="o">*</span><span class="n">call_args</span><span class="p">)</span>
+</span><span data-line="10"><span class="n">txn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">,</span> <span class="o">*</span><span class="n">call_args</span><span class="p">)</span>
+</span><span data-line="11"><span class="o">...</span>  <span class="c1"># Add as many calls as desired to execute</span>
+</span><span data-line="12"><span class="n">txn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">,</span> <span class="o">*</span><span class="n">call_args</span><span class="p">)</span>
+</span><span data-line="13"><span class="c1"># or, using a builder pattern:</span>
+</span><span data-line="14"><span class="n">txn</span> <span class="o">=</span> <span class="n">multisend</span><span class="o">.</span><span class="n">MultiSend</span><span class="p">()</span>
 </span><span data-line="15">    <span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">,</span> <span class="o">*</span><span class="n">call_args</span><span class="p">)</span>
-</span><span data-line="16">    <span class="o">...</span>  <span class="c1"># Add as many calls as desired to execute</span>
-</span><span data-line="17">    <span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">,</span> <span class="o">*</span><span class="n">call_args</span><span class="p">)</span>
-</span><span data-line="18">
-</span><span data-line="19"><span class="c1"># Stage the transaction to publish on-chain</span>
-</span><span data-line="20"><span class="c1"># NOTE: if not enough signers are available, publish to Safe API instead</span>
-</span><span data-line="21"><span class="n">receipt</span> <span class="o">=</span> <span class="n">txn</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">,</span><span class="n">gas</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span data-line="16">    <span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">,</span> <span class="o">*</span><span class="n">call_args</span><span class="p">)</span>
+</span><span data-line="17">    <span class="o">...</span>  <span class="c1"># Add as many calls as desired to execute</span>
+</span><span data-line="18">    <span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">,</span> <span class="o">*</span><span class="n">call_args</span><span class="p">)</span>
+</span><span data-line="19">
+</span><span data-line="20"><span class="c1"># Stage the transaction to publish on-chain</span>
+</span><span data-line="21"><span class="c1"># NOTE: if not enough signers are available, publish to Safe API instead</span>
+</span><span data-line="22"><span class="n">receipt</span> <span class="o">=</span> <span class="n">txn</span><span class="p">(</span><span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
 </span></pre></div>
 </div>
 <dl class="py method">
@@ -207,18 +208,27 @@ via the MultiSend contract.</p>
 <dd><p>Decode all calls from a multisend calldata and add them to this MultiSend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>calldata</strong> – Calldata encoding the MultiSend.multiSend call</p>
+<dd class="field-odd"><p><strong>calldata</strong> – Calldata encoding the <code class="docutils literal notranslate"><span class="pre">MultiSend.multiSend</span></code> call.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ape_safe.multisend.MultiSend.as_transaction">
-<span class="sig-name descname"><span class="pre">as_transaction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impersonate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">txn_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TransactionAPI</span></span></span><a class="headerlink" href="#ape_safe.multisend.MultiSend.as_transaction" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">as_transaction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">safe</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="accounts.html#ape_safe.accounts.SafeAccount" title="ape_safe.accounts.SafeAccount"><span class="pre">SafeAccount</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impersonate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">txn_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TransactionAPI</span></span></span><a class="headerlink" href="#ape_safe.multisend.MultiSend.as_transaction" title="Link to this definition"></a></dt>
 <dd><p>Encode the MultiSend transaction as a <code class="docutils literal notranslate"><span class="pre">TransactionAPI</span></code> object, but do not execute it.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionAPI</span></code></p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>safe</strong> (Optional[<a class="reference internal" href="accounts.html#ape_safe.accounts.SafeAccount" title="ape_safe.accounts.SafeAccount"><code class="xref py py-class docutils literal notranslate"><span class="pre">SafeAccount</span></code></a>]) – The Safe account to use for executing this batch.
+If not provided, then it uses value provided to
+<code class="xref py py-func docutils literal notranslate"><span class="pre">__init__()</span></code>.</p></li>
+<li><p><strong>impersonate</strong> (<em>bool</em>) – Whether to mock approvals for executing this transaction.</p></li>
+<li><p><strong>**txn_kwargs</strong> – the kwargs to pass through to the transaction handler.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionAPI</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -228,6 +238,12 @@ via the MultiSend contract.</p>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Version</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ape_safe.multisend.MultiSend.inject" title="Link to this definition"></a></dt>
 <dd><p>Create the multisend module contract on-chain, so we can use it.
 Must use a provider that supports <code class="docutils literal notranslate"><span class="pre">debug_setCode</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>version</strong> (Union[<code class="xref py py-class docutils literal notranslate"><span class="pre">Version</span></code>, str, None]) – The version of <code class="docutils literal notranslate"><span class="pre">MultiSend</span></code>/<code class="docutils literal notranslate"><span class="pre">MultiSendCallOnly</span></code> contract to use from SDK.
+Defaults to max available from SDK.</p>
+</dd>
+</dl>
 <p>Usage example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe.multisend</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiSend</span>
 </span><span data-line="2">
