@@ -248,20 +248,7 @@ class MultiSend(ManagerAccessMixin):
         Returns:
             :class:`~ape.api.transactions.ReceiptAPI`
         """
-        # TODO: Update docstring to use `sender=safe` if not using `safe.create_batch`
-        if not (safe or (safe := self.safe)):
-            raise ValueError("Must provide `safe=` to call this function")
-
-        elif not isinstance(safe, SafeAccount):
-            raise ValueError("`safe=` must be a SafeAccount to use Multisend")
-
-        safe_tx_kwargs = {}
-        for field in safe.safe_tx_def.__annotations__:
-            if field in txn_kwargs:
-                safe_tx_kwargs[field] = txn_kwargs.pop(field)
-
-        safe_tx = self.as_safe_tx(safe, **safe_tx_kwargs)
-        return safe.submit_safe_tx(safe_tx, **txn_kwargs)
+        return self.provider.send_transaction(self.as_transaction(safe=safe, **txn_kwargs))
 
     def add_from_calldata(self, calldata: bytes):
         """
