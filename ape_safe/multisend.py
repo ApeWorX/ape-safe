@@ -157,6 +157,32 @@ class MultiSend(ManagerAccessMixin):
         )
         return self
 
+    def add_from_receipt(self, receipt: "ReceiptAPI") -> "MultiSend":
+        """
+        Append a call to the MultiSend session object from a receipt.
+        Especially useful for more complex simulations.
+
+        Usage::
+
+            with networks.fork():
+                receipt = contract.method(*args, sender=safe.address)
+                assert contract.viewMethod() == ...
+                batch.add_from_receipt(receipt)
+
+            batch(...)
+
+        Args:
+            receipt: :class:`~ape.api.ReceiptAPI` The receipt object to pull information from for the call to add.
+        """
+        self.calls.append(
+            {
+                "target": receipt.receiver,
+                "value": receipt.value,
+                "callData": receipt.data,
+            }
+        )
+        return self
+
     def _validate_safe_tx(self, safe_tx: "SafeTx") -> None:
         required_value = sum(call["value"] for call in self.calls)
         if required_value > safe_tx.value:
