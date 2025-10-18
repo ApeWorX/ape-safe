@@ -161,7 +161,7 @@ class MultiSend(ManagerAccessMixin):
         """
         Append a call to the MultiSend session object from a receipt.
         Especially useful for more complex simulations.
-        
+
         Usage::
 
             with networks.fork():
