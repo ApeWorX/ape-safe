@@ -278,7 +278,7 @@ class MultiSend(ManagerAccessMixin):
         """
         return self.provider.send_transaction(self.as_transaction(safe=safe, **txn_kwargs))
 
-    def add_from_calldata(self, calldata: bytes):
+    def add_from_calldata(self, calldata: bytes) -> "MultiSend":
         """
         Decode all calls from a multisend calldata and add them to this MultiSend.
 
@@ -301,3 +301,5 @@ class MultiSend(ManagerAccessMixin):
                     "callData": data,
                 }
             )
+
+        return self
