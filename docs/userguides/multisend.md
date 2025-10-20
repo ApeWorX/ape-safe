@@ -66,6 +66,41 @@ signatures = safe.add_signatures(safe_tx)
 receipt = safe.submit_safe_tx(safe_tx)
 ```
 
+## Simulating Side Effects in Scripts
+
+Typically, it is useful to validate your multisend scripts through the use of simulating their
+side effects via a "forked" network context.
+We have provided a feature `batch.add_from_receipt` which allows you to add calls directly from
+the results of simulated network calls (executing as the Safe itself), which reduces human error.
+
+```python
+# Create MultiSend transaction outside the fork context (important!)
+# NOTE: You should be connected to a live "public"  network when executing this
+batch = safe.create_batch()
+
+# Enter a "simulated" context as a "fork" of the public network you want to propose to
+with networks.fork():
+    # NOTE: We must use `sender=safe.address` to skip ape-safe's local signer processing
+    # NOTE: You typically must provide an eth balance to `safe.address`, or it will fail
+    #       due to no funds to pay for gas in order to perform the transaction.
+    receipt = dai.approve(vault, amount, sender=safe.address)
+    # NOTE: You can now test "side effects" of the transaction here.
+    assert dai.allowance(safe, vault) == amount
+    # This will add the call as a step in the MultiSend batch
+    batch.add_from_receipt(receipt)
+
+    # ...add as many steps as you would like to the batch while inside this forked context.
+    receipt = vault.deposit(amount, sender=safe.address)
+    assert vault.balanceOf(safe) == amount
+    batch.add_from_receipt(receipt)
+
+# After exiting the forked context, submit it as a real transaction on-chain
+batch(submitter=me)
+
+# Or, propose to the API
+safe_tx = batch.propose(submitter=me)
+```
+
 ## Decoding Existing MultiSend Transactions
 
 You can decode and inspect existing MultiSend transactions:
