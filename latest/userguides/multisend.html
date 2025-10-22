@@ -123,6 +123,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
 <li><a class="reference internal" href="#adding-eth-value-to-calls">Adding ETH Value to Calls</a></li>
 <li><a class="reference internal" href="#advanced-control">Advanced Control</a></li>
+<li><a class="reference internal" href="#simulating-side-effects-in-scripts">Simulating Side Effects in Scripts</a></li>
 <li><a class="reference internal" href="#decoding-existing-multisend-transactions">Decoding Existing MultiSend Transactions</a></li>
 <li><a class="reference internal" href="#multisend-contract-detection">MultiSend Contract Detection</a></li>
 <li><a class="reference internal" href="#handling-errors">Handling Errors</a></li>
@@ -218,6 +219,40 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="12">
 </span><span data-line="13"><span class="c1"># Later execute when ready</span>
 </span><span data-line="14"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">submit_safe_tx</span><span class="p">(</span><span class="n">safe_tx</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="simulating-side-effects-in-scripts">
+<h2>Simulating Side Effects in Scripts<a class="headerlink" href="#simulating-side-effects-in-scripts" title="Link to this heading"></a></h2>
+<p>Typically, it is useful to validate your multisend scripts through the use of simulating their
+side effects via a “forked” network context.
+We have provided a feature <code class="docutils literal notranslate"><span class="pre">batch.add_from_receipt</span></code> which allows you to add calls directly from
+the results of simulated network calls (executing as the Safe itself), which reduces human error.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create MultiSend transaction outside the fork context (important!)</span>
+</span><span data-line="2"><span class="c1"># NOTE: You should be connected to a live &quot;public&quot;  network when executing this</span>
+</span><span data-line="3"><span class="n">batch</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Enter a &quot;simulated&quot; context as a &quot;fork&quot; of the public network you want to propose to</span>
+</span><span data-line="6"><span class="k">with</span> <span class="n">networks</span><span class="o">.</span><span class="n">fork</span><span class="p">():</span>
+</span><span data-line="7">    <span class="c1"># NOTE: We must use `sender=safe.address` to skip ape-safe&#39;s local signer processing</span>
+</span><span data-line="8">    <span class="c1"># NOTE: You typically must provide an eth balance to `safe.address`, or it will fail</span>
+</span><span data-line="9">    <span class="c1">#       due to no funds to pay for gas in order to perform the transaction.</span>
+</span><span data-line="10">    <span class="n">receipt</span> <span class="o">=</span> <span class="n">dai</span><span class="o">.</span><span class="n">approve</span><span class="p">(</span><span class="n">vault</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+</span><span data-line="11">    <span class="c1"># NOTE: You can now test &quot;side effects&quot; of the transaction here.</span>
+</span><span data-line="12">    <span class="k">assert</span> <span class="n">dai</span><span class="o">.</span><span class="n">allowance</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">vault</span><span class="p">)</span> <span class="o">==</span> <span class="n">amount</span>
+</span><span data-line="13">    <span class="c1"># This will add the call as a step in the MultiSend batch</span>
+</span><span data-line="14">    <span class="n">batch</span><span class="o">.</span><span class="n">add_from_receipt</span><span class="p">(</span><span class="n">receipt</span><span class="p">)</span>
+</span><span data-line="15">
+</span><span data-line="16">    <span class="c1"># ...add as many steps as you would like to the batch while inside this forked context.</span>
+</span><span data-line="17">    <span class="n">receipt</span> <span class="o">=</span> <span class="n">vault</span><span class="o">.</span><span class="n">deposit</span><span class="p">(</span><span class="n">amount</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+</span><span data-line="18">    <span class="k">assert</span> <span class="n">vault</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">safe</span><span class="p">)</span> <span class="o">==</span> <span class="n">amount</span>
+</span><span data-line="19">    <span class="n">batch</span><span class="o">.</span><span class="n">add_from_receipt</span><span class="p">(</span><span class="n">receipt</span><span class="p">)</span>
+</span><span data-line="20">
+</span><span data-line="21"><span class="c1"># After exiting the forked context, submit it as a real transaction on-chain</span>
+</span><span data-line="22"><span class="n">batch</span><span class="p">(</span><span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="c1"># Or, propose to the API</span>
+</span><span data-line="25"><span class="n">safe_tx</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">propose</span><span class="p">(</span><span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>

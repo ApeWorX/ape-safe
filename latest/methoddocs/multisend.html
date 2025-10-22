@@ -122,6 +122,7 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#ape_safe.multisend.MultiSend.add"><code class="docutils literal notranslate">add()</span></code></a></li>
 <li><a class="reference internal" href="#ape_safe.multisend.MultiSend.add_from_calldata"><code class="docutils literal notranslate">add_from_calldata()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.multisend.MultiSend.add_from_receipt"><code class="docutils literal notranslate">add_from_receipt()</span></code></a></li>
 <li><a class="reference internal" href="#ape_safe.multisend.MultiSend.as_transaction"><code class="docutils literal notranslate">as_transaction()</span></code></a></li>
 <li><a class="reference internal" href="#ape_safe.multisend.MultiSend.inject"><code class="docutils literal notranslate">inject()</span></code></a></li>
 </ul>
@@ -209,6 +210,27 @@ via the MultiSend contract.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>calldata</strong> – Calldata encoding the <code class="docutils literal notranslate"><span class="pre">MultiSend.multiSend</span></code> call.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.multisend.MultiSend.add_from_receipt">
+<span class="sig-name descname"><span class="pre">add_from_receipt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">receipt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ReceiptAPI</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ape_safe.multisend.MultiSend" title="ape_safe.multisend.MultiSend"><span class="pre">MultiSend</span></a></span></span><a class="headerlink" href="#ape_safe.multisend.MultiSend.add_from_receipt" title="Link to this definition"></a></dt>
+<dd><p>Append a call to the MultiSend session object from a receipt.
+Especially useful for more complex simulations.</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">with</span> <span class="n">networks</span><span class="o">.</span><span class="n">fork</span><span class="p">():</span>
+</span><span data-line="2">    <span class="n">receipt</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+</span><span data-line="3">    <span class="k">assert</span> <span class="n">contract</span><span class="o">.</span><span class="n">viewMethod</span><span class="p">()</span> <span class="o">==</span> <span class="o">...</span>
+</span><span data-line="4">    <span class="n">batch</span><span class="o">.</span><span class="n">add_from_receipt</span><span class="p">(</span><span class="n">receipt</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="n">batch</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>receipt</strong> – <code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiptAPI</span></code> The receipt object to pull information from for the call to add.</p>
 </dd>
 </dl>
 </dd></dl>
