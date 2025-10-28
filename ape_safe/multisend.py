@@ -213,7 +213,8 @@ class MultiSend(ManagerAccessMixin):
             raise ValueError("`safe=` must be a SafeAccount to use Multisend")
 
         return safe.create_safe_tx(
-            self.handler.as_transaction(b"".join(self.encoded_calls)),
+            to=self.contract.address,
+            data=self.handler.encode_input(b"".join(self.encoded_calls)),
             operation=OperationType.DELEGATECALL,
             **safe_tx_kwargs,
         )
