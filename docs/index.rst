@@ -5,6 +5,7 @@
         - safe_management
         - multisend
         - modules
+        - production
     :commands:
         - mgmt
         - pending
