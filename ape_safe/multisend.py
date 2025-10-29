@@ -209,9 +209,6 @@ class MultiSend(ManagerAccessMixin):
         if not (safe or (safe := self.safe)):
             raise ValueError("Must provide `safe=` to call this function")
 
-        elif not isinstance(safe, SafeAccount):
-            raise ValueError("`safe=` must be a SafeAccount to use Multisend")
-
         return safe.create_safe_tx(
             to=self.contract.address,
             data=self.handler.encode_input(b"".join(self.encoded_calls)),
@@ -226,9 +223,6 @@ class MultiSend(ManagerAccessMixin):
     ) -> SafeTxID:
         if not (safe or (safe := self.safe)):
             raise ValueError("Must provide `safe=` to call this function")
-
-        elif not isinstance(safe, SafeAccount):
-            raise ValueError("`safe=` must be a SafeAccount to use Multisend")
 
         submitter = safe_tx_kwargs.pop("submitter", None)
         sigs_by_signer = safe_tx_kwargs.pop("sigs_by_signer", None)
@@ -262,9 +256,6 @@ class MultiSend(ManagerAccessMixin):
         """
         if not (safe or (safe := self.safe)):
             raise ValueError("Must provide `safe=` to call this function")
-
-        elif not isinstance(safe, SafeAccount):
-            raise ValueError("`safe=` must be a SafeAccount to use Multisend")
 
         safe_tx_kwargs = {}
         for field in safe.safe_tx_def.__annotations__:
