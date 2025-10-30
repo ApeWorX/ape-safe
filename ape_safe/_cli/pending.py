@@ -465,7 +465,7 @@ def ensure(cli_ctx, ecosystem, network, submitter, safe):
         return 1
 
     elif missing_nonces := sorted(
-        set(range(starting_nonce, max(pending_scripts))) - set(pending_scripts)
+        set(range(starting_nonce, max(pending_scripts) + 1)) - set(pending_scripts)
     ):
         display_str = ", ".join(map(str, missing_nonces))
         cli_ctx.logger.error(f"Missing nonce scripts(s) for: {display_str}")
