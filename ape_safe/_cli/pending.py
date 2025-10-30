@@ -1,9 +1,10 @@
+import runpy
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Optional, Union, cast
 
 import click
 import rich
-from ape.cli import ConnectedProviderCommand
+from ape.cli import ConnectedProviderCommand, account_option
 from ape.exceptions import SignatureError
 from eth_typing import ChecksumAddress, Hash32
 from eth_utils import humanize_hash, to_hex
@@ -404,3 +405,80 @@ def _filter_tx_from_ids(
         return [x for x in txn_ids if x != txn.safe_tx_hash]
 
     return txn_ids
+
+
+@pending.command(cls=ConnectedProviderCommand)
+@safe_cli_ctx()
+@account_option("--submitter", prompt="Select an account to submit or propose transaction(s)")
+@safe_option
+def ensure(cli_ctx, ecosystem, network, submitter, safe):
+    """
+    Ensure Safe API queue matches `scripts/`
+
+    This command uses scripts from `scripts/<ecosystem-name>_<network-name>_nonce*.py`
+    (or `scripts/nonce*.py` if no network-specified scripts detected) and "replays" them from the
+    Safe's current on-chain nonce, up to the last script available in the folder. When executed
+    using a fork network, it will only perform a simulated validation of the script. When executed
+    using a live network, it will propose the transaction ONLY IF the transaction at that nonce
+    height does not match the expected calldata.
+
+    To enable this, scripts under `scripts/` must be properly named, and all use
+    `ape_safe.cli.propose_batch`.
+    """
+
+    if scripts_to_ensure := list(
+        cli_ctx.local_project.scripts_folder.glob(
+            f"{ecosystem.name}_{network.name.rstrip('-fork')}_nonce*.py"
+        )
+    ):
+        scripts_found_str = "\n".join(
+            str(fs.relative_to(cli_ctx.local_project.scripts_folder)) for fs in scripts_to_ensure
+        )
+        cli_ctx.logger.debug(f"Network-specific scripts found:\n{scripts_found_str}")
+
+    elif scripts_to_ensure := list(cli_ctx.local_project.scripts_folder.glob("nonce*.py")):
+        scripts_found_str = "\n".join(
+            str(fs.relative_to(cli_ctx.local_project.scripts_folder)) for fs in scripts_to_ensure
+        )
+        cli_ctx.logger.debug(f"Scripts found:\n{scripts_found_str}")
+
+    else:
+        raise click.UsageError("No queue scripts detected under `scripts/`.")
+
+    starting_nonce = safe.next_nonce
+    if not (
+        pending_scripts := {
+            nonce: script_path
+            for script_path in scripts_to_ensure
+            if "nonce" in script_path.stem
+            and (nonce := int(script_path.stem.split("nonce")[-1])) >= starting_nonce
+        }
+    ):
+        raise click.UsageError(
+            "No queue scripts detected under `scripts/` above current Safe nonce."
+        )
+
+    elif min(pending_scripts) != starting_nonce:
+        raise click.UsageError(
+            f"Next nonce for {safe.address} is {starting_nonce}, not {min(pending_scripts)}."
+        )
+
+    elif missing_nonces := sorted(
+        set(range(starting_nonce, max(pending_scripts) + 1)) - set(pending_scripts)
+    ):
+        display_str = ", ".join(map(str, missing_nonces))
+        raise click.UsageError(f"Missing queue scripts for nonce(s): {display_str}")
+
+    for nonce in sorted(pending_scripts):
+        script_path = pending_scripts[nonce].relative_to(cli_ctx.local_project.path)
+        if not (cmd := runpy.run_path(str(script_path), run_name=script_path.stem).get("cli")):
+            raise click.UsageError(f"No command `cli` detected in {script_path}.")
+
+        cli_ctx.logger.info(
+            f"Running queue script for nonce {nonce} ('{script_path}'):\n\n  {cmd.help}\n"
+        )
+        # NOTE: This matches signature from `ape_safe.cli:propose_batch`
+        cmd.callback.__wrapped__.func(cli_ctx, network, submitter, safe)
+
+    if not network.is_fork:
+        cli_ctx.logger.success(f"Queue for {safe.address} up-to-date!")
