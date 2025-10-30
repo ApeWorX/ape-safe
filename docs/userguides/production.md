@@ -42,12 +42,21 @@ def cli():
 Once the simulation is complete, the decorator will collect all receipts it finds from the `safe`'s
 history during that session, and collect them into a single SafeTx to propose to a public network.
 
-```{note}
+```{important}
 The name of the decorated function in your queue script **must** be `cli` for it to work.
 ```
 
-```{note}
 The decorated function may have `safe` or `submitter` args in it, in order to access their values.
+
+```py
+@propose_from_simulation()
+# NOTE: Can also just use `def cli(safe):` if you don't need `submitter`
+def cli(safe, submitter):
+    # You can use `safe` or `submitter` in your script to query values from the chain
+    bal_before = token.balanceOf(submitter)
+    amount = token.balanceOf(safe)
+    token.transfer(submitter, amount)
+    assert token.balanceOf(submitter) == bal_before + amount
 ```
 
 You can run the script directly using the following command, and it will dry-run the transaction:
