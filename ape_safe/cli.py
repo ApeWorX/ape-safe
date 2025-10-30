@@ -80,7 +80,10 @@ def propose_from_simulation():
         @click.command(cls=ConnectedProviderCommand, name=cmd.__module__)
         @ape_cli_context()
         @network_option()
-        @account_option("--submitter")
+        @account_option(
+            "--submitter",
+            prompt="Select an account to submit or propose transaction(s)",
+        )
         @safe_argument
         def new_cmd(
             cli_ctx: ApeCliContextObject,

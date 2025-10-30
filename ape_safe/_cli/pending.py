@@ -409,7 +409,7 @@ def _filter_tx_from_ids(
 
 @pending.command(cls=ConnectedProviderCommand)
 @safe_cli_ctx()
-@account_option("--submitter")
+@account_option("--submitter", prompt="Select an account to submit or propose transaction(s)")
 @safe_option
 def ensure(cli_ctx, ecosystem, network, submitter, safe):
     """
