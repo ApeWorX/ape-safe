@@ -2,8 +2,8 @@
 <html lang="en" data-accent-color="lime" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Managing Delegates - ape-safe documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Modules" href="modules.html" /><link rel="prev" title="Pending Transactions" href="pending.html" />
-      <link rel="canonical" href="ape-safe/commands/delegates.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Managing your Safe in Production - ape-safe documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Local Safe Management" href="../commands/mgmt.html" /><link rel="prev" title="Modules" href="modules.html" />
+      <link rel="canonical" href="ape-safe/userguides/production.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
@@ -19,8 +19,8 @@
 }
 </style>
     <meta property="og:type" content="website"/>
-<meta property="og:url" content="ape-safe/commands/delegates.html"/>
-<meta property="og:title" content="Managing Delegates"/>
+<meta property="og:url" content="ape-safe/userguides/production.html"/>
+<meta property="og:title" content="Managing your Safe in Production"/>
 <meta name="twitter:card" content="summary"/>
   </head>
 <body><div class="sy-head">
@@ -58,20 +58,20 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-lside-inner md:sticky">
       <div class="sy-scrollbar p-6">
         <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../userguides/quickstart.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../userguides/transactions.html">Transaction Workflows</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../userguides/safe_management.html">Safe Management</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../userguides/multisend.html">MultiSend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../userguides/modules.html">Modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../userguides/production.html">Managing your Safe in Production</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transactions.html">Transaction Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="safe_management.html">Safe Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multisend.html">MultiSend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Managing your Safe in Production</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="mgmt.html">Local Safe Management</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pending.html">Pending Transactions</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Managing Delegates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/mgmt.html">Local Safe Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/pending.html">Pending Transactions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/delegates.html">Managing Delegates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/modules.html">Modules</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
 <ul>
@@ -122,12 +122,7 @@ data-aria-dark="Switch to auto color mode">
       <i class="i-lucide close"></i>
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
-<li><a class="reference internal" href="#ape-safe-delegates">ape safe delegates</a><ul>
-<li><a class="reference internal" href="#ape-safe-delegates-add">add</a></li>
-<li><a class="reference internal" href="#ape-safe-delegates-list">list</a></li>
-<li><a class="reference internal" href="#ape-safe-delegates-remove">remove</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#queue-scripts">Queue Scripts</a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -145,7 +140,7 @@ data-aria-dark="Switch to auto color mode">
         <span>/</span>
         <meta itemprop="position" content="1" />
       </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-        <strong itemprop="name">Managing Delegates</strong>
+        <strong itemprop="name">Managing your Safe in Production</strong>
         <meta itemprop="position" content="2" />
       </li></ol>
     <div class="xl:hidden ml-1">
@@ -158,103 +153,91 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
-          <section id="managing-delegates">
-<h1>Managing Delegates<a class="headerlink" href="#managing-delegates" title="Link to this heading"></a></h1>
-<section id="ape-safe-delegates">
-<h2>ape safe delegates<a class="headerlink" href="#ape-safe-delegates" title="Link to this heading"></a></h2>
-<p>View and configure delegates</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>delegates<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+          <section id="managing-your-safe-in-production">
+<h1>Managing your Safe in Production<a class="headerlink" href="#managing-your-safe-in-production" title="Link to this heading"></a></h1>
+<p>When co-managing a Safe with a larger team, ape-safe brings extra tools to the table to help you.</p>
+<section id="queue-scripts">
+<h2>Queue Scripts<a class="headerlink" href="#queue-scripts" title="Link to this heading"></a></h2>
+<p>You can define “queue scripts” which are scripts under your project’s <code class="docutils literal notranslate"><span class="pre">scripts/</span></code> folder that follow
+a naming convention (either <code class="docutils literal notranslate"><span class="pre">scripts/nonce&lt;N&gt;.py</span></code> or <code class="docutils literal notranslate"><span class="pre">scripts/&lt;ecosystem&gt;_&lt;network&gt;_nonce&lt;N&gt;.py</span></code>),
+and then use the <a class="reference external" href="../../methoddocs/cli"><code class="docutils literal notranslate"><span class="pre">propose_from_simulation</span></code></a> decorator.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The value of the nonce <code class="docutils literal notranslate"><span class="pre">N</span></code> must correspond to a specific nonce above the current on-chain
+value of <code class="docutils literal notranslate"><span class="pre">nonce</span></code> from the safe, or it will not be recognized by our other queue management command.</p>
+</div>
+<p>An example:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">propose_from_simulation</span>
+</span><span data-line="2">
+</span><span data-line="3">
+</span><span data-line="4"><span class="nd">@propose_from_simulation</span><span class="p">()</span>
+</span><span data-line="5"><span class="k">def</span><span class="w"> </span><span class="nf">cli</span><span class="p">():</span>
+</span><span data-line="6">    <span class="c1"># This entire function is executed within a fork/isolated context</span>
+</span><span data-line="7">
+</span><span data-line="8">    <span class="c1"># Use normal Ape features</span>
+</span><span data-line="9">    <span class="n">my_contract</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="s2">&quot;&lt;address&gt;&quot;</span><span class="p">)</span>
+</span><span data-line="10">
+</span><span data-line="11">    <span class="c1"># Any transaction is performed as if `sender=safe.address`</span>
+</span><span data-line="12">    <span class="n">my_contract</span><span class="o">.</span><span class="n">mutableMethod</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span data-line="13">
+</span><span data-line="14">    <span class="c1"># You can make assertions that will cause your simulation to fail if tripped</span>
+</span><span data-line="15">    <span class="k">assert</span> <span class="n">my_contract</span><span class="o">.</span><span class="n">viewMethod</span><span class="p">()</span> <span class="o">==</span> <span class="o">...</span>
+</span><span data-line="16">
+</span><span data-line="17">    <span class="c1"># You can also add conditional calls</span>
+</span><span data-line="18">    <span class="k">if</span> <span class="n">my_contract</span><span class="o">.</span><span class="n">viewMethod</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">some_number</span><span class="p">:</span>
+</span><span data-line="19">        <span class="n">my_contract</span><span class="o">.</span><span class="n">mutableMethod</span><span class="p">()</span>
+</span><span data-line="20">
+</span><span data-line="21">    <span class="c1"># Once you are done with your transactions, the simulation will complete after exiting</span>
 </span></pre></div>
 </div>
-<section id="ape-safe-delegates-add">
-<h3>add<a class="headerlink" href="#ape-safe-delegates-add" title="Link to this heading"></a></h3>
-<p>Add a delegate for a signer in a Safe</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>delegates<span class="w"> </span>add<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>DELEGATE<span class="w"> </span>LABEL
+<p>Once the simulation is complete, the decorator will collect all receipts it finds from the <code class="docutils literal notranslate"><span class="pre">safe</span></code>’s
+history during that session, and collect them into a single SafeTx to propose to a public network.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The name of the decorated function in your queue script <strong>must</strong> be <code class="docutils literal notranslate"><span class="pre">cli</span></code> for it to work.</p>
+</div>
+<p>The decorated function may have <code class="docutils literal notranslate"><span class="pre">safe</span></code> or <code class="docutils literal notranslate"><span class="pre">submitter</span></code> args in it, in order to access their values.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@propose_from_simulation</span><span class="p">()</span>
+</span><span data-line="2"><span class="c1"># NOTE: Can also just use `def cli(safe):` if you don&#39;t need `submitter`</span>
+</span><span data-line="3"><span class="k">def</span><span class="w"> </span><span class="nf">cli</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">submitter</span><span class="p">):</span>
+</span><span data-line="4">    <span class="c1"># You can use `safe` or `submitter` in your script to query values from the chain</span>
+</span><span data-line="5">    <span class="n">bal_before</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">submitter</span><span class="p">)</span>
+</span><span data-line="6">    <span class="n">amount</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">safe</span><span class="p">)</span>
+</span><span data-line="7">    <span class="n">token</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">submitter</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+</span><span data-line="8">    <span class="k">assert</span> <span class="n">token</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">submitter</span><span class="p">)</span> <span class="o">==</span> <span class="n">bal_before</span> <span class="o">+</span> <span class="n">amount</span>
 </span></pre></div>
 </div>
-<p class="rubric">Options</p>
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-ape-safe-delegates-add-v">
-<span id="cmdoption-ape-safe-delegates-add-verbosity"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbosity</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;LVL&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-delegates-add-v" title="Link to this definition"></a></dt>
-<dd><p>One of ERROR, WARNING, SUCCESS, INFO, or DEBUG</p>
-</dd></dl>
-
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-ape-safe-delegates-add-safe">
-<span class="sig-name descname"><span class="pre">--safe</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;safe&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-delegates-add-safe" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-ape-safe-delegates-add-account">
-<span class="sig-name descname"><span class="pre">--account</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-delegates-add-account" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<p class="rubric">Arguments</p>
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-ape-safe-delegates-add-arg-DELEGATE">
-<span class="sig-name descname"><span class="pre">DELEGATE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-delegates-add-arg-DELEGATE" title="Link to this definition"></a></dt>
-<dd><p>Required argument</p>
-</dd></dl>
-
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-ape-safe-delegates-add-arg-LABEL">
-<span class="sig-name descname"><span class="pre">LABEL</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-delegates-add-arg-LABEL" title="Link to this definition"></a></dt>
-<dd><p>Required argument</p>
-</dd></dl>
-
-</section>
-<section id="ape-safe-delegates-list">
-<h3>list<a class="headerlink" href="#ape-safe-delegates-list" title="Link to this heading"></a></h3>
-<p>Show delegates for signers in a Safe</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>delegates<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>SAFE
+<p>You can run the script directly using the following command, and it will dry-run the transaction:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>ape<span class="w"> </span>run<span class="w"> </span>nonce&lt;N&gt;<span class="w"> </span>your-safe<span class="w"> </span>--network<span class="w"> </span>ethereum:mainnet-fork<span class="w"> </span>--submitter<span class="w"> </span>TEST::0
 </span></pre></div>
 </div>
-<p class="rubric">Options</p>
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-ape-safe-delegates-list-v">
-<span id="cmdoption-ape-safe-delegates-list-verbosity"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbosity</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;LVL&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-delegates-list-v" title="Link to this definition"></a></dt>
-<dd><p>One of ERROR, WARNING, SUCCESS, INFO, or DEBUG</p>
-</dd></dl>
-
-<p class="rubric">Arguments</p>
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-ape-safe-delegates-list-arg-SAFE">
-<span class="sig-name descname"><span class="pre">SAFE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-delegates-list-arg-SAFE" title="Link to this definition"></a></dt>
-<dd><p>Required argument</p>
-</dd></dl>
-
-</section>
-<section id="ape-safe-delegates-remove">
-<h3>remove<a class="headerlink" href="#ape-safe-delegates-remove" title="Link to this heading"></a></h3>
-<p>Remove a delegate for a specific signer in a Safe</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>delegates<span class="w"> </span>remove<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>DELEGATE
+<p>We also provide a command <a class="reference external" href="../../commands/pending#ape-safe-pending-ensure"><code class="docutils literal notranslate"><span class="pre">ape</span> <span class="pre">safe</span> <span class="pre">pending</span> <span class="pre">ensure</span></code></a>
+that allows you to execute all matching nonce commands up to the latest you have defined in sequence.
+This allows you to check for side-effects of commands in the queue, helping to reduce human error.</p>
+<p>To execute a dry-run of all matching queue scripts for your safe, execute the following:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>ensure<span class="w"> </span>--safe<span class="w"> </span>your-safe<span class="w"> </span>--network<span class="w"> </span>ethereum:mainnet-fork<span class="w"> </span>--submitter<span class="w"> </span>TEST::0
 </span></pre></div>
 </div>
-<p class="rubric">Options</p>
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-ape-safe-delegates-remove-v">
-<span id="cmdoption-ape-safe-delegates-remove-verbosity"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbosity</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;LVL&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-delegates-remove-v" title="Link to this definition"></a></dt>
-<dd><p>One of ERROR, WARNING, SUCCESS, INFO, or DEBUG</p>
-</dd></dl>
-
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-ape-safe-delegates-remove-safe">
-<span class="sig-name descname"><span class="pre">--safe</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;safe&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-delegates-remove-safe" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-ape-safe-delegates-remove-account">
-<span class="sig-name descname"><span class="pre">--account</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-delegates-remove-account" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<p class="rubric">Arguments</p>
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-ape-safe-delegates-remove-arg-DELEGATE">
-<span class="sig-name descname"><span class="pre">DELEGATE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-delegates-remove-arg-DELEGATE" title="Link to this definition"></a></dt>
-<dd><p>Required argument</p>
-</dd></dl>
-
-</section>
+<p>Once you are ready, you can “propose” your queue script to the Safe API via the following:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>ape<span class="w"> </span>run<span class="w"> </span>nonce&lt;N&gt;<span class="w"> </span>your-safe<span class="w"> </span>--network<span class="w"> </span>ethereum:mainnet<span class="w"> </span>--submitter<span class="w"> </span>local-wallet
+</span></pre></div>
+</div>
+<p>You can also propose all of your queue scripts (if there are discrepencies) to the Safe API via:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>ensure<span class="w"> </span>--safe<span class="w"> </span>your-safe<span class="w"> </span>--network<span class="w"> </span>ethereum:mainnet<span class="w"> </span>--submitter<span class="w"> </span>local-wallet
+</span></pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The wallet you use for <code class="docutils literal notranslate"><span class="pre">--submitter</span></code> must either be one of the signers on the safe, or pre-approved
+by the Safe API as a delegate for another signer, otherwise it will fail to propose the new script.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is recommended to use our ensure command in a secure context, such as Github Actions, where all
+scripts can be reviewed by signers, and access is controlled behind Github’s access control system.</p>
+</div>
+<!-- TODO: Add Github Action? -->
+<!-- TODO: Add self-hosted API? -->
 </section>
 </section>
 
@@ -264,16 +247,16 @@ data-aria-dark="Switch to auto color mode">
   </svg>
   <span>Back to top</span>
 </button><div class="navigation flex print:hidden"><div class="navigation-prev">
-    <a href="pending.html">
+    <a href="modules.html">
       <i class="i-lucide chevron-left"></i>
       <div class="page-info">
-        <span>Previous</span><div class="title">Pending Transactions</div></div>
+        <span>Previous</span><div class="title">Modules</div></div>
     </a>
   </div><div class="navigation-next">
-    <a href="modules.html">
+    <a href="../commands/mgmt.html">
       <div class="page-info">
         <span>Next</span>
-        <div class="title">Modules</div>
+        <div class="title">Local Safe Management</div>
       </div>
       <i class="i-lucide chevron-right"></i>
     </a>

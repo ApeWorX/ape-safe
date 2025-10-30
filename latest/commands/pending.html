@@ -64,6 +64,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../userguides/safe_management.html">Safe Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../userguides/multisend.html">MultiSend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../userguides/modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/production.html">Managing your Safe in Production</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
 <ul class="current">
@@ -76,6 +77,7 @@ data-aria-dark="Switch to auto color mode">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/accounts.html"><code class="docutils literal notranslate"><span class="pre">SafeAccount</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/accounts.html#ape_safe.accounts.SafeContainer"><code class="docutils literal notranslate"><span class="pre">SafeContainer</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/cli.html"><code class="docutils literal notranslate"><span class="pre">propose_from_simulation()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html"><code class="docutils literal notranslate"><span class="pre">ExecutedTxData</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.MockSafeClient"><code class="docutils literal notranslate"><span class="pre">MockSafeClient</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.OperationType"><code class="docutils literal notranslate"><span class="pre">OperationType</span></code></a></li>
@@ -122,6 +124,7 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#ape-safe-pending">ape safe pending</a><ul>
 <li><a class="reference internal" href="#ape-safe-pending-approve">approve</a></li>
+<li><a class="reference internal" href="#ape-safe-pending-ensure">ensure</a></li>
 <li><a class="reference internal" href="#ape-safe-pending-execute">execute</a></li>
 <li><a class="reference internal" href="#ape-safe-pending-list">list</a></li>
 <li><a class="reference internal" href="#ape-safe-pending-propose">propose</a></li>
@@ -195,6 +198,38 @@ data-aria-dark="Switch to auto color mode">
 <span class="sig-name descname"><span class="pre">NONCE_OR_SAFE_TX_HASH(s)</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-pending-approve-arg-NONCE_OR_SAFE_TX_HASH-s" title="Link to this definition"></a></dt>
 <dd><p>Optional argument(s)</p>
 </dd></dl>
+
+</section>
+<section id="ape-safe-pending-ensure">
+<h3>ensure<a class="headerlink" href="#ape-safe-pending-ensure" title="Link to this heading"></a></h3>
+<p>Ensure Safe API queue matches <cite>scripts/</cite></p>
+<p>This command uses scripts from <cite>scripts/&lt;ecosystem-name&gt;_&lt;network-name&gt;_nonce*.py</cite>
+(or <cite>scripts/nonce*.py</cite> if no network-specified scripts detected) and “replays” them from the
+Safe’s current on-chain nonce, up to the last script available in the folder. When executed
+using a fork network, it will only perform a simulated validation of the script. When executed
+using a live network, it will propose the transaction ONLY IF the transaction at that nonce
+height does not match the expected calldata.</p>
+<p>To enable this, scripts under <cite>scripts/</cite> must be properly named, and all use
+<cite>ape_safe.cli.propose_batch</cite>.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>ensure<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ape-safe-pending-ensure-v">
+<span id="cmdoption-ape-safe-pending-ensure-verbosity"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbosity</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;LVL&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-pending-ensure-v" title="Link to this definition"></a></dt>
+<dd><p>One of ERROR, WARNING, SUCCESS, INFO, or DEBUG</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ape-safe-pending-ensure-submitter">
+<span class="sig-name descname"><span class="pre">--submitter</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;submitter&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-pending-ensure-submitter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ape-safe-pending-ensure-safe">
+<span class="sig-name descname"><span class="pre">--safe</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;safe&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-pending-ensure-safe" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 </section>
 <section id="ape-safe-pending-execute">
