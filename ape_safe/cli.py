@@ -66,6 +66,12 @@ def propose_from_simulation():
             args["submitter"] = None
 
         if (script_name := cmd.__module__.split(".")[-1]).startswith("nonce"):
+            if not script_name[5:].isnumeric():
+                raise click.UsageError(
+                    f"Script 'scripts/{script_name}.py' must follow 'nonce<N>.py', "
+                    "where <N> is convertible to an integer value"
+                )
+
             script_nonce = int(script_name[5:])
 
         else:
