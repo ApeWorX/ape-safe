@@ -443,8 +443,7 @@ def ensure(cli_ctx, ecosystem, network, submitter, safe):
         cli_ctx.logger.debug(f"Scripts found:\n{scripts_found_str}")
 
     else:
-        cli_ctx.logger.warning("No nonce scripts detected under `scripts/`.")
-        return 0
+        raise click.UsageError("No queue scripts detected under `scripts/`.")
 
     starting_nonce = safe.next_nonce
     if not (
@@ -455,30 +454,28 @@ def ensure(cli_ctx, ecosystem, network, submitter, safe):
             and (nonce := int(script_path.stem.split("nonce")[-1])) >= starting_nonce
         }
     ):
-        cli_ctx.logger.warning("No scripts need to be ensured in queue.")
-        return 0
+        raise click.UsageError(
+            "No queue scripts detected under `scripts/` above current Safe nonce."
+        )
 
     elif min(pending_scripts) != starting_nonce:
-        cli_ctx.logger.error(
+        raise click.UsageError(
             f"Next nonce for {safe.address} is {starting_nonce}, not {min(pending_scripts)}."
         )
-        return 1
 
     elif missing_nonces := sorted(
         set(range(starting_nonce, max(pending_scripts) + 1)) - set(pending_scripts)
     ):
         display_str = ", ".join(map(str, missing_nonces))
-        cli_ctx.logger.error(f"Missing nonce scripts(s) for: {display_str}")
-        return 1
+        raise click.UsageError(f"Missing queue scripts for nonce(s): {display_str}")
 
     for nonce in sorted(pending_scripts):
         script_path = pending_scripts[nonce].relative_to(cli_ctx.local_project.path)
         if not (cmd := runpy.run_path(str(script_path), run_name=script_path.stem).get("cli")):
-            cli_ctx.logger.error(f"No command `cli` detected in {script_path}.")
-            return 1
+            raise click.UsageError(f"No command `cli` detected in {script_path}.")
 
         cli_ctx.logger.info(
-            f"Running script for nonce {nonce} ('{script_path}'):\n\n  {cmd.help}\n"
+            f"Running queue script for nonce {nonce} ('{script_path}'):\n\n  {cmd.help}\n"
         )
         # NOTE: This matches signature from `ape_safe.cli:propose_batch`
         cmd.callback.__wrapped__.func(cli_ctx, network, submitter, safe)
