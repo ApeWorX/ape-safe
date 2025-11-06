@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Optional, Union
 
 from ape.types import AddressType
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
-from eth_utils import to_checksum_address
+from cchecksum import to_checksum_address
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
