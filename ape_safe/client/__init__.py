@@ -88,7 +88,11 @@ class SafeClient(BaseSafeClient):
                 raise ValueError(f"Chain ID {chain_id} is not a supported chain.")
 
             elif not GATEWAY_API_KEY:
-                raise ValueError("Must provide API key via 'APE_SAFE_GATEWAY_API_KEY='.")
+                raise ValueError(
+                    """Must provide API key via 'APE_SAFE_GATEWAY_API_KEY='.
+
+    Get one from https://developer.safe.global if you don't have one."""
+                )
 
             base_url = (
                 f"{SAFE_CLIENT_GATEWAY_URL}/{EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID[chain_id]}/api"
