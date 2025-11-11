@@ -95,7 +95,7 @@ class UnexecutedTxData(BaseModel):
     operation: OperationType
     gas_token: AddressType = Field(alias="gasToken")
     safe_tx_gas: int = Field(alias="safeTxGas")
-    base_gas: int = Field(alias="baseGas")
+    base_gas: int = Field(alias="baseGas", default=0)
     gas_price: int = Field(alias="gasPrice")
     refund_receiver: AddressType = Field(alias="refundReceiver")
     nonce: int
