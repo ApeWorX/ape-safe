@@ -90,6 +90,7 @@ SAFE_ERROR_CODES = {
 
 class SafeLogicError(ApeSafeException, ContractLogicError):
     def __init__(self, error_code: str):
+        self.error_code = error_code
         super().__init__(f"{SAFE_ERROR_CODES[error_code]} ({error_code})")
 
 
