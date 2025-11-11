@@ -57,6 +57,7 @@ class SafeDetails(BaseModel):
     owners: list[Address]
     master_copy: Address = Field(
         alias="masterCopy",
+        # NOTE: `implementation` matches an older version of the API
         validation_alias=AliasChoices("masterCopy", "implementation"),
     )
     modules: list[Address] = []
