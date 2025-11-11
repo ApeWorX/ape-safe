@@ -7,12 +7,24 @@ from ape.logging import logger
 
 PLUGIN_MANIFEST_FOLDER = project.path / "ape_safe" / "manifests"
 
+# NOTE: Exclude all non-essential contract types
 VERSIONS = {
     "v1.1.1": """
 compile:
   exclude:
-    - mocks
+    - base
+    - common
+    - external
+    - handler
     - interfaces
+    - libraries/CreateAndAddModules.sol
+    - libraries/CreateCall.sol
+    - mocks
+    - modules
+    - proxies/DelegateConstructorProxy.sol
+    - proxies/IProxyCreationCallback.sol
+    - proxies/PayingProxy.sol
+    - Migrations.sol
 
 dependencies:
   - name: openzeppelin
@@ -27,9 +39,19 @@ solidity:
     "v1.3.0": """
 compile:
   exclude:
-    - test
+    - accessors
+    - base
+    - common
     - examples
+    - external
+    - handler
     - interfaces
+    - libraries/CreateCall.sol
+    - libraries/MultiSend.sol
+    - mocks
+    - modules
+    - proxies/IProxyCreationCallback.sol
+    - test
 
 dependencies:
   - name: openzeppelin
@@ -44,9 +66,21 @@ solidity:
     "v1.4.1": """
 compile:
   exclude:
-    - test
+    - accessors
+    - base
+    - common
     - examples
+    - external
+    - handler
     - interfaces
+    - libraries/CreateCall.sol
+    - libraries/MultiSend.sol
+    - libraries/SafeStorage.sol
+    - libraries/SignMessageLib.sol
+    - mocks
+    - modules
+    - proxies/IProxyCreationCallback.sol
+    - test
 
 dependencies:
   - name: openzeppelin
@@ -58,6 +92,12 @@ solidity:
   import_remapping:
     - "@openzeppelin/contracts=openzeppelin/v3.4.0"
 """,
+}
+
+INCLUDED_FIELDS = {
+    "abi",
+    "runtimeBytecode",
+    "deploymentBytecode",
 }
 
 
@@ -78,7 +118,12 @@ def compile_version(version: str, override: bool):
         dependency.compile()
 
     logger.info(f"Writing './{plugin_manifest_path.relative_to(Path.cwd())}'")
-    plugin_manifest_path.write_text(dependency.project.manifest.model_dump_json())
+    plugin_manifest_path.write_text(
+        dependency.project.manifest.model_dump_json(
+            # NOTE: Create a compact representation, only what we need
+            exclude={"sources": True, "compilers": True},
+        )
+    )
 
 
 @click.command()
