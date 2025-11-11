@@ -5,11 +5,11 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Optional, Union
 
 import certifi
-import requests
 import urllib3
 from ape.types import AddressType, HexBytes, MessageSignature
 from eth_utils import keccak
 from requests.adapters import HTTPAdapter
+from requests_ratelimiter import LimiterSession
 
 from ape_safe.client.types import (
     ExecutedTxData,
@@ -24,7 +24,7 @@ from ape_safe.exceptions import ClientResponseError
 
 if TYPE_CHECKING:
     from ape.api import AccountAPI
-    from requests import Response
+    from requests import Response, Session
 
 DEFAULT_HEADERS = {
     "Accept": "application/json",
@@ -33,10 +33,7 @@ DEFAULT_HEADERS = {
 
 
 class BaseSafeClient(ABC):
-    def __init__(self, base_url: str):
-        self.base_url = base_url
-
-    """Abstract methods"""
+    """All custom SafeClient instances should implement this"""
 
     @property
     @abstractmethod
@@ -135,11 +132,14 @@ class BaseSafeClient(ABC):
     @abstractmethod
     def remove_delegate(self, delegate: AddressType, delegator: "AccountAPI"): ...
 
-    """Request methods"""
+
+class RequestsClient(BaseSafeClient):
+    def __init__(self, base_url: str):
+        self.base_url = base_url
 
     @cached_property
-    def session(self) -> requests.Session:
-        session = requests.Session()
+    def session(self) -> "Session":
+        session = LimiterSession(per_second=5)
         adapter = HTTPAdapter(
             pool_connections=10,  # Doing all the connections to the same url
             pool_maxsize=100,  # Number of concurrent connections
