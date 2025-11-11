@@ -18,6 +18,16 @@ python setup.py install
 pip install -e .'[dev]'
 ```
 
+If you need to add support for a new Safe version to the package,
+edit the `scripts/build.py` file to add the version to build, then run:
+
+```sh
+$ ape run build
+```
+
+This will compile the new dependency and install it under `ape_safe/mainfests/`.
+Be sure to add the new manifest to a PR and submit it, alongside updates to `tests/conftest.py`
+
 ## Pre-Commit Hooks
 
 We use [`pre-commit`](https://pre-commit.com/) hooks to simplify linting and ensure consistent formatting among contributors.

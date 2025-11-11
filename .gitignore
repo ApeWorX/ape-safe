@@ -1,6 +1,5 @@
 # Ape stuff
 .build/
-ape_safe/manifests/safe-v*.json
 
 # NPM Stuff
 node_modules/
