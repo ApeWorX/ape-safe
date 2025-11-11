@@ -6,7 +6,7 @@ from ape.types import AddressType, HexBytes
 from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
 from eth_pydantic_types import HexStr
 from eth_utils import add_0x_prefix, to_hex
-from pydantic import BaseModel, BeforeValidator, Field, field_validator
+from pydantic import AliasChoices, BaseModel, BeforeValidator, Field, field_validator
 
 from ape_safe.utils import get_safe_tx_hash
 
@@ -55,7 +55,10 @@ class SafeDetails(BaseModel):
     nonce: int
     threshold: int
     owners: list[Address]
-    master_copy: Address = Field(alias="masterCopy")
+    master_copy: Address = Field(
+        alias="masterCopy",
+        validation_alias=AliasChoices("masterCopy", "implementation"),
+    )
     modules: list[Address] = []
     fallback_handler: Address = Field(alias="fallbackHandler")
     guard: AddressType
