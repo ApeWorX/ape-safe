@@ -64,8 +64,8 @@ def OWNERS(accounts, MULTISIG_TYPE):
 
 
 @pytest.fixture
-def safe_contract(safe_factory, deployer, OWNERS, THRESHOLD):
-    return safe_factory.create(OWNERS, THRESHOLD, sender=deployer)
+def safe_contract(VERSION, deployer, safe_factory, OWNERS, THRESHOLD):
+    return safe_factory.create(OWNERS, THRESHOLD, version=VERSION, sender=deployer)
 
 
 @pytest.fixture
