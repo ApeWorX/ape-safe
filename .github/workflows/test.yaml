@@ -79,11 +79,6 @@ jobs:
           with:
               python-version: ${{ matrix.python-version }}
 
-        - name: Build and Install Contract Dependencies
-          run: |
-            ape pm compile
-            ape run build
-
         - name: Install Package
           run: |
             python -m pip install --upgrade pip

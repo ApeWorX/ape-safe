@@ -1,6 +1,8 @@
 import json
 import tempfile
+from importlib.resources import files as get_pkg_resources
 from pathlib import Path
+from typing import cast
 
 import pytest
 from ape.contracts import ContractContainer
@@ -11,17 +13,13 @@ from ape_safe.accounts import SafeAccount
 from ape_safe.factory import SafeFactory
 
 contracts_directory = Path(__file__).parent / "contracts"
+safe_package_versions = [
+    m.stem.replace("safe-v", "")
+    for m in cast(Path, (get_pkg_resources("ape_safe") / "manifests")).glob("safe-v*.json")
+]
 
 
-@pytest.fixture(
-    scope="session",
-    # TODO: Test more versions.
-    params=(
-        "1.4.1",
-        "1.3.0",
-        "1.1.1",
-    ),
-)
+@pytest.fixture(scope="session", params=safe_package_versions)
 def VERSION(request):
     return Version(request.param)
 
@@ -66,8 +64,8 @@ def OWNERS(accounts, MULTISIG_TYPE):
 
 
 @pytest.fixture
-def safe_contract(safe_factory, deployer, OWNERS, THRESHOLD):
-    return safe_factory.create(OWNERS, THRESHOLD, sender=deployer)
+def safe_contract(VERSION, deployer, safe_factory, OWNERS, THRESHOLD):
+    return safe_factory.create(OWNERS, THRESHOLD, version=VERSION, sender=deployer)
 
 
 @pytest.fixture

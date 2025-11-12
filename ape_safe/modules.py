@@ -3,6 +3,9 @@ from typing import TYPE_CHECKING, Optional, Union
 from ape.types import AddressType
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
 from eth_utils import to_checksum_address
+from packaging.version import Version
+
+from ape_safe.exceptions import handle_safe_logic_error
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -25,8 +28,12 @@ class SafeModuleManager(ManagerAccessMixin):
         return f"<{self.__class__.__qualname__} safe={self._safe.address}"
 
     def __contains__(self, module: Union[str, AddressType, "ContractInstance"]) -> bool:
-        return self._safe.contract.isModuleEnabled(module)
+        if self._safe.version >= Version("1.2.0"):
+            return self._safe.contract.isModuleEnabled(module)
 
+        return module in iter(self)
+
+    @handle_safe_logic_error()
     def enable(
         self,
         module: Union[str, AddressType, "ContractInstance"],
@@ -70,6 +77,7 @@ class SafeModuleManager(ManagerAccessMixin):
 
         raise AssertionError(f"Module {module} not in Safe modules for {self._safe}")
 
+    @handle_safe_logic_error()
     def disable(
         self,
         module: Union[str, AddressType, "ContractInstance"],
@@ -108,6 +116,7 @@ class SafeModuleManager(ManagerAccessMixin):
 
         return self.chain_manager.contracts.instance_at(module_guard_address)
 
+    @handle_safe_logic_error()
     def set_guard(
         self,
         guard: Union[str, AddressType, "ContractInstance"],
@@ -122,5 +131,6 @@ class SafeModuleManager(ManagerAccessMixin):
         else:
             return self._safe.contract.setModuleGuard(guard, sender=self._safe, **txn_kwargs)
 
+    @handle_safe_logic_error()
     def remove_guard(self, **txn_kwargs) -> Union["ReceiptAPI", "SafeTxID"]:
         return self.set_guard(ZERO_ADDRESS, **txn_kwargs)

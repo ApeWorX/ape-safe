@@ -8,6 +8,7 @@ from ape.exceptions import (
     DecodingError,
     SignatureError,
 )
+from packaging.version import Version
 
 if TYPE_CHECKING:
     from ape.types import AddressType
@@ -30,6 +31,11 @@ class NoVersionDetected(ApeSafeException, DecodingError):
             f"Could not detect `VERSION()` for {safe}.\n\n"
             "**Are you sure you are on the right network?**"
         )
+
+
+class FeatureNotAvailable(ApeSafeException, NotImplementedError):
+    def __init__(self, feature: str, version: Version):
+        super().__init__(f"Feature '{feature}' does not exist in version {version}")
 
 
 class NotASigner(ApeSafeException):
@@ -90,6 +96,7 @@ SAFE_ERROR_CODES = {
 
 class SafeLogicError(ApeSafeException, ContractLogicError):
     def __init__(self, error_code: str):
+        self.error_code = error_code
         super().__init__(f"{SAFE_ERROR_CODES[error_code]} ({error_code})")
 
 
@@ -105,6 +112,12 @@ class handle_safe_logic_error(ContextDecorator):
             message = exc.message.replace("revert: ", "").strip()
             if message.startswith("GS") and message in SAFE_ERROR_CODES:
                 raise SafeLogicError(exc.message.replace("revert: ", "")) from exc
+
+            elif message in SAFE_ERROR_CODES.values():
+                # For pre-v1.3.0 safes, normalize to GS code from error message
+                raise SafeLogicError(
+                    list(SAFE_ERROR_CODES.keys())[list(SAFE_ERROR_CODES.values()).index(message)]
+                )
 
         # NOTE: Will raise `exc` by default because we did not return anything
 

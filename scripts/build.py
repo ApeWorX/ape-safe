@@ -1,28 +1,113 @@
-import shutil
 from pathlib import Path
 
 import click
+import yaml  # type: ignore[import-untyped]
 from ape import project
+from ape.logging import logger
 
 PLUGIN_MANIFEST_FOLDER = project.path / "ape_safe" / "manifests"
+
+# NOTE: Exclude all non-essential contract types
+VERSIONS = {
+    "v1.3.0": """
+compile:
+  exclude:
+    - accessors
+    - base
+    - common
+    - examples
+    - external
+    - handler
+    - interfaces
+    - libraries/CreateCall.sol
+    - libraries/MultiSend.sol
+    - mocks
+    - modules
+    - proxies/IProxyCreationCallback.sol
+    - test
+
+dependencies:
+  - name: openzeppelin
+    github: OpenZeppelin/openzeppelin-contracts
+    version: 3.4.0
+
+solidity:
+  version: 0.7.6
+  import_remapping:
+    - "@openzeppelin/contracts=openzeppelin/v3.4.0"
+""",
+    "v1.4.1": """
+compile:
+  exclude:
+    - accessors
+    - base
+    - common
+    - examples
+    - external
+    - handler
+    - interfaces
+    - libraries/CreateCall.sol
+    - libraries/MultiSend.sol
+    - libraries/SafeStorage.sol
+    - libraries/SignMessageLib.sol
+    - mocks
+    - modules
+    - proxies/IProxyCreationCallback.sol
+    - test
+
+dependencies:
+  - name: openzeppelin
+    github: OpenZeppelin/openzeppelin-contracts
+    version: 3.4.0
+
+solidity:
+  version: 0.7.6
+  import_remapping:
+    - "@openzeppelin/contracts=openzeppelin/v3.4.0"
+""",
+}
+
+INCLUDED_FIELDS = {
+    "abi",
+    "runtimeBytecode",
+    "deploymentBytecode",
+}
+
+
+def compile_version(version: str, override: bool):
+    dependency = project.dependencies.install(
+        name="safe-contracts",
+        github="safe-global/safe-smart-account",
+        version=version,
+        config_override=yaml.safe_load(VERSIONS[version]),
+    )
+    plugin_manifest_path = PLUGIN_MANIFEST_FOLDER / f"safe-{version}.json"
+    if not override and (plugin_manifest_path).is_file():
+        logger.info(f"Version '{version}' already exists, skipping.'")
+        return
+
+    if not dependency.compiled:
+        logger.warning(f"Safe {version} not compiled, compiling...")
+        dependency.compile()
+
+    logger.info(f"Writing './{plugin_manifest_path.relative_to(Path.cwd())}'")
+    plugin_manifest_path.write_text(
+        dependency.project.manifest.model_dump_json(
+            # NOTE: Create a compact representation, only what we need
+            exclude={"sources": True, "compilers": True},
+        )
+    )
 
 
 @click.command()
 @click.option("--override", is_flag=True)
-def cli(override):
-    for version in project.dependencies["safe-contracts"]:
-        dependency = project.dependencies["safe-contracts"][version]
-        plugin_manifest_path = PLUGIN_MANIFEST_FOLDER / f"safe-{version}.json"
+@click.argument(
+    "versions",
+    nargs=-1,
+    type=click.Choice(list(VERSIONS)),
+)
+def cli(override, versions):
+    """Build manifests for Safe protocol"""
 
-        if plugin_manifest_path.is_file() and not override:
-            click.echo(f"Version '{version}' already exists, skipping.'")
-            continue
-
-        # OK to delete - either doesn't exist or override set.
-        plugin_manifest_path.unlink(missing_ok=True)
-
-        click.echo(
-            f"cp $HOME/{dependency.manifest_path.relative_to(Path.home())}"
-            f" ./{plugin_manifest_path.relative_to(Path.cwd())}"
-        )
-        shutil.copyfile(dependency.manifest_path, plugin_manifest_path)
+    for version in iter(versions or VERSIONS):
+        compile_version(version, override)

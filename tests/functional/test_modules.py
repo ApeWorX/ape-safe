@@ -36,10 +36,12 @@ def test_remove_module(safe, create_module, num_modules):
 
 def test_module_works(safe, create_module, deployer):
     module = create_module()
+
+    # NOTE: `handle_safe_logic_error` won't work on a generic contract call
     with pytest.raises(ContractLogicError, match="GS104"):
         module.test(safe, sender=deployer)
 
-    safe.modules.enable(module)
+    safe.modules.enable(module, submitter=deployer)
     assert module in safe.modules
 
     module.test(safe, sender=deployer)

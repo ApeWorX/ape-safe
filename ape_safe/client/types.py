@@ -95,7 +95,7 @@ class UnexecutedTxData(BaseModel):
     operation: OperationType
     gas_token: AddressType = Field(alias="gasToken")
     safe_tx_gas: int = Field(alias="safeTxGas")
-    base_gas: int = Field(alias="baseGas")
+    base_gas: int = Field(alias="baseGas", default=0)
     gas_price: int = Field(alias="gasPrice")
     refund_receiver: AddressType = Field(alias="refundReceiver")
     nonce: int
@@ -124,6 +124,20 @@ class UnexecutedTxData(BaseModel):
             contract_address=self.safe,
             chain_id=chain_id,
         )
+
+        # NOTE: Safe pre-v1.3.0 did not have `baseGas` parameter
+        if not hasattr(tx_def, "baseGas"):
+            return tx_def(  # type: ignore[call-arg]
+                to=self.to,
+                value=self.value,
+                data=self.data,
+                operation=self.operation,
+                gasToken=self.gas_token,
+                safeTxGas=self.safe_tx_gas,
+                gasPrice=self.gas_price,
+                refundReceiver=self.refund_receiver,
+                nonce=self.nonce,
+            )
 
         return tx_def(  # type: ignore[call-arg]
             to=self.to,
