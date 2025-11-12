@@ -56,7 +56,12 @@ class PackageType(str, Enum):
                 return package.SafeProxyFactory
 
         elif version > Version("1.3.0"):
-            SafeSingleton = package.Safe
+            # NOTE: Use `SafeL2` as it has an extra event
+            SafeSingleton = package.SafeL2
+
+        elif version == Version("1.3.0"):
+            # NOTE: Use `SafeL2` as it has an extra event
+            SafeSingleton = package.GnosisSafeL2
 
         else:
             SafeSingleton = package.GnosisSafe

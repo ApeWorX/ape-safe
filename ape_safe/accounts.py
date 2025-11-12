@@ -356,7 +356,7 @@ class SafeAccount(AccountAPI):
             raise NoVersionDetected(self.address)
 
         elif (
-            version := Version(version)
+            version := Version(version.replace("+L2", ""))
         ) not in MANIFESTS_BY_VERSION and self._warn_supported_version:
             supported_versions = "', 'v".join(map(str, MANIFESTS_BY_VERSION))
             logger.warning(
