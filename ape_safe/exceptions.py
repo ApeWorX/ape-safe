@@ -8,6 +8,7 @@ from ape.exceptions import (
     DecodingError,
     SignatureError,
 )
+from packaging.version import Version
 
 if TYPE_CHECKING:
     from ape.types import AddressType
@@ -30,6 +31,11 @@ class NoVersionDetected(ApeSafeException, DecodingError):
             f"Could not detect `VERSION()` for {safe}.\n\n"
             "**Are you sure you are on the right network?**"
         )
+
+
+class FeatureNotAvailable(ApeSafeException, NotImplementedError):
+    def __init__(self, feature: str, version: Version):
+        super().__init__(f"Feature '{feature}' does not exist in version {version}")
 
 
 class NotASigner(ApeSafeException):

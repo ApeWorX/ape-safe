@@ -27,6 +27,7 @@ from .client import BaseSafeClient, MockSafeClient, SafeClient, SafeTx, SafeTxCo
 from .config import SafeConfig
 from .exceptions import (
     ApeSafeError,
+    FeatureNotAvailable,
     NoLocalSigners,
     NotASigner,
     NotEnoughSignatures,
@@ -288,6 +289,9 @@ class SafeAccount(AccountAPI):
 
     @property
     def guard(self) -> Optional["ContractInstance"]:
+        if self.version < Version("1.3.0"):
+            raise FeatureNotAvailable("Safe Guard", self.version)
+
         slot = keccak(text="guard_manager.guard.address")
         value = self.provider.get_storage(self.address, slot)
         address = self.network_manager.ecosystem.decode_address(value[-20:])
@@ -300,6 +304,9 @@ class SafeAccount(AccountAPI):
         new_guard: Union[str, AddressType, "BaseAddress"] = ZERO_ADDRESS,
         **tx_args,
     ) -> ReceiptAPI:
+        if self.version < Version("1.3.0"):
+            raise FeatureNotAvailable("Safe Guard", self.version)
+
         if "sender" not in tx_args:
             tx_args["sender"] = self
 

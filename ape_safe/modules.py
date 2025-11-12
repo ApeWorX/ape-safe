@@ -28,8 +28,7 @@ class SafeModuleManager(ManagerAccessMixin):
         return f"<{self.__class__.__qualname__} safe={self._safe.address}"
 
     def __contains__(self, module: Union[str, AddressType, "ContractInstance"]) -> bool:
-        if self._safe.version > Version("1.1.1"):
-            # NOTE: This was only added in v1.2.0
+        if self._safe.version >= Version("1.2.0"):
             return self._safe.contract.isModuleEnabled(module)
 
         return module in iter(self)
