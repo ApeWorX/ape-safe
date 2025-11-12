@@ -25,7 +25,8 @@ def test_swap_owner(safe, accounts, OWNERS, exec_transaction):
         new_owner,
     )
 
-    assert receipt.events == [
+    # NOTE: SafeL2 contracts have extra event
+    assert receipt.events[-3:] == [
         safe.contract.RemovedOwner(owner=old_owner),
         safe.contract.AddedOwner(owner=new_owner),
         safe.contract.ExecutionSuccess(),
@@ -45,7 +46,8 @@ def test_add_owner(safe, accounts, OWNERS, exec_transaction):
         safe.confirmations_required,
     )
 
-    assert receipt.events == [
+    # NOTE: SafeL2 contracts have extra event
+    assert receipt.events[-2:] == [
         safe.contract.AddedOwner(owner=new_owner),
         safe.contract.ExecutionSuccess(),
     ]
@@ -77,7 +79,8 @@ def test_remove_owner(safe, OWNERS, exec_transaction):
     ]
     if threshold_changed:
         expected_events.insert(1, safe.contract.ChangedThreshold(threshold=new_threshold))
-    assert receipt.events == expected_events
+    # NOTE: SafeL2 contracts have extra event
+    assert receipt.events[-len(expected_events) :] == expected_events
 
     assert old_owner not in safe.signers
 

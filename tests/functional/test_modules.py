@@ -11,7 +11,9 @@ def test_add_module(safe, create_module, num_modules):
         receipt = safe.modules.enable(module)
 
         assert module in safe.modules
-        assert receipt.events == [
+
+        # NOTE: SafeL2 contracts have extra event
+        assert receipt.events[-2:] == [
             safe.contract.EnabledModule(module),
             safe.contract.ExecutionSuccess(),
         ]
@@ -28,7 +30,9 @@ def test_remove_module(safe, create_module, num_modules):
     for module in safe.modules:
         receipt = safe.modules.disable(module)
         assert module not in safe.modules
-        assert receipt.events == [
+
+        # NOTE: SafeL2 contracts have extra event
+        assert receipt.events[-2:] == [
             safe.contract.DisabledModule(module),
             safe.contract.ExecutionSuccess(),
         ]

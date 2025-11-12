@@ -7,7 +7,9 @@ def test_add_guard(safe, guard, exec_transaction):
     )
 
     assert safe.guard == guard
-    assert receipt.events == [
+
+    # NOTE: SafeL2 contracts have extra event
+    assert receipt.events[-2:] == [
         safe.contract.ChangedGuard(guard),
         safe.contract.ExecutionSuccess(),
     ]
