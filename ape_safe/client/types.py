@@ -125,6 +125,20 @@ class UnexecutedTxData(BaseModel):
             chain_id=chain_id,
         )
 
+        # NOTE: Safe pre-v1.3.0 did not have `baseGas` parameter
+        if not hasattr(tx_def, "baseGas"):
+            return tx_def(  # type: ignore[call-arg]
+                to=self.to,
+                value=self.value,
+                data=self.data,
+                operation=self.operation,
+                gasToken=self.gas_token,
+                safeTxGas=self.safe_tx_gas,
+                gasPrice=self.gas_price,
+                refundReceiver=self.refund_receiver,
+                nonce=self.nonce,
+            )
+
         return tx_def(  # type: ignore[call-arg]
             to=self.to,
             value=self.value,
