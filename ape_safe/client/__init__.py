@@ -11,7 +11,7 @@ from eip712.common import SafeTxV1, SafeTxV2
 from eth_utils import to_hex
 from pydantic import TypeAdapter
 
-from ape_safe.client.base import BaseSafeClient
+from ape_safe.client.base import BaseSafeClient, RequestsClient
 from ape_safe.client.mock import MockSafeClient
 from ape_safe.client.types import (
     DelegateInfo,
@@ -71,7 +71,9 @@ EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID = {
 }
 
 
-class SafeClient(BaseSafeClient):
+class SafeClient(RequestsClient):
+    """Client to use to communicate with Safe Client Gateway Service"""
+
     def __init__(
         self,
         address: AddressType,
@@ -158,8 +160,14 @@ class SafeClient(BaseSafeClient):
         tx_data = UnexecutedTxData.from_safe_tx(safe_tx, self.safe_details.threshold)
         signature = HexBytes(
             reduce(
-                lambda raw_sig, next_sig: raw_sig
-                + (next_sig.encode_rsv() if isinstance(next_sig, MessageSignature) else next_sig),
+                lambda raw_sig, next_sig: (
+                    raw_sig
+                    + (
+                        next_sig.encode_rsv()
+                        if isinstance(next_sig, MessageSignature)
+                        else next_sig
+                    )
+                ),
                 order_by_signer(signatures),
                 b"",
             )
@@ -278,6 +286,7 @@ class SafeClient(BaseSafeClient):
 
 __all__ = [
     "ExecutedTxData",
+    "BaseSafeClient",
     "MockSafeClient",
     "OperationType",
     "SafeApiTxData",

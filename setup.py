@@ -68,6 +68,7 @@ setup(
         "eth-utils>=2.1.0,<6",
         "pydantic>=2.10.2,<3",
         "requests>=2.31.0,<3",
+        "requests-ratelimiter>=0.7,<1",
     ],
     entry_points={
         "ape_cli_subcommands": [
