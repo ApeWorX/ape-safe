@@ -37,7 +37,7 @@ from .exceptions import (
 )
 from .factory import SafeFactory
 from .modules import SafeModuleManager
-from .packages import PackageType
+from .packages import MANIFESTS_BY_VERSION, PackageType
 from .types import SafeCacheData
 from .utils import encode_signatures, get_safe_tx_hash
 
@@ -199,6 +199,7 @@ def _safe_tx_exec_args(safe_tx: SafeTx) -> list:
 class SafeAccount(AccountAPI):
     account_file_path: Path  # NOTE: Cache any relevant data here
     _factory: ClassVar[SafeFactory] = SafeFactory()
+    _warn_supported_version: ClassVar[bool] = True
 
     def __dir__(self) -> list[str]:
         return [
@@ -350,11 +351,21 @@ class SafeAccount(AccountAPI):
             outputs=[ABIType(type="string")],
         )
 
-        if isinstance(version := ContractCall(VERSION_ABI, address=self.address)(), str):
-            return Version(version)
+        if not isinstance(version := ContractCall(VERSION_ABI, address=self.address)(), str):
+            # NOTE: If `eth_call` returns nothing, the safe is likely not on the correct network
+            raise NoVersionDetected(self.address)
 
-        # NOTE: If `eth_call` returns nothing, the safe is likely not on the correct network
-        raise NoVersionDetected(self.address)
+        elif (
+            version := Version(version)
+        ) not in MANIFESTS_BY_VERSION and self._warn_supported_version:
+            supported_versions = "', 'v".join(map(str, MANIFESTS_BY_VERSION))
+            logger.warning(
+                f"'v{version}' is not a version supported by this library, "
+                f"consider migrating to one of {supported_versions}"
+            )
+            self.__class__._warn_supported_version = False
+
+        return version
 
     @property
     def signers(self) -> list[AddressType]:
