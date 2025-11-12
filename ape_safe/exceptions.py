@@ -107,6 +107,12 @@ class handle_safe_logic_error(ContextDecorator):
             if message.startswith("GS") and message in SAFE_ERROR_CODES:
                 raise SafeLogicError(exc.message.replace("revert: ", "")) from exc
 
+            elif message in SAFE_ERROR_CODES.values():
+                # For pre-v1.3.0 safes, normalize to GS code from error message
+                raise SafeLogicError(
+                    list(SAFE_ERROR_CODES.keys())[list(SAFE_ERROR_CODES.values()).index(message)]
+                )
+
         # NOTE: Will raise `exc` by default because we did not return anything
 
 
