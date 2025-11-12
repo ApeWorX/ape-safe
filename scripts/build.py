@@ -9,33 +9,6 @@ PLUGIN_MANIFEST_FOLDER = project.path / "ape_safe" / "manifests"
 
 # NOTE: Exclude all non-essential contract types
 VERSIONS = {
-    "v1.1.1": """
-compile:
-  exclude:
-    - base
-    - common
-    - external
-    - handler
-    - interfaces
-    - libraries/CreateAndAddModules.sol
-    - libraries/CreateCall.sol
-    - mocks
-    - modules
-    - proxies/DelegateConstructorProxy.sol
-    - proxies/IProxyCreationCallback.sol
-    - proxies/PayingProxy.sol
-    - Migrations.sol
-
-dependencies:
-  - name: openzeppelin
-    github: OpenZeppelin/openzeppelin-contracts
-    version: 2.2.0
-
-solidity:
-  version: 0.5.14
-  import_remapping:
-    - "@openzeppelin/contracts=openzeppelin/v2.2.0"
-""",
     "v1.3.0": """
 compile:
   exclude:
