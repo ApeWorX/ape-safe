@@ -155,7 +155,7 @@ def propose_from_simulation():
                 safe.propose_safe_tx(safe_tx, submitter=submitter)
 
                 safe_tx_id = safe_tx._message_hash_
-                cli_ctx.logger.success("'{safe_tx_id.to_0x_hex()}' proposed to queue")
+                cli_ctx.logger.success(f"'{safe_tx_id.to_0x_hex()}' proposed to queue")
 
             else:
                 safe_tx_id = safe_tx._message_hash_
