@@ -169,11 +169,13 @@ data-aria-dark="Switch to auto color mode">
 <section id="ape-safe-pending">
 <h2>ape safe pending<a class="headerlink" href="#ape-safe-pending" title="Link to this heading"></a></h2>
 <p>Commands for handling pending transactions</p>
+<p class="rubric">Usage</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
 </span></pre></div>
 </div>
 <section id="ape-safe-pending-approve">
 <h3>approve<a class="headerlink" href="#ape-safe-pending-approve" title="Link to this heading"></a></h3>
+<p class="rubric">Usage</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>approve<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NONCE_OR_SAFE_TX_HASH<span class="o">(</span>s<span class="o">)</span>
 </span></pre></div>
 </div>
@@ -213,6 +215,7 @@ using a live network, it will propose the transaction ONLY IF the transaction at
 height does not match the expected calldata.</p>
 <p>To enable this, scripts under <cite>scripts/</cite> must be properly named, and all use
 <cite>ape_safe.cli.propose_batch</cite>.</p>
+<p class="rubric">Usage</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>ensure<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </span></pre></div>
 </div>
@@ -237,6 +240,7 @@ height does not match the expected calldata.</p>
 <section id="ape-safe-pending-execute">
 <h3>execute<a class="headerlink" href="#ape-safe-pending-execute" title="Link to this heading"></a></h3>
 <p>Execute a transaction</p>
+<p class="rubric">Usage</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>execute<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NONCE_OR_SAFE_TX_HASH<span class="o">(</span>s<span class="o">)</span>
 </span></pre></div>
 </div>
@@ -275,6 +279,7 @@ height does not match the expected calldata.</p>
 <section id="ape-safe-pending-list">
 <h3>list<a class="headerlink" href="#ape-safe-pending-list" title="Link to this heading"></a></h3>
 <p>View pending transactions for a Safe</p>
+<p class="rubric">Usage</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </span></pre></div>
 </div>
@@ -299,6 +304,7 @@ height does not match the expected calldata.</p>
 <section id="ape-safe-pending-propose">
 <h3>propose<a class="headerlink" href="#ape-safe-pending-propose" title="Link to this heading"></a></h3>
 <p>Create a new transaction</p>
+<p class="rubric">Usage</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>propose<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </span></pre></div>
 </div>
@@ -359,6 +365,7 @@ height does not match the expected calldata.</p>
 <section id="ape-safe-pending-reject">
 <h3>reject<a class="headerlink" href="#ape-safe-pending-reject" title="Link to this heading"></a></h3>
 <p>Reject one or more pending transactions</p>
+<p class="rubric">Usage</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>reject<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NONCE_OR_SAFE_TX_HASH<span class="o">(</span>s<span class="o">)</span>
 </span></pre></div>
 </div>
@@ -390,6 +397,7 @@ height does not match the expected calldata.</p>
 <section id="ape-safe-pending-show-confs">
 <h3>show-confs<a class="headerlink" href="#ape-safe-pending-show-confs" title="Link to this heading"></a></h3>
 <p>Show existing confirmations</p>
+<p class="rubric">Usage</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>show-confs<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>TXN_ID
 </span></pre></div>
 </div>
