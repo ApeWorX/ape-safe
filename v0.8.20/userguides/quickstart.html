@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Overview - ape-safe documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Transaction Workflows" href="transactions.html" /><link rel="prev" title="&lt;no title&gt;" href="../index.html" />
+      <link rel="canonical" href="ape-safe/userguides/quickstart.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="ape-safe/userguides/quickstart.html"/>
+  <meta property="og:title" content="Overview"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      <img class="light-logo" src="../_static/logo_grey.svg" alt="ape-safe" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/logo_green.svg" alt="ape-safe" height="28" loading="lazy" />
+      <strong>ape-safe</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transactions.html">Transaction Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="safe_management.html">Safe Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multisend.html">MultiSend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="production.html">Managing your Safe in Production</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/mgmt.html">Local Safe Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/pending.html">Pending Transactions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/delegates.html">Managing Delegates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/modules.html">Modules</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/accounts.html"><code class="docutils literal notranslate"><span class="pre">SafeAccount</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/accounts.html#ape_safe.accounts.SafeContainer"><code class="docutils literal notranslate"><span class="pre">SafeContainer</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/cli.html"><code class="docutils literal notranslate"><span class="pre">propose_from_simulation()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html"><code class="docutils literal notranslate"><span class="pre">BaseSafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.ExecutedTxData"><code class="docutils literal notranslate"><span class="pre">ExecutedTxData</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.MockSafeClient"><code class="docutils literal notranslate"><span class="pre">MockSafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.OperationType"><code class="docutils literal notranslate"><span class="pre">OperationType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SafeClient"><code class="docutils literal notranslate"><span class="pre">SafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SafeDetails"><code class="docutils literal notranslate"><span class="pre">SafeDetails</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SafeTxConfirmation"><code class="docutils literal notranslate"><span class="pre">SafeTxConfirmation</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SignatureType"><code class="docutils literal notranslate"><span class="pre">SignatureType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.UnexecutedTxData"><code class="docutils literal notranslate"><span class="pre">UnexecutedTxData</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/config.html"><code class="docutils literal notranslate"><span class="pre">SafeConfig</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html"><code class="docutils literal notranslate"><span class="pre">ActionNotPerformedError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ApeSafeError"><code class="docutils literal notranslate"><span class="pre">ApeSafeError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ApeSafeException"><code class="docutils literal notranslate"><span class="pre">ApeSafeException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ClientResponseError"><code class="docutils literal notranslate"><span class="pre">ClientResponseError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ClientUnavailable"><code class="docutils literal notranslate"><span class="pre">ClientUnavailable</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.FeatureNotAvailable"><code class="docutils literal notranslate"><span class="pre">FeatureNotAvailable</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.MulticallException"><code class="docutils literal notranslate"><span class="pre">MulticallException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.MultisigTransactionNotFoundError"><code class="docutils literal notranslate"><span class="pre">MultisigTransactionNotFoundError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NoLocalSigners"><code class="docutils literal notranslate"><span class="pre">NoLocalSigners</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NoVersionDetected"><code class="docutils literal notranslate"><span class="pre">NoVersionDetected</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NotASigner"><code class="docutils literal notranslate"><span class="pre">NotASigner</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NotEnoughSignatures"><code class="docutils literal notranslate"><span class="pre">NotEnoughSignatures</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.SafeClientException"><code class="docutils literal notranslate"><span class="pre">SafeClientException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.SafeLogicError"><code class="docutils literal notranslate"><span class="pre">SafeLogicError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.UnsupportedChainError"><code class="docutils literal notranslate"><span class="pre">UnsupportedChainError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ValueRequired"><code class="docutils literal notranslate"><span class="pre">ValueRequired</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.handle_safe_logic_error"><code class="docutils literal notranslate"><span class="pre">handle_safe_logic_error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/factory.html"><code class="docutils literal notranslate"><span class="pre">SafeFactory</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/multisend.html"><code class="docutils literal notranslate"><span class="pre">MultiSend</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html"><code class="docutils literal notranslate"><span class="pre">DeploymentAsset</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html#ape_safe.packages.DeploymentInfo"><code class="docutils literal notranslate"><span class="pre">DeploymentInfo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html#ape_safe.packages.DeploymentType"><code class="docutils literal notranslate"><span class="pre">DeploymentType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html#ape_safe.packages.PackageType"><code class="docutils literal notranslate"><span class="pre">PackageType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/types.html"><code class="docutils literal notranslate"><span class="pre">SafeCacheData</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#via-ape">via <code class="docutils literal notranslate"><span class="pre">ape</span></code></a></li>
+<li><a class="reference internal" href="#via-pip">via <code class="docutils literal notranslate"><span class="pre">pip</span></code></a></li>
+<li><a class="reference internal" href="#via-setuptools">via <code class="docutils literal notranslate"><span class="pre">setuptools</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#quick-usage">Quick Usage</a><ul>
+<li><a class="reference internal" href="#multisend-support">MultiSend Support</a></li>
+<li><a class="reference internal" href="#cloud-environment">Cloud Environment</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#development">Development</a></li>
+<li><a class="reference internal" href="#acknowledgements">Acknowledgements</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">ape-safe</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Overview</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h1>
+<p>Account plugin for the <a class="reference external" href="https://safe.global/">Safe</a> multisig wallet (previously known as Gnosis Safe) for the <a class="reference external" href="https://github.com/ApeWorX/ape">Ape Framework</a>.</p>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Safe Account Management</strong>: Add, list, and remove Safe multisig wallets</p></li>
+<li><p><strong>Transaction Management</strong>: Create, propose, sign, and execute Safe transactions</p></li>
+<li><p><strong>Multisig Workflows</strong>: Manage transaction approval workflows with multiple signers</p></li>
+<li><p><strong>MultiSend Support</strong>: Batch multiple transactions together efficiently</p></li>
+<li><p><strong>CLI Interface</strong>: Comprehensive command line tools for Safe management</p></li>
+<li><p><strong>Python API</strong>: Programmatic access to all Safe functionality</p></li>
+</ul>
+</section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.python.org/downloads">python3</a> version 3.9 or newer</p></li>
+</ul>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<section id="via-ape">
+<h3>via <code class="docutils literal notranslate"><span class="pre">ape</span></code><a class="headerlink" href="#via-ape" title="Link to this heading"></a></h3>
+<p>You can install using the <a class="reference external" href="https://github.com/ApeWorX/ape">ape</a> built-in plugin manager:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>ape<span class="w"> </span>plugins<span class="w"> </span>install<span class="w"> </span>safe
+</span></pre></div>
+</div>
+</section>
+<section id="via-pip">
+<h3>via <code class="docutils literal notranslate"><span class="pre">pip</span></code><a class="headerlink" href="#via-pip" title="Link to this heading"></a></h3>
+<p>You can install the latest release via <a class="reference external" href="https://pypi.org/project/pip/"><code class="docutils literal notranslate"><span class="pre">pip</span></code></a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>ape-safe
+</span></pre></div>
+</div>
+<p>You can also install from source:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Clone the source code.</span>
+</span><span data-line="2">git<span class="w"> </span>clone<span class="w"> </span>git@github.com:ApeWorX/ape-safe.git
+</span><span data-line="3"><span class="nb">cd</span><span class="w"> </span>ape-safe
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Build the Safe manifests.</span>
+</span><span data-line="6">ape<span class="w"> </span>pm<span class="w"> </span>compile
+</span><span data-line="7">ape<span class="w"> </span>run<span class="w"> </span>build
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Install.</span>
+</span><span data-line="10">pip<span class="w"> </span>install<span class="w"> </span>.
+</span></pre></div>
+</div>
+</section>
+<section id="via-setuptools">
+<h3>via <code class="docutils literal notranslate"><span class="pre">setuptools</span></code><a class="headerlink" href="#via-setuptools" title="Link to this heading"></a></h3>
+<p>You can clone the repository and use <a class="reference external" href="https://github.com/pypa/setuptools"><code class="docutils literal notranslate"><span class="pre">setuptools</span></code></a> for the most up-to-date version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ApeWorX/ape-safe.git
+</span><span data-line="2">$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>ape-safe
+</span><span data-line="3">$<span class="w"> </span>python3<span class="w"> </span>setup.py<span class="w"> </span>install
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="quick-usage">
+<h2>Quick Usage<a class="headerlink" href="#quick-usage" title="Link to this heading"></a></h2>
+<p>To use the plugin, first use the Ape CLI extension to add a safe you want to control:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># ape safe add ADDRESS ALIAS</span>
+</span><span data-line="2">ape<span class="w"> </span>safe<span class="w"> </span>add<span class="w"> </span>--network<span class="w"> </span>ethereum:mainnet<span class="w"> </span>my-safe.eth<span class="w"> </span>my-safe
+</span></pre></div>
+</div>
+<p>If you made a mistake or just need to remove the safe, use the <code class="docutils literal notranslate"><span class="pre">remove</span></code> command:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># ape safe remove ALIAS</span>
+</span><span data-line="2">ape<span class="w"> </span>safe<span class="w"> </span>remove<span class="w"> </span>my-safe<span class="w"> </span>--yes
+</span></pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">--yes</span></code> is a way to skip the prompt.</p>
+</div>
+<p>If you only have one safe, you will not have to specify which safe to use other commands.
+Otherwise, for most <code class="docutils literal notranslate"><span class="pre">pending</span></code> commands, you specify the safe to use (by alias) via the <code class="docutils literal notranslate"><span class="pre">--safe</span></code> option.</p>
+<p>Additionally, you can configure a safe to use as the default when no <code class="docutils literal notranslate"><span class="pre">--safe</span></code> argument is present by configuring the following in your <code class="docutils literal notranslate"><span class="pre">ape-config.yaml</span></code> file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">safe</span><span class="p">:</span>
+</span><span data-line="2"><span class="w">  </span><span class="nt">default_safe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-safe</span>
+</span></pre></div>
+</div>
+<p>or via <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[tool.ape.safe]</span>
+</span><span data-line="2"><span class="n">default_safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;my-safe&quot;</span>
+</span></pre></div>
+</div>
+<p>or specify via environment variable:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nb">export</span><span class="w"> </span><span class="nv">APE_SAFE_DEFAULT_SAFE</span><span class="o">=</span><span class="s2">&quot;my-safe&quot;</span>
+</span></pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To avoid always needing to specify <code class="docutils literal notranslate"><span class="pre">--network</span></code>, you can set a default ecosystem, network, and provider in your config file.
+The rest of the guide will not specify <code class="docutils literal notranslate"><span class="pre">--network</span></code> on each command but assume it matches the network your Safe is on.</p>
+</div>
+<p>Once you have a safe, you can view pending transactions:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>list
+</span></pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You must specify the environment variable <code class="docutils literal notranslate"><span class="pre">APE_SAFE_GATEWAY_API_KEY=</span></code> to use the Safe Gateway API.
+Get an API key at the <a class="reference external" href="https://developer.safe.global">Safe Developer Portal</a>.</p>
+</div>
+<p>It should show transactions like this:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">Transaction<span class="w"> </span><span class="m">8</span><span class="w"> </span>rejection<span class="w"> </span><span class="o">(</span><span class="m">1</span>/2<span class="o">)</span><span class="w"> </span><span class="nv">safe_tx_hash</span><span class="o">=</span>0x09ab...a9a7
+</span><span data-line="2">Transaction<span class="w"> </span><span class="m">8</span><span class="w"> </span>transfer<span class="w">  </span><span class="o">(</span><span class="m">1</span>/2<span class="o">)</span><span class="w"> </span><span class="nv">safe_tx_hash</span><span class="o">=</span>0xed43...0a5b
+</span></pre></div>
+</div>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">--verbose</span></code> flag to see more information about each transaction:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>list<span class="w"> </span>--verbose
+</span></pre></div>
+</div>
+<p>There are several operations you can do on a pending transaction:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Add more signatures using locally-configured Ape signer(s)</span>
+</span><span data-line="2"><span class="c1"># NOTE: can specify either SafeTxID or Nonce</span>
+</span><span data-line="3">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>approve<span class="w"> </span>0x09ab...a9a7
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Add remaining signatures and execute transction w/ account alias `submitter`</span>
+</span><span data-line="6"><span class="c1"># NOTE: can specify either SafeTxID or Nonce</span>
+</span><span data-line="7">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>approve<span class="w"> </span><span class="m">2</span><span class="w"> </span>--execute<span class="w"> </span>submitter
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Execute an already-signed transaction using `submitter`</span>
+</span><span data-line="10">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>execute<span class="w"> </span><span class="m">2</span><span class="w"> </span>--account<span class="w"> </span>submitter
+</span><span data-line="11">
+</span><span data-line="12"><span class="c1"># Create an on-chain rejection for an existing transaction queue item</span>
+</span><span data-line="13">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>reject<span class="w"> </span><span class="m">2</span>
+</span></pre></div>
+</div>
+<section id="multisend-support">
+<h3>MultiSend Support<a class="headerlink" href="#multisend-support" title="Link to this heading"></a></h3>
+<p>Ape Safe allows sending “batched transactions” using the <code class="docutils literal notranslate"><span class="pre">MultiSend</span></code> module:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">accounts</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe</span><span class="w"> </span><span class="kn">import</span> <span class="n">multisend</span>
+</span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_tokens</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokens</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">me</span> <span class="o">=</span> <span class="n">accounts</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;my-key&quot;</span><span class="p">)</span>
+</span><span data-line="6"><span class="n">safe</span> <span class="o">=</span> <span class="n">accounts</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;my-safe&quot;</span><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Load some contracts using ape-tokens</span>
+</span><span data-line="9"><span class="n">dai</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="s2">&quot;DAI&quot;</span><span class="p">]</span>
+</span><span data-line="10"><span class="n">vault</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="s2">&quot;yvDAI&quot;</span><span class="p">]</span>
+</span><span data-line="11"><span class="n">amount</span> <span class="o">=</span> <span class="n">dai</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">safe</span><span class="p">)</span>  <span class="c1"># How much we want to deposit</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="c1"># Create a multisend batch transaction</span>
+</span><span data-line="14"><span class="n">batch</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
+</span><span data-line="15"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dai</span><span class="o">.</span><span class="n">approve</span><span class="p">,</span> <span class="n">vault</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+</span><span data-line="16"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">vault</span><span class="o">.</span><span class="n">deposit</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="c1"># Fetch signatures from local signer(s)</span>
+</span><span data-line="19"><span class="c1"># NOTE: will broadcast unless `submit=False`</span>
+</span><span data-line="20"><span class="n">batch</span><span class="p">(</span><span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+</span><span data-line="21"><span class="c1"># OR add to the Safe Gateway for later execution</span>
+</span><span data-line="22"><span class="n">batch</span><span class="o">.</span><span class="n">propose</span><span class="p">()</span>
+</span></pre></div>
+</div>
+</section>
+<section id="cloud-environment">
+<h3>Cloud Environment<a class="headerlink" href="#cloud-environment" title="Link to this heading"></a></h3>
+<p>To use this plugin in a cloud environment, such as with the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>, you will need to make sure that you have configured your Safe to exist within the environment.
+The easiest way to do this is to use the <code class="docutils literal notranslate"><span class="pre">require</span></code> configuration item.
+To specify a required Safe in your <code class="docutils literal notranslate"><span class="pre">ape-config.yaml</span></code> (which adds it into your <code class="docutils literal notranslate"><span class="pre">~/.ape/safe</span></code> folder if it doesn’t exist), use:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">safe</span><span class="p">:</span>
+</span><span data-line="2"><span class="w">  </span><span class="nt">require</span><span class="p">:</span>
+</span><span data-line="3"><span class="w">    </span><span class="nt">my-safe</span><span class="p">:</span>
+</span><span data-line="4"><span class="w">      </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0x1234...AbCd&quot;</span>
+</span><span data-line="5"><span class="w">      </span><span class="nt">deployed_chain_ids</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">10</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># Add all deployed chains here</span>
+</span></pre></div>
+</div>
+<p>or in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[tool.ape.safe.require.</span><span class="s2">&quot;my-safe&quot;</span><span class="k">]</span>
+</span><span data-line="2"><span class="n">address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;0x1234...AbCd&quot;</span>
+</span><span data-line="3"><span class="n">deployed_chain_ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="c1"># Add all deployed chains here</span>
+</span></pre></div>
+</div>
+<p>To specify via environment variable, do:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nv">APE_SAFE_REQUIRE</span><span class="o">=</span><span class="s1">&#39;{&quot;my-safe&quot;:{&quot;address&quot;:&quot;0x1234...AbCd&quot;,&quot;deployed_chain_ids&quot;:[1,...]}}&#39;</span>
+</span></pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If a safe with the same alias as an entry in <code class="docutils literal notranslate"><span class="pre">require</span></code> exists in your local environment, this will skip adding it, even if the existing alias points to a different address than the one in the config item.</p>
+</div>
+</section>
+</section>
+<section id="development">
+<h2>Development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<p>Please see the <a class="reference external" href="CONTRIBUTING.md">contributing guide</a> to learn more how to contribute to this project.
+Comments, questions, criticisms and pull requests are welcomed.</p>
+</section>
+<section id="acknowledgements">
+<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Link to this heading"></a></h2>
+<p>This package was inspired by the original ape-safe, now <a class="reference external" href="https://github.com/banteg/brownie-safe">brownie-safe</a> by <a class="reference external" href="https://github.com/banteg">banteg</a>.
+For versions prior to v0.6.0, the original package should be referenced.</p>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../index.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Home</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="transactions.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Transaction Workflows</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+      <script src="../_static/shibuya.js?v=c1cf1a6b"></script></body>
+</html>
