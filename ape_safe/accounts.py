@@ -192,10 +192,6 @@ def get_signatures(
     return signatures
 
 
-def _safe_tx_exec_args(safe_tx: SafeTx) -> list:
-    return list(safe_tx._body_["message"].values())
-
-
 class SafeAccount(AccountAPI):
     account_file_path: Path  # NOTE: Cache any relevant data here
     _factory: ClassVar[SafeFactory] = SafeFactory()
@@ -608,7 +604,7 @@ class SafeAccount(AccountAPI):
             submitter = self.load_submitter(submitter)
             assert isinstance(submitter, AccountAPI)  # NOTE: mypy happy
 
-        exec_args = _safe_tx_exec_args(safe_tx)[:-1]  # NOTE: Skip `nonce`
+        exec_args = list(safe_tx)[:-1]  # NOTE: Skip `nonce`
         encoded_signatures = encode_signatures(signatures)
 
         # NOTE: executes a `ProviderAPI.prepare_transaction`, which may produce `ContractLogicError`

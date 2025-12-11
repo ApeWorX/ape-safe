@@ -114,12 +114,12 @@ class UnexecutedTxData(BaseModel):
     @classmethod
     def from_safe_tx(cls, safe_tx: SafeTx, confirmations_required: int) -> "UnexecutedTxData":
         return cls(
-            safe=safe_tx._verifyingContract_,
+            safe=safe_tx.eip712_domain.verifyingContract,
             submissionDate=datetime.now(timezone.utc),
             modified=datetime.now(timezone.utc),
             confirmationsRequired=confirmations_required,
             safeTxHash=get_safe_tx_hash(safe_tx),
-            **safe_tx._body_["message"],
+            **safe_tx.model_dump(),
         )
 
     def as_safe_tx(self, version: str, chain_id: Optional[int] = None) -> SafeTx:
