@@ -478,7 +478,7 @@ def ensure(cli_ctx, ecosystem, network, submitter, safe):
             f"Running queue script for nonce {nonce} ('{script_path}'):\n\n  {cmd.help}\n"
         )
         # NOTE: This matches signature from `ape_safe.cli:propose_batch`
-        cmd.callback.__wrapped__.func(cli_ctx, network, submitter, safe)
+        cmd.callback.__wrapped__.func(cli_ctx, network, submitter, nonce, safe)
 
     if not network.is_fork:
         cli_ctx.logger.success(f"Queue for {safe.address} up-to-date!")
