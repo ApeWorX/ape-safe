@@ -72,10 +72,10 @@ def propose_from_simulation():
                     "where <N> is convertible to an integer value"
                 )
 
-            script_nonce = int(script_name[5:])
+            script_name_nonce = int(script_name[5:])
 
         else:
-            script_nonce = None  # Auto-determine nonce later
+            script_name_nonce = None  # Use `--nonce` option or lookup on-chain later
 
         @click.command(cls=ConnectedProviderCommand, name=cmd.__module__)
         @ape_cli_context()
@@ -109,9 +109,8 @@ def propose_from_simulation():
             total_gas_used = 0
 
             if nonce is None:
-                # NOTE: Saves an on-chain call (and also works with `pending ensure`)
-                if (mod_name := cmd.__module__.split(".")[-1]).startswith("nonce"):
-                    nonce = int(mod_name.replace("nonce", ""))
+                if script_name_nonce is not None:
+                    nonce = script_name_nonce
 
                 else:
                     nonce = safe.next_nonce
@@ -152,7 +151,7 @@ def propose_from_simulation():
             )
 
             if len(batch.calls) > 1:
-                safe_tx = batch.as_safe_tx(nonce=script_nonce)
+                safe_tx = batch.as_safe_tx(nonce=nonce)
 
             else:  # When only one transaction receipt exits, just directly call that
                 cli_ctx.logger.info("Only 1 call found, calling directly instead of MultiSend")
