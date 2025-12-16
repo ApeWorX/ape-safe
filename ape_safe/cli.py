@@ -1,5 +1,5 @@
 import inspect
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Optional
 
 import click
 from ape.api.accounts import ImpersonatedAccount
@@ -84,11 +84,19 @@ def propose_from_simulation():
             "--submitter",
             prompt="Select an account to submit or propose transaction(s)",
         )
+        @click.option(
+            "--nonce",
+            type=int,
+            default=None,
+            help="Set value of `nonce` for txn."
+            " Will parse integer value of end of script name to automatically set.",
+        )
         @safe_argument
         def new_cmd(
             cli_ctx: ApeCliContextObject,
             network: "NetworkAPI",
             submitter: "AccountAPI",
+            nonce: Optional[int],
             safe: "SafeAccount",
         ):
             if "safe" in args:
@@ -99,6 +107,14 @@ def propose_from_simulation():
             # TODO: Use name of script to determine nonce? If starts with `nonce<XXX>.py`
             batch = safe.create_batch()
             total_gas_used = 0
+
+            if nonce is None:
+                # NOTE: Saves an on-chain call (and also works with `pending ensure`)
+                if (mod_name := cmd.__module__.split(".")[-1]).startswith("nonce"):
+                    nonce = int(mod_name.replace("nonce", ""))
+
+                else:
+                    nonce = safe.next_nonce
 
             with (
                 cli_ctx.chain_manager.isolate()
@@ -142,7 +158,10 @@ def propose_from_simulation():
                 cli_ctx.logger.info("Only 1 call found, calling directly instead of MultiSend")
                 txn = batch.calls[0]
                 safe_tx = safe.create_safe_tx(
-                    to=txn["target"], value=txn["value"], data=txn["callData"]
+                    to=txn["target"],
+                    value=txn["value"],
+                    data=txn["callData"],
+                    nonce=nonce,
                 )
 
             if network.is_fork:  # Testing, execute as a simulation (don't set nonce)
