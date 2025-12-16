@@ -428,7 +428,7 @@ def ensure(cli_ctx, ecosystem, network, submitter, safe):
 
     if scripts_to_ensure := list(
         cli_ctx.local_project.scripts_folder.glob(
-            f"{ecosystem.name}_{network.name.rstrip('-fork')}_nonce*.py"
+            f"{ecosystem.name}_{network.name.replace('-fork', '')}_nonce*.py"
         )
     ):
         scripts_found_str = "\n".join(
@@ -441,6 +441,44 @@ def ensure(cli_ctx, ecosystem, network, submitter, safe):
             str(fs.relative_to(cli_ctx.local_project.scripts_folder)) for fs in scripts_to_ensure
         )
         cli_ctx.logger.debug(f"Scripts found:\n{scripts_found_str}")
+
+    elif (
+        network_subfolder := cli_ctx.local_project.scripts_folder
+        / ecosystem.name
+        / network.name.replace("-fork", "")
+    ).exists() and (scripts_to_ensure := list(network_subfolder.glob("nonce*.py"))):
+        scripts_found_str = "\n".join(
+            str(fs.relative_to(cli_ctx.local_project.scripts_folder)) for fs in scripts_to_ensure
+        )
+        cli_ctx.logger.debug(f"Network-specific scripts found:\n{scripts_found_str}")
+
+    elif (alias_subfolder := cli_ctx.local_project.scripts_folder / safe.alias).exists() and (
+        scripts_to_ensure := list(
+            alias_subfolder.glob(f"{ecosystem.name}_{network.name.replace('-fork', '')}_nonce*.py")
+        )
+    ):
+        scripts_found_str = "\n".join(
+            str(fs.relative_to(cli_ctx.local_project.scripts_folder)) for fs in scripts_to_ensure
+        )
+        cli_ctx.logger.debug(f"Network-specific scripts found:\n{scripts_found_str}")
+
+    elif alias_subfolder.exists() and (
+        scripts_to_ensure := list(alias_subfolder.glob("nonce*.py"))
+    ):
+        scripts_found_str = "\n".join(
+            str(fs.relative_to(cli_ctx.local_project.scripts_folder)) for fs in scripts_to_ensure
+        )
+        cli_ctx.logger.debug(f"Scripts found:\n{scripts_found_str}")
+
+    elif (
+        alias_network_subfolder := alias_subfolder
+        / ecosystem.name
+        / network.name.replace("-fork", "")
+    ).exists() and (scripts_to_ensure := list(alias_network_subfolder.glob("nonce*.py"))):
+        scripts_found_str = "\n".join(
+            str(fs.relative_to(cli_ctx.local_project.scripts_folder)) for fs in scripts_to_ensure
+        )
+        cli_ctx.logger.debug(f"Network-specific scripts found:\n{scripts_found_str}")
 
     else:
         raise click.UsageError("No queue scripts detected under `scripts/`.")
