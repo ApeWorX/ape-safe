@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=a318c5d4" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -125,6 +125,7 @@ data-aria-dark="Switch to auto color mode">
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#queue-scripts">Queue Scripts</a></li>
+<li><a class="reference internal" href="#queue-management">Queue Management</a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -153,52 +154,115 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </div><div class="flex flex-col break-words justify-between">
-      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
-        <article class="yue" role="main">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  
+
+
+<div class="copy-page-wrapper relative pb-4 lg:absolute lg:top-8 lg:right-6 xl:right-12">
+  <div id="copy-page-trigger">
+    <button
+      type="button"
+      class="js-copy px-3 py-1 inline-flex items-center gap-1"
+      data-url="../_sources/userguides/production.md.txt"
+    >
+      <i class="i-lucide" data-icon="copy"></i>
+      <span>Copy page</span>
+    </button>
+    <button class="js-menu px-2 py-1" type="button" aria-label="More actions"
+      aria-haspopup="menu" aria-expanded="false" aria-controls="copy-page-content">
+      <i class="i-lucide chevron-down"></i>
+    </button>
+  </div>
+  <div id="copy-page-content" role="menu" aria-orientation="vertical" aria-hidden="true">
+    <div role="presentation">
+      <div class="flex flex-col" role="group">
+        <button class="js-copy" type="button" role="menuitem"
+          data-url="../_sources/userguides/production.md.txt">
+          <span class="iconify-icon">
+            <i class="i-lucide" data-icon="copy"></i>
+          </span>
+          <span>Copy page</span>
+        </button>
+        <a role="menuitem" href="../_sources/userguides/production.md.txt" target="_blank" rel="nofollow">
+          
+            <iconify-icon icon="bi:markdown"></iconify-icon>
+            <span>View as Markdown</span>
+          
+        </a>
+        
+        <a role="menuitem" href="https://chatgpt.com/?hints=search&q=Read%20../_sources/userguides/production.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:openai"></iconify-icon>
+          <span>Open in ChatGPT</span>
+        </a>
+        
+        
+        <a role="menuitem" href="https://claude.ai/new?q=Read%20../_sources/userguides/production.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:claude"></iconify-icon>
+          <span>Open in Claude</span>
+        </a>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+<article class="yue" role="main">
           <section id="managing-your-safe-in-production">
 <h1>Managing your Safe in Production<a class="headerlink" href="#managing-your-safe-in-production" title="Link to this heading"></a></h1>
 <p>When co-managing a Safe with a larger team, ape-safe brings extra tools to the table to help you.</p>
 <section id="queue-scripts">
 <h2>Queue Scripts<a class="headerlink" href="#queue-scripts" title="Link to this heading"></a></h2>
-<p>You can define “queue scripts” which are scripts under your project’s <code class="docutils literal notranslate"><span class="pre">scripts/</span></code> folder that follow
-a naming convention (either <code class="docutils literal notranslate"><span class="pre">scripts/nonce&lt;N&gt;.py</span></code> or <code class="docutils literal notranslate"><span class="pre">scripts/&lt;ecosystem&gt;_&lt;network&gt;_nonce&lt;N&gt;.py</span></code>),
-and then use the <a class="reference external" href="../../methoddocs/cli"><code class="docutils literal notranslate"><span class="pre">propose_from_simulation</span></code></a> decorator.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The value of the nonce <code class="docutils literal notranslate"><span class="pre">N</span></code> must correspond to a specific nonce above the current on-chain
-value of <code class="docutils literal notranslate"><span class="pre">nonce</span></code> from the safe, or it will not be recognized by our other queue management command.</p>
+<p>You can define “queue scripts” which are scripts under your project’s <code class="docutils literal notranslate"><span class="pre">scripts/</span></code> folder that use
+the <a class="reference external" href="../methoddocs/cli"><code class="docutils literal notranslate"><span class="pre">propose_from_simulation</span></code></a> decorator in your script.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>These scripts should follow a recommended naming convention by naming them either
+<code class="docutils literal notranslate"><span class="pre">scripts/nonce&lt;N&gt;.py</span></code> or <code class="docutils literal notranslate"><span class="pre">scripts/&lt;ecosystem&gt;_&lt;network&gt;_nonce&lt;N&gt;.py</span></code>).
+This will automatically registry with the <a class="reference external" href="#queue-management">queue management</a>
+subcommand that ships with ape-safe.</p>
+<p>The value of the nonce <code class="docutils literal notranslate"><span class="pre">N</span></code> must correspond to a specific nonce above the current on-chain contract
+value of <code class="docutils literal notranslate"><span class="pre">nonce</span></code> from the Safe, or it will not be collected by the queue management command.</p>
 </div>
 <p>An example:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">propose_from_simulation</span>
-</span><span data-line="2">
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># scripts/nonce&lt;N&gt;.py</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">propose_from_simulation</span>
 </span><span data-line="3">
-</span><span data-line="4"><span class="nd">@propose_from_simulation</span><span class="p">()</span>
-</span><span data-line="5"><span class="k">def</span><span class="w"> </span><span class="nf">cli</span><span class="p">():</span>
-</span><span data-line="6">    <span class="c1"># This entire function is executed within a fork/isolated context</span>
-</span><span data-line="7">
-</span><span data-line="8">    <span class="c1"># Use normal Ape features</span>
-</span><span data-line="9">    <span class="n">my_contract</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="s2">&quot;&lt;address&gt;&quot;</span><span class="p">)</span>
-</span><span data-line="10">
-</span><span data-line="11">    <span class="c1"># Any transaction is performed as if `sender=safe.address`</span>
-</span><span data-line="12">    <span class="n">my_contract</span><span class="o">.</span><span class="n">mutableMethod</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</span><span data-line="13">
-</span><span data-line="14">    <span class="c1"># You can make assertions that will cause your simulation to fail if tripped</span>
-</span><span data-line="15">    <span class="k">assert</span> <span class="n">my_contract</span><span class="o">.</span><span class="n">viewMethod</span><span class="p">()</span> <span class="o">==</span> <span class="o">...</span>
-</span><span data-line="16">
-</span><span data-line="17">    <span class="c1"># You can also add conditional calls</span>
-</span><span data-line="18">    <span class="k">if</span> <span class="n">my_contract</span><span class="o">.</span><span class="n">viewMethod</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">some_number</span><span class="p">:</span>
-</span><span data-line="19">        <span class="n">my_contract</span><span class="o">.</span><span class="n">mutableMethod</span><span class="p">()</span>
-</span><span data-line="20">
-</span><span data-line="21">    <span class="c1"># Once you are done with your transactions, the simulation will complete after exiting</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="nd">@propose_from_simulation</span><span class="p">()</span>
+</span><span data-line="6"><span class="k">def</span><span class="w"> </span><span class="nf">cli</span><span class="p">():</span>
+</span><span data-line="7">    <span class="c1"># This entire function is executed within a fork/isolated context</span>
+</span><span data-line="8">
+</span><span data-line="9">    <span class="c1"># Use normal Ape features</span>
+</span><span data-line="10">    <span class="n">my_contract</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="s2">&quot;&lt;address&gt;&quot;</span><span class="p">)</span>
+</span><span data-line="11">
+</span><span data-line="12">    <span class="c1"># Any transaction is performed as if `sender=safe.address` (using Ape&#39;s default sender support)</span>
+</span><span data-line="13">    <span class="n">my_contract</span><span class="o">.</span><span class="n">mutableMethod</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span data-line="14">
+</span><span data-line="15">    <span class="c1"># You can make assertions that will cause your simulation to fail if tripped</span>
+</span><span data-line="16">    <span class="k">assert</span> <span class="n">my_contract</span><span class="o">.</span><span class="n">viewMethod</span><span class="p">()</span> <span class="o">==</span> <span class="o">...</span>
+</span><span data-line="17">
+</span><span data-line="18">    <span class="c1"># You can also add conditional calls</span>
+</span><span data-line="19">    <span class="k">if</span> <span class="n">my_contract</span><span class="o">.</span><span class="n">viewMethod</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">some_number</span><span class="p">:</span>
+</span><span data-line="20">        <span class="n">my_contract</span><span class="o">.</span><span class="n">mutableMethod</span><span class="p">()</span>
 </span></pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The callback function <strong>MUST</strong> be named <code class="docutils literal notranslate"><span class="pre">cli</span></code> or it won’t work with Ape’s script runner.</p>
 </div>
 <p>Once the simulation is complete, the decorator will collect all receipts it finds from the <code class="docutils literal notranslate"><span class="pre">safe</span></code>’s
 history during that session, and collect them into a single SafeTx to propose to a public network.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>The name of the decorated function in your queue script <strong>must</strong> be <code class="docutils literal notranslate"><span class="pre">cli</span></code> for it to work.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If only one transaction is detected, it will “condense” that as a direct call,
+instead of using <code class="docutils literal notranslate"><span class="pre">MultiSend</span></code> (which is used for &gt;1 detected transactions).</p>
 </div>
-<p>The decorated function may have <code class="docutils literal notranslate"><span class="pre">safe</span></code> or <code class="docutils literal notranslate"><span class="pre">submitter</span></code> args in it, in order to access their values.</p>
+<p>The decorated function may have <code class="docutils literal notranslate"><span class="pre">safe</span></code> or <code class="docutils literal notranslate"><span class="pre">submitter</span></code> args in it,
+in order to access their values within your simulation.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">submitter</span></code> is needed, <code class="docutils literal notranslate"><span class="pre">safe</span></code> must also be present in the args.</p>
+</div>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@propose_from_simulation</span><span class="p">()</span>
 </span><span data-line="2"><span class="c1"># NOTE: Can also just use `def cli(safe):` if you don&#39;t need `submitter`</span>
 </span><span data-line="3"><span class="k">def</span><span class="w"> </span><span class="nf">cli</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">submitter</span><span class="p">):</span>
@@ -209,22 +273,22 @@ history during that session, and collect them into a single SafeTx to propose to
 </span><span data-line="8">    <span class="k">assert</span> <span class="n">token</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">submitter</span><span class="p">)</span> <span class="o">==</span> <span class="n">bal_before</span> <span class="o">+</span> <span class="n">amount</span>
 </span></pre></div>
 </div>
-<p>You can run the script directly using the following command, and it will dry-run the transaction:</p>
+<p>You can run the script directly using the following command, and it will “dry-run” the <code class="docutils literal notranslate"><span class="pre">SafeTx</span></code>:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>ape<span class="w"> </span>run<span class="w"> </span>nonce&lt;N&gt;<span class="w"> </span>your-safe<span class="w"> </span>--network<span class="w"> </span>ethereum:mainnet-fork<span class="w"> </span>--submitter<span class="w"> </span>TEST::0
 </span></pre></div>
 </div>
+</section>
+<section id="queue-management">
+<h2>Queue Management<a class="headerlink" href="#queue-management" title="Link to this heading"></a></h2>
 <p>We also provide a command <a class="reference external" href="../../commands/pending#ape-safe-pending-ensure"><code class="docutils literal notranslate"><span class="pre">ape</span> <span class="pre">safe</span> <span class="pre">pending</span> <span class="pre">ensure</span></code></a>
-that allows you to execute all matching nonce commands up to the latest you have defined in sequence.
-This allows you to check for side-effects of commands in the queue, helping to reduce human error.</p>
-<p>To execute a dry-run of all matching queue scripts for your safe, execute the following:</p>
+that allows you to execute <strong>all</strong> matching queue scripts you have defined in <code class="docutils literal notranslate"><span class="pre">scripts/</span></code>.
+This allows you to check side-effects from running all commands in the queue,
+helping to reduce human error.</p>
+<p>To execute a dry-run of all matching queue scripts for your Safe, execute the following:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>ensure<span class="w"> </span>--safe<span class="w"> </span>your-safe<span class="w"> </span>--network<span class="w"> </span>ethereum:mainnet-fork<span class="w"> </span>--submitter<span class="w"> </span>TEST::0
 </span></pre></div>
 </div>
-<p>Once you are ready, you can “propose” your queue script to the Safe API via the following:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>ape<span class="w"> </span>run<span class="w"> </span>nonce&lt;N&gt;<span class="w"> </span>your-safe<span class="w"> </span>--network<span class="w"> </span>ethereum:mainnet<span class="w"> </span>--submitter<span class="w"> </span>local-wallet
-</span></pre></div>
-</div>
-<p>You can also propose all of your queue scripts (if there are discrepencies) to the Safe API via:</p>
+<p>Once you are ready, you can “push” your queue scripts to the Safe API via the following:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>ensure<span class="w"> </span>--safe<span class="w"> </span>your-safe<span class="w"> </span>--network<span class="w"> </span>ethereum:mainnet<span class="w"> </span>--submitter<span class="w"> </span>local-wallet
 </span></pre></div>
 </div>
@@ -235,11 +299,11 @@ by the Safe API as a delegate for another signer, otherwise it will fail to prop
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>It is recommended to use our ensure command in a secure context, such as Github Actions, where all
+<p>It is recommended to use our <code class="docutils literal notranslate"><span class="pre">ensure</span></code> command in a secure context, such as Github Actions, where all
 scripts can be reviewed by signers, and access is controlled behind Github’s access control system.</p>
 </div>
-<!-- TODO: Add Github Action? -->
-<!-- TODO: Add self-hosted API? -->
+<!-- TODO: Add Github Action for `pending ensure` command? -->
+<!-- TODO: Add self-hosting the Safe API w/ `ape safe host`? -->
 </section>
 </section>
 
@@ -289,5 +353,5 @@ scripts can be reviewed by signers, and access is controlled behind Github’s a
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=c1cf1a6b"></script></body>
+      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
 </html>

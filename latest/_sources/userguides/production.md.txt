@@ -4,18 +4,23 @@ When co-managing a Safe with a larger team, ape-safe brings extra tools to the t
 
 ## Queue Scripts
 
-You can define "queue scripts" which are scripts under your project's `scripts/` folder that follow
-a naming convention (either `scripts/nonce<N>.py` or `scripts/<ecosystem>_<network>_nonce<N>.py`),
-and then use the [`propose_from_simulation`](../../methoddocs/cli) decorator.
+You can define "queue scripts" which are scripts under your project's `scripts/` folder that use
+the [`propose_from_simulation`](../methoddocs/cli) decorator in your script.
 
-```{note}
-The value of the nonce `N` must correspond to a specific nonce above the current on-chain
-value of `nonce` from the safe, or it will not be recognized by our other queue management command.
+```{important}
+These scripts should follow a recommended naming convention by naming them either
+`scripts/nonce<N>.py` or `scripts/<ecosystem>_<network>_nonce<N>.py`).
+This will automatically registry with the [queue management](#queue-management)
+subcommand that ships with ape-safe.
+
+The value of the nonce `N` must correspond to a specific nonce above the current on-chain contract
+value of `nonce` from the Safe, or it will not be collected by the queue management command.
 ```
 
 An example:
 
 ```py
+# scripts/nonce<N>.py
 from ape_safe.cli import propose_from_simulation
 
 
@@ -26,7 +31,7 @@ def cli():
     # Use normal Ape features
     my_contract = Contract("<address>")
 
-    # Any transaction is performed as if `sender=safe.address`
+    # Any transaction is performed as if `sender=safe.address` (using Ape's default sender support)
     my_contract.mutableMethod(...)
 
     # You can make assertions that will cause your simulation to fail if tripped
@@ -35,18 +40,26 @@ def cli():
     # You can also add conditional calls
     if my_contract.viewMethod() < some_number:
         my_contract.mutableMethod()
+```
 
-    # Once you are done with your transactions, the simulation will complete after exiting
+```{warning}
+The callback function **MUST** be named `cli` or it won't work with Ape's script runner.
 ```
 
 Once the simulation is complete, the decorator will collect all receipts it finds from the `safe`'s
 history during that session, and collect them into a single SafeTx to propose to a public network.
 
-```{important}
-The name of the decorated function in your queue script **must** be `cli` for it to work.
+```{note}
+If only one transaction is detected, it will "condense" that as a direct call,
+instead of using `MultiSend` (which is used for >1 detected transactions).
 ```
 
-The decorated function may have `safe` or `submitter` args in it, in order to access their values.
+The decorated function may have `safe` or `submitter` args in it,
+in order to access their values within your simulation.
+
+```{note}
+If `submitter` is needed, `safe` must also be present in the args.
+```
 
 ```py
 @propose_from_simulation()
@@ -59,29 +72,26 @@ def cli(safe, submitter):
     assert token.balanceOf(submitter) == bal_before + amount
 ```
 
-You can run the script directly using the following command, and it will dry-run the transaction:
+You can run the script directly using the following command, and it will "dry-run" the `SafeTx`:
 
 ```sh
 $ ape run nonce<N> your-safe --network ethereum:mainnet-fork --submitter TEST::0
 ```
 
-We also provide a command [`ape safe pending ensure`](../../commands/pending#ape-safe-pending-ensure)
-that allows you to execute all matching nonce commands up to the latest you have defined in sequence.
-This allows you to check for side-effects of commands in the queue, helping to reduce human error.
+## Queue Management
 
-To execute a dry-run of all matching queue scripts for your safe, execute the following:
+We also provide a command [`ape safe pending ensure`](../../commands/pending#ape-safe-pending-ensure)
+that allows you to execute **all** matching queue scripts you have defined in `scripts/`.
+This allows you to check side-effects from running all commands in the queue,
+helping to reduce human error.
+
+To execute a dry-run of all matching queue scripts for your Safe, execute the following:
 
 ```sh
 $ ape safe pending ensure --safe your-safe --network ethereum:mainnet-fork --submitter TEST::0
 ```
 
-Once you are ready, you can "propose" your queue script to the Safe API via the following:
-
-```sh
-$ ape run nonce<N> your-safe --network ethereum:mainnet --submitter local-wallet
-```
-
-You can also propose all of your queue scripts (if there are discrepencies) to the Safe API via:
+Once you are ready, you can "push" your queue scripts to the Safe API via the following:
 
 ```sh
 $ ape safe pending ensure --safe your-safe --network ethereum:mainnet --submitter local-wallet
@@ -93,10 +103,10 @@ by the Safe API as a delegate for another signer, otherwise it will fail to prop
 ```
 
 ```{note}
-It is recommended to use our ensure command in a secure context, such as Github Actions, where all
+It is recommended to use our `ensure` command in a secure context, such as Github Actions, where all
 scripts can be reviewed by signers, and access is controlled behind Github's access control system.
 ```
 
-<!-- TODO: Add Github Action? -->
+<!-- TODO: Add Github Action for `pending ensure` command? -->
 
-<!-- TODO: Add self-hosted API? -->
+<!-- TODO: Add self-hosting the Safe API w/ `ape safe host`? -->
