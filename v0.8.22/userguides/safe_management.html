@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Safe Management - ape-safe documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="MultiSend" href="multisend.html" /><link rel="prev" title="Transaction Workflows" href="transactions.html" />
+      <link rel="canonical" href="ape-safe/userguides/safe_management.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=a318c5d4" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="ape-safe/userguides/safe_management.html"/>
+  <meta property="og:title" content="Safe Management"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      <img class="light-logo" src="../_static/logo_grey.svg" alt="ape-safe" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/logo_green.svg" alt="ape-safe" height="28" loading="lazy" />
+      <strong>ape-safe</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transactions.html">Transaction Workflows</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Safe Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multisend.html">MultiSend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="production.html">Managing your Safe in Production</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/mgmt.html">Local Safe Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/pending.html">Pending Transactions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/delegates.html">Managing Delegates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/modules.html">Modules</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/accounts.html"><code class="docutils literal notranslate"><span class="pre">SafeAccount</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/accounts.html#ape_safe.accounts.SafeContainer"><code class="docutils literal notranslate"><span class="pre">SafeContainer</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/cli.html"><code class="docutils literal notranslate"><span class="pre">propose_from_simulation()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html"><code class="docutils literal notranslate"><span class="pre">BaseSafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.ExecutedTxData"><code class="docutils literal notranslate"><span class="pre">ExecutedTxData</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.MockSafeClient"><code class="docutils literal notranslate"><span class="pre">MockSafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.OperationType"><code class="docutils literal notranslate"><span class="pre">OperationType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SafeClient"><code class="docutils literal notranslate"><span class="pre">SafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SafeDetails"><code class="docutils literal notranslate"><span class="pre">SafeDetails</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SafeTxConfirmation"><code class="docutils literal notranslate"><span class="pre">SafeTxConfirmation</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SignatureType"><code class="docutils literal notranslate"><span class="pre">SignatureType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.UnexecutedTxData"><code class="docutils literal notranslate"><span class="pre">UnexecutedTxData</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/config.html"><code class="docutils literal notranslate"><span class="pre">SafeConfig</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html"><code class="docutils literal notranslate"><span class="pre">ActionNotPerformedError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ApeSafeError"><code class="docutils literal notranslate"><span class="pre">ApeSafeError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ApeSafeException"><code class="docutils literal notranslate"><span class="pre">ApeSafeException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ClientResponseError"><code class="docutils literal notranslate"><span class="pre">ClientResponseError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ClientUnavailable"><code class="docutils literal notranslate"><span class="pre">ClientUnavailable</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.FeatureNotAvailable"><code class="docutils literal notranslate"><span class="pre">FeatureNotAvailable</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.MulticallException"><code class="docutils literal notranslate"><span class="pre">MulticallException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.MultisigTransactionNotFoundError"><code class="docutils literal notranslate"><span class="pre">MultisigTransactionNotFoundError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NoLocalSigners"><code class="docutils literal notranslate"><span class="pre">NoLocalSigners</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NoVersionDetected"><code class="docutils literal notranslate"><span class="pre">NoVersionDetected</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NotASigner"><code class="docutils literal notranslate"><span class="pre">NotASigner</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NotEnoughSignatures"><code class="docutils literal notranslate"><span class="pre">NotEnoughSignatures</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.SafeClientException"><code class="docutils literal notranslate"><span class="pre">SafeClientException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.SafeLogicError"><code class="docutils literal notranslate"><span class="pre">SafeLogicError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.UnsupportedChainError"><code class="docutils literal notranslate"><span class="pre">UnsupportedChainError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ValueRequired"><code class="docutils literal notranslate"><span class="pre">ValueRequired</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.handle_safe_logic_error"><code class="docutils literal notranslate"><span class="pre">handle_safe_logic_error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/factory.html"><code class="docutils literal notranslate"><span class="pre">SafeFactory</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/multisend.html"><code class="docutils literal notranslate"><span class="pre">MultiSend</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html"><code class="docutils literal notranslate"><span class="pre">DeploymentAsset</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html#ape_safe.packages.DeploymentInfo"><code class="docutils literal notranslate"><span class="pre">DeploymentInfo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html#ape_safe.packages.DeploymentType"><code class="docutils literal notranslate"><span class="pre">DeploymentType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html#ape_safe.packages.PackageType"><code class="docutils literal notranslate"><span class="pre">PackageType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/types.html"><code class="docutils literal notranslate"><span class="pre">SafeCacheData</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#working-with-safe-contracts">Working with Safe Contracts</a></li>
+<li><a class="reference internal" href="#changing-safe-ownership-and-threshold">Changing Safe Ownership and Threshold</a></li>
+<li><a class="reference internal" href="#safe-modules">Safe Modules</a></li>
+<li><a class="reference internal" href="#safe-guard">Safe Guard</a></li>
+<li><a class="reference internal" href="#understanding-safe-versions">Understanding Safe Versions</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">ape-safe</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Safe Management</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  
+
+
+<div class="copy-page-wrapper relative pb-4 lg:absolute lg:top-8 lg:right-6 xl:right-12">
+  <div id="copy-page-trigger">
+    <button
+      type="button"
+      class="js-copy px-3 py-1 inline-flex items-center gap-1"
+      data-url="../_sources/userguides/safe_management.md.txt"
+    >
+      <i class="i-lucide" data-icon="copy"></i>
+      <span>Copy page</span>
+    </button>
+    <button class="js-menu px-2 py-1" type="button" aria-label="More actions"
+      aria-haspopup="menu" aria-expanded="false" aria-controls="copy-page-content">
+      <i class="i-lucide chevron-down"></i>
+    </button>
+  </div>
+  <div id="copy-page-content" role="menu" aria-orientation="vertical" aria-hidden="true">
+    <div role="presentation">
+      <div class="flex flex-col" role="group">
+        <button class="js-copy" type="button" role="menuitem"
+          data-url="../_sources/userguides/safe_management.md.txt">
+          <span class="iconify-icon">
+            <i class="i-lucide" data-icon="copy"></i>
+          </span>
+          <span>Copy page</span>
+        </button>
+        <a role="menuitem" href="../_sources/userguides/safe_management.md.txt" target="_blank" rel="nofollow">
+          
+            <iconify-icon icon="bi:markdown"></iconify-icon>
+            <span>View as Markdown</span>
+          
+        </a>
+        
+        <a role="menuitem" href="https://chatgpt.com/?hints=search&q=Read%20../_sources/userguides/safe_management.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:openai"></iconify-icon>
+          <span>Open in ChatGPT</span>
+        </a>
+        
+        
+        <a role="menuitem" href="https://claude.ai/new?q=Read%20../_sources/userguides/safe_management.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:claude"></iconify-icon>
+          <span>Open in Claude</span>
+        </a>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+<article class="yue" role="main">
+          <section id="safe-management">
+<h1>Safe Management<a class="headerlink" href="#safe-management" title="Link to this heading"></a></h1>
+<p>This guide explains how to modify your Safe configuration programmatically.</p>
+<section id="working-with-safe-contracts">
+<h2>Working with Safe Contracts<a class="headerlink" href="#working-with-safe-contracts" title="Link to this heading"></a></h2>
+<p>You can directly access the underlying Safe protocol smart contract via <code class="docutils literal notranslate"><span class="pre">safe.contract</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Accessible as `safe.signers`</span>
+</span><span data-line="2"><span class="n">owners</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">getOwners</span><span class="p">()</span>
+</span><span data-line="3"><span class="k">assert</span> <span class="n">owners</span> <span class="o">==</span> <span class="n">safe</span><span class="o">.</span><span class="n">signers</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Accessible as `safe.confirmations_required`</span>
+</span><span data-line="6"><span class="n">threshold</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">getThreshold</span><span class="p">()</span>
+</span><span data-line="7"><span class="k">assert</span> <span class="n">threshold</span> <span class="o">==</span> <span class="n">safe</span><span class="o">.</span><span class="n">confirmations_required</span>
+</span></pre></div>
+</div>
+</section>
+<section id="changing-safe-ownership-and-threshold">
+<h2>Changing Safe Ownership and Threshold<a class="headerlink" href="#changing-safe-ownership-and-threshold" title="Link to this heading"></a></h2>
+<p>Using the Safe contract provides methods to modify the Safe’s owner set:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Add a new owner with the current threshold</span>
+</span><span data-line="2"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">addOwnerWithThreshold</span><span class="p">(</span>
+</span><span data-line="3">    <span class="s2">&quot;0xNewOwnerAddress&quot;</span><span class="p">,</span>
+</span><span data-line="4">    <span class="n">safe</span><span class="o">.</span><span class="n">confirmations_required</span><span class="p">,</span>  <span class="c1"># NOTE: Can also change threshold as the same time</span>
+</span><span data-line="5">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span>
+</span><span data-line="6"><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Remove an owner</span>
+</span><span data-line="9"><span class="n">prev_owner</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">&quot;0xOwnerToRemove&quot;</span><span class="p">)</span>
+</span><span data-line="10"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">removeOwner</span><span class="p">(</span>
+</span><span data-line="11">    <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">&quot;0xOwnerToRemove&quot;</span><span class="p">),</span>
+</span><span data-line="12">    <span class="s2">&quot;0xOwnerToRemove&quot;</span><span class="p">,</span>
+</span><span data-line="13">    <span class="n">safe</span><span class="o">.</span><span class="n">confirmations_required</span><span class="p">,</span>  <span class="c1"># NOTE: Can also change threshold as the same time</span>
+</span><span data-line="14">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span>
+</span><span data-line="15"><span class="p">)</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="c1"># Swap an owner</span>
+</span><span data-line="18"><span class="n">prev_owner</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">&quot;0xOldOwner&quot;</span><span class="p">)</span>
+</span><span data-line="19"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">swapOwner</span><span class="p">(</span>
+</span><span data-line="20">    <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">&quot;0xOwnerToRemove&quot;</span><span class="p">),</span>
+</span><span data-line="21">    <span class="s2">&quot;0xOldOwner&quot;</span><span class="p">,</span>
+</span><span data-line="22">    <span class="s2">&quot;0xNewOwner&quot;</span><span class="p">,</span>
+</span><span data-line="23">    <span class="c1"># NOTE: Cannot modify threshold this way</span>
+</span><span data-line="24">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span>
+</span><span data-line="25"><span class="p">)</span>
+</span><span data-line="26">
+</span><span data-line="27"><span class="c1"># Change threshold</span>
+</span><span data-line="28"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">changeThreshold</span><span class="p">(</span>
+</span><span data-line="29">    <span class="n">new_threshold</span><span class="p">,</span>
+</span><span data-line="30">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span>
+</span><span data-line="31"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Note that these are multisig transactions themselves and require the appropriate number of confirmations.</p>
+</section>
+<section id="safe-modules">
+<h2>Safe Modules<a class="headerlink" href="#safe-modules" title="Link to this heading"></a></h2>
+<p>The Safe protocol supports configuring “Modules”, which are contracts that have special capabilities to access your Safe.</p>
+<p>You can enable or disable modules using the Safe contract as followsnot :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">assert</span> <span class="ow">not</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">isModuleEnabled</span><span class="p">(</span><span class="s2">&quot;0xModule&quot;</span><span class="p">)</span>
+</span><span data-line="2"><span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">enableModule</span><span class="p">(</span><span class="s2">&quot;0xModule&quot;</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">)</span>
+</span><span data-line="3"><span class="k">assert</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">isModuleEnabled</span><span class="p">(</span><span class="s2">&quot;0xModule&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">disableModule</span><span class="p">(</span><span class="s2">&quot;0xModule&quot;</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">)</span>
+</span><span data-line="5"><span class="k">assert</span> <span class="ow">not</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">isModuleEnabled</span><span class="p">(</span><span class="s2">&quot;0xModule&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<!-- TODO better module support -->
+</section>
+<section id="safe-guard">
+<h2>Safe Guard<a class="headerlink" href="#safe-guard" title="Link to this heading"></a></h2>
+<p>Since version v1.3.0, the Safe protocol supports setting a transaction “Guard”, which is a contract that can disallow certain actions to occur unless conditions are met after a proposed transaction executes.
+To check if your safe has a Guard implemented, you can use the <code class="docutils literal notranslate"><span class="pre">.guard</span></code> property, which will return a contract if the guard is set.</p>
+<p>You can also change or set a guard using the <code class="docutils literal notranslate"><span class="pre">.set_guard</span></code> function:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">assert</span> <span class="ow">not</span> <span class="n">safe</span><span class="o">.</span><span class="n">guard</span>
+</span><span data-line="2"><span class="n">safe</span><span class="o">.</span><span class="n">set_guard</span><span class="p">(</span><span class="s2">&quot;0xMyGuard&quot;</span><span class="p">,</span> <span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+</span><span data-line="3"><span class="k">assert</span> <span class="n">safe</span><span class="o">.</span><span class="n">guard</span>
+</span></pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Setting a Guard is a dangerous action.
+Do <em>NOT</em> attempt unless you know what you are doing.
+If a Guard is set improperly, it may render your Safe (and all it’s assets) permanently inaccessible.</p>
+</div>
+</section>
+<section id="understanding-safe-versions">
+<h2>Understanding Safe Versions<a class="headerlink" href="#understanding-safe-versions" title="Link to this heading"></a></h2>
+<p>Safe contracts have different versions with varying features. Ape Safe supports all major Safe versions:</p>
+<ul class="simple">
+<li><p>Safe v1.1.1</p></li>
+<li><p>Safe v1.3.0</p></li>
+<li><p>Safe v1.4.1</p></li>
+</ul>
+<p>You can check the version of your Safe by examining the master copy address when listing Safes with the <code class="docutils literal notranslate"><span class="pre">--verbose</span></code> flag.</p>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="transactions.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Transaction Workflows</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="multisend.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">MultiSend</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+</html>

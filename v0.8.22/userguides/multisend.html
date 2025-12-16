@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>MultiSend - ape-safe documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Modules" href="modules.html" /><link rel="prev" title="Safe Management" href="safe_management.html" />
+      <link rel="canonical" href="ape-safe/userguides/multisend.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=a318c5d4" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="ape-safe/userguides/multisend.html"/>
+  <meta property="og:title" content="MultiSend"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      <img class="light-logo" src="../_static/logo_grey.svg" alt="ape-safe" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/logo_green.svg" alt="ape-safe" height="28" loading="lazy" />
+      <strong>ape-safe</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transactions.html">Transaction Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="safe_management.html">Safe Management</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MultiSend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="production.html">Managing your Safe in Production</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/mgmt.html">Local Safe Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/pending.html">Pending Transactions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/delegates.html">Managing Delegates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/modules.html">Modules</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/accounts.html"><code class="docutils literal notranslate"><span class="pre">SafeAccount</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/accounts.html#ape_safe.accounts.SafeContainer"><code class="docutils literal notranslate"><span class="pre">SafeContainer</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/cli.html"><code class="docutils literal notranslate"><span class="pre">propose_from_simulation()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html"><code class="docutils literal notranslate"><span class="pre">BaseSafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.ExecutedTxData"><code class="docutils literal notranslate"><span class="pre">ExecutedTxData</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.MockSafeClient"><code class="docutils literal notranslate"><span class="pre">MockSafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.OperationType"><code class="docutils literal notranslate"><span class="pre">OperationType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SafeClient"><code class="docutils literal notranslate"><span class="pre">SafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SafeDetails"><code class="docutils literal notranslate"><span class="pre">SafeDetails</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SafeTxConfirmation"><code class="docutils literal notranslate"><span class="pre">SafeTxConfirmation</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.SignatureType"><code class="docutils literal notranslate"><span class="pre">SignatureType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/client.html#ape_safe.client.UnexecutedTxData"><code class="docutils literal notranslate"><span class="pre">UnexecutedTxData</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/config.html"><code class="docutils literal notranslate"><span class="pre">SafeConfig</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html"><code class="docutils literal notranslate"><span class="pre">ActionNotPerformedError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ApeSafeError"><code class="docutils literal notranslate"><span class="pre">ApeSafeError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ApeSafeException"><code class="docutils literal notranslate"><span class="pre">ApeSafeException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ClientResponseError"><code class="docutils literal notranslate"><span class="pre">ClientResponseError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ClientUnavailable"><code class="docutils literal notranslate"><span class="pre">ClientUnavailable</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.FeatureNotAvailable"><code class="docutils literal notranslate"><span class="pre">FeatureNotAvailable</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.MulticallException"><code class="docutils literal notranslate"><span class="pre">MulticallException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.MultisigTransactionNotFoundError"><code class="docutils literal notranslate"><span class="pre">MultisigTransactionNotFoundError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NoLocalSigners"><code class="docutils literal notranslate"><span class="pre">NoLocalSigners</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NoVersionDetected"><code class="docutils literal notranslate"><span class="pre">NoVersionDetected</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NotASigner"><code class="docutils literal notranslate"><span class="pre">NotASigner</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.NotEnoughSignatures"><code class="docutils literal notranslate"><span class="pre">NotEnoughSignatures</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.SafeClientException"><code class="docutils literal notranslate"><span class="pre">SafeClientException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.SafeLogicError"><code class="docutils literal notranslate"><span class="pre">SafeLogicError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.UnsupportedChainError"><code class="docutils literal notranslate"><span class="pre">UnsupportedChainError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.ValueRequired"><code class="docutils literal notranslate"><span class="pre">ValueRequired</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html#ape_safe.exceptions.handle_safe_logic_error"><code class="docutils literal notranslate"><span class="pre">handle_safe_logic_error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/factory.html"><code class="docutils literal notranslate"><span class="pre">SafeFactory</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/multisend.html"><code class="docutils literal notranslate"><span class="pre">MultiSend</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html"><code class="docutils literal notranslate"><span class="pre">DeploymentAsset</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html#ape_safe.packages.DeploymentInfo"><code class="docutils literal notranslate"><span class="pre">DeploymentInfo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html#ape_safe.packages.DeploymentType"><code class="docutils literal notranslate"><span class="pre">DeploymentType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/packages.html#ape_safe.packages.PackageType"><code class="docutils literal notranslate"><span class="pre">PackageType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/types.html"><code class="docutils literal notranslate"><span class="pre">SafeCacheData</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+<li><a class="reference internal" href="#adding-eth-value-to-calls">Adding ETH Value to Calls</a></li>
+<li><a class="reference internal" href="#advanced-control">Advanced Control</a></li>
+<li><a class="reference internal" href="#simulating-side-effects-in-scripts">Simulating Side Effects in Scripts</a></li>
+<li><a class="reference internal" href="#decoding-existing-multisend-transactions">Decoding Existing MultiSend Transactions</a></li>
+<li><a class="reference internal" href="#multisend-contract-detection">MultiSend Contract Detection</a></li>
+<li><a class="reference internal" href="#handling-errors">Handling Errors</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">ape-safe</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">MultiSend</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  
+
+
+<div class="copy-page-wrapper relative pb-4 lg:absolute lg:top-8 lg:right-6 xl:right-12">
+  <div id="copy-page-trigger">
+    <button
+      type="button"
+      class="js-copy px-3 py-1 inline-flex items-center gap-1"
+      data-url="../_sources/userguides/multisend.md.txt"
+    >
+      <i class="i-lucide" data-icon="copy"></i>
+      <span>Copy page</span>
+    </button>
+    <button class="js-menu px-2 py-1" type="button" aria-label="More actions"
+      aria-haspopup="menu" aria-expanded="false" aria-controls="copy-page-content">
+      <i class="i-lucide chevron-down"></i>
+    </button>
+  </div>
+  <div id="copy-page-content" role="menu" aria-orientation="vertical" aria-hidden="true">
+    <div role="presentation">
+      <div class="flex flex-col" role="group">
+        <button class="js-copy" type="button" role="menuitem"
+          data-url="../_sources/userguides/multisend.md.txt">
+          <span class="iconify-icon">
+            <i class="i-lucide" data-icon="copy"></i>
+          </span>
+          <span>Copy page</span>
+        </button>
+        <a role="menuitem" href="../_sources/userguides/multisend.md.txt" target="_blank" rel="nofollow">
+          
+            <iconify-icon icon="bi:markdown"></iconify-icon>
+            <span>View as Markdown</span>
+          
+        </a>
+        
+        <a role="menuitem" href="https://chatgpt.com/?hints=search&q=Read%20../_sources/userguides/multisend.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:openai"></iconify-icon>
+          <span>Open in ChatGPT</span>
+        </a>
+        
+        
+        <a role="menuitem" href="https://claude.ai/new?q=Read%20../_sources/userguides/multisend.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:claude"></iconify-icon>
+          <span>Open in Claude</span>
+        </a>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+<article class="yue" role="main">
+          <section id="multisend">
+<h1>MultiSend<a class="headerlink" href="#multisend" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">MultiSend</span></code> feature allows you to batch multiple transactions into a single transaction, which is more gas-efficient and ensures atomic execution (all operations succeed or fail together).</p>
+<section id="basic-usage">
+<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">accounts</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe</span><span class="w"> </span><span class="kn">import</span> <span class="n">multisend</span>
+</span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_tokens</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokens</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">me</span> <span class="o">=</span> <span class="n">accounts</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;my-key&quot;</span><span class="p">)</span>
+</span><span data-line="6"><span class="n">safe</span> <span class="o">=</span> <span class="n">accounts</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;my-safe&quot;</span><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Load some contracts using ape-tokens</span>
+</span><span data-line="9"><span class="n">dai</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="s2">&quot;DAI&quot;</span><span class="p">]</span>
+</span><span data-line="10"><span class="n">vault</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="s2">&quot;yvDAI&quot;</span><span class="p">]</span>
+</span><span data-line="11"><span class="n">amount</span> <span class="o">=</span> <span class="n">dai</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">safe</span><span class="p">)</span>  <span class="c1"># How much we want to deposit</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="c1"># Create a multisend batch transaction</span>
+</span><span data-line="14"><span class="n">batch</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
+</span><span data-line="15"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dai</span><span class="o">.</span><span class="n">approve</span><span class="p">,</span> <span class="n">vault</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+</span><span data-line="16"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">vault</span><span class="o">.</span><span class="n">deposit</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="c1"># Fetch signatures from local signer(s)</span>
+</span><span data-line="19"><span class="c1"># NOTE: will broadcast unless `submit=False`</span>
+</span><span data-line="20"><span class="n">batch</span><span class="p">(</span><span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="adding-eth-value-to-calls">
+<h2>Adding ETH Value to Calls<a class="headerlink" href="#adding-eth-value-to-calls" title="Link to this heading"></a></h2>
+<p>You can include ETH value with transactions in the batch:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create a MultiSend transaction</span>
+</span><span data-line="2"><span class="n">txn</span> <span class="o">=</span> <span class="n">multisend</span><span class="o">.</span><span class="n">MultiSend</span><span class="p">()</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Add a transaction that sends ETH with the call</span>
+</span><span data-line="5"><span class="n">txn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">deposit</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;1 ether&quot;</span><span class="p">)</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Add another call without value</span>
+</span><span data-line="8"><span class="n">txn</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">stake</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1"># Execute (will send Ether from `safe.balance`)</span>
+</span><span data-line="11"><span class="n">txn</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="advanced-control">
+<h2>Advanced Control<a class="headerlink" href="#advanced-control" title="Link to this heading"></a></h2>
+<p>You can create the transaction without executing it immediately:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create MultiSend transaction</span>
+</span><span data-line="2"><span class="n">batch</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dai</span><span class="o">.</span><span class="n">approve</span><span class="p">,</span> <span class="n">vault</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+</span><span data-line="5"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">vault</span><span class="o">.</span><span class="n">deposit</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Convert to a transaction object</span>
+</span><span data-line="8"><span class="n">safe_tx</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">propose</span><span class="p">(</span><span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1"># Manually handle the signing process</span>
+</span><span data-line="11"><span class="n">signatures</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">add_signatures</span><span class="p">(</span><span class="n">safe_tx</span><span class="p">)</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="c1"># Later execute when ready</span>
+</span><span data-line="14"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">submit_safe_tx</span><span class="p">(</span><span class="n">safe_tx</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="simulating-side-effects-in-scripts">
+<h2>Simulating Side Effects in Scripts<a class="headerlink" href="#simulating-side-effects-in-scripts" title="Link to this heading"></a></h2>
+<p>Typically, it is useful to validate your multisend scripts through the use of simulating their
+side effects via a “forked” network context.
+We have provided a feature <code class="docutils literal notranslate"><span class="pre">batch.add_from_receipt</span></code> which allows you to add calls directly from
+the results of simulated network calls (executing as the Safe itself), which reduces human error.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create MultiSend transaction outside the fork context (important!)</span>
+</span><span data-line="2"><span class="c1"># NOTE: You should be connected to a live &quot;public&quot;  network when executing this</span>
+</span><span data-line="3"><span class="n">batch</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Enter a &quot;simulated&quot; context as a &quot;fork&quot; of the public network you want to propose to</span>
+</span><span data-line="6"><span class="k">with</span> <span class="n">networks</span><span class="o">.</span><span class="n">fork</span><span class="p">():</span>
+</span><span data-line="7">    <span class="c1"># NOTE: We must use `sender=safe.address` to skip ape-safe&#39;s local signer processing</span>
+</span><span data-line="8">    <span class="c1"># NOTE: You typically must provide an eth balance to `safe.address`, or it will fail</span>
+</span><span data-line="9">    <span class="c1">#       due to no funds to pay for gas in order to perform the transaction.</span>
+</span><span data-line="10">    <span class="n">receipt</span> <span class="o">=</span> <span class="n">dai</span><span class="o">.</span><span class="n">approve</span><span class="p">(</span><span class="n">vault</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+</span><span data-line="11">    <span class="c1"># NOTE: You can now test &quot;side effects&quot; of the transaction here.</span>
+</span><span data-line="12">    <span class="k">assert</span> <span class="n">dai</span><span class="o">.</span><span class="n">allowance</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">vault</span><span class="p">)</span> <span class="o">==</span> <span class="n">amount</span>
+</span><span data-line="13">    <span class="c1"># This will add the call as a step in the MultiSend batch</span>
+</span><span data-line="14">    <span class="n">batch</span><span class="o">.</span><span class="n">add_from_receipt</span><span class="p">(</span><span class="n">receipt</span><span class="p">)</span>
+</span><span data-line="15">
+</span><span data-line="16">    <span class="c1"># ...add as many steps as you would like to the batch while inside this forked context.</span>
+</span><span data-line="17">    <span class="n">receipt</span> <span class="o">=</span> <span class="n">vault</span><span class="o">.</span><span class="n">deposit</span><span class="p">(</span><span class="n">amount</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+</span><span data-line="18">    <span class="k">assert</span> <span class="n">vault</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">safe</span><span class="p">)</span> <span class="o">==</span> <span class="n">amount</span>
+</span><span data-line="19">    <span class="n">batch</span><span class="o">.</span><span class="n">add_from_receipt</span><span class="p">(</span><span class="n">receipt</span><span class="p">)</span>
+</span><span data-line="20">
+</span><span data-line="21"><span class="c1"># After exiting the forked context, submit it as a real transaction on-chain</span>
+</span><span data-line="22"><span class="n">batch</span><span class="p">(</span><span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="c1"># Or, propose to the API</span>
+</span><span data-line="25"><span class="n">safe_tx</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">propose</span><span class="p">(</span><span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="decoding-existing-multisend-transactions">
+<h2>Decoding Existing MultiSend Transactions<a class="headerlink" href="#decoding-existing-multisend-transactions" title="Link to this heading"></a></h2>
+<p>You can decode and inspect existing MultiSend transactions:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe</span><span class="w"> </span><span class="kn">import</span> <span class="n">multisend</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Create an empty MultiSend object</span>
+</span><span data-line="4"><span class="n">txn</span> <span class="o">=</span> <span class="n">multisend</span><span class="o">.</span><span class="n">MultiSend</span><span class="p">()</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1"># Add calls from existing calldata</span>
+</span><span data-line="7"><span class="n">calldata</span> <span class="o">=</span> <span class="s2">&quot;0x...&quot;</span>  <span class="c1"># MultiSend calldata from a transaction</span>
+</span><span data-line="8"><span class="n">txn</span><span class="o">.</span><span class="n">add_from_calldata</span><span class="p">(</span><span class="n">calldata</span><span class="p">)</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1"># Now you can inspect the calls</span>
+</span><span data-line="11"><span class="k">for</span> <span class="n">call</span> <span class="ow">in</span> <span class="n">txn</span><span class="o">.</span><span class="n">calls</span><span class="p">:</span>
+</span><span data-line="12">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;To: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">to</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="13">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Value: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="14">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="multisend-contract-detection">
+<h2>MultiSend Contract Detection<a class="headerlink" href="#multisend-contract-detection" title="Link to this heading"></a></h2>
+<p>The MultiSend functionality automatically detects the appropriate MultiSend contract on the current chain when using <code class="docutils literal notranslate"><span class="pre">safe.create_batch</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Print the MultiSend contract address for the current chain</span>
+</span><span data-line="2"><span class="n">ms</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
+</span><span data-line="3"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MultiSend contract: </span><span class="si">{</span><span class="n">ms</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>For testing purposes, you may also inject the correct version in order to use it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe</span><span class="w"> </span><span class="kn">import</span> <span class="n">multisend</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">multisend</span><span class="o">.</span><span class="n">MultiSend</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="s2">&quot;1.3.0&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">ms</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
+</span><span data-line="5"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MultiSend contract: </span><span class="si">{</span><span class="n">ms</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="handling-errors">
+<h2>Handling Errors<a class="headerlink" href="#handling-errors" title="Link to this heading"></a></h2>
+<p>When using MultiSend, remember:</p>
+<ol class="arabic simple">
+<li><p>All operations are atomic - if one fails, all fail</p></li>
+<li><p>Some operations may not be compatible with batching</p></li>
+<li><p>Gas estimation may be challenging for complex batches</p></li>
+</ol>
+<p>Typically the most common issues have to do with gas estimation, which you can set directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create a MultiSend transaction</span>
+</span><span data-line="2"><span class="n">ms</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">create_batch</span><span class="p">()</span>
+</span><span data-line="3"><span class="n">ms</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract1</span><span class="o">.</span><span class="n">method1</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">ms</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract2</span><span class="o">.</span><span class="n">method2</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1"># raises `ape.exceptions.TransactionError`</span>
+</span><span data-line="7"><span class="n">ms</span><span class="p">()</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Try to execute with manual gas limit if estimation fails</span>
+</span><span data-line="10"><span class="n">ms</span><span class="p">(</span><span class="n">gas_limit</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="safe_management.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Safe Management</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="modules.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Modules</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+</html>

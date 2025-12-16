@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>&lt;no title&gt; - ape-safe documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="&lt;no title&gt;" href="cli.html" /><link rel="prev" title="Modules" href="../commands/modules.html" />
+      <link rel="canonical" href="ape-safe/methoddocs/accounts.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=a318c5d4" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="ape-safe/methoddocs/accounts.html"/>
+  <meta property="og:title" content="&lt;no title&gt;"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      <img class="light-logo" src="../_static/logo_grey.svg" alt="ape-safe" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/logo_green.svg" alt="ape-safe" height="28" loading="lazy" />
+      <strong>ape-safe</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/quickstart.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/transactions.html">Transaction Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/safe_management.html">Safe Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/multisend.html">MultiSend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/production.html">Managing your Safe in Production</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/mgmt.html">Local Safe Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/pending.html">Pending Transactions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/delegates.html">Managing Delegates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/modules.html">Modules</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">SafeAccount</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="#ape_safe.accounts.SafeContainer"><code class="docutils literal notranslate"><span class="pre">SafeContainer</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal notranslate"><span class="pre">propose_from_simulation()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html"><code class="docutils literal notranslate"><span class="pre">BaseSafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#ape_safe.client.ExecutedTxData"><code class="docutils literal notranslate"><span class="pre">ExecutedTxData</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#ape_safe.client.MockSafeClient"><code class="docutils literal notranslate"><span class="pre">MockSafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#ape_safe.client.OperationType"><code class="docutils literal notranslate"><span class="pre">OperationType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#ape_safe.client.SafeClient"><code class="docutils literal notranslate"><span class="pre">SafeClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#ape_safe.client.SafeDetails"><code class="docutils literal notranslate"><span class="pre">SafeDetails</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#ape_safe.client.SafeTxConfirmation"><code class="docutils literal notranslate"><span class="pre">SafeTxConfirmation</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#ape_safe.client.SignatureType"><code class="docutils literal notranslate"><span class="pre">SignatureType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html#ape_safe.client.UnexecutedTxData"><code class="docutils literal notranslate"><span class="pre">UnexecutedTxData</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html"><code class="docutils literal notranslate"><span class="pre">SafeConfig</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html"><code class="docutils literal notranslate"><span class="pre">ActionNotPerformedError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.ApeSafeError"><code class="docutils literal notranslate"><span class="pre">ApeSafeError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.ApeSafeException"><code class="docutils literal notranslate"><span class="pre">ApeSafeException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.ClientResponseError"><code class="docutils literal notranslate"><span class="pre">ClientResponseError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.ClientUnavailable"><code class="docutils literal notranslate"><span class="pre">ClientUnavailable</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.FeatureNotAvailable"><code class="docutils literal notranslate"><span class="pre">FeatureNotAvailable</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.MulticallException"><code class="docutils literal notranslate"><span class="pre">MulticallException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.MultisigTransactionNotFoundError"><code class="docutils literal notranslate"><span class="pre">MultisigTransactionNotFoundError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.NoLocalSigners"><code class="docutils literal notranslate"><span class="pre">NoLocalSigners</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.NoVersionDetected"><code class="docutils literal notranslate"><span class="pre">NoVersionDetected</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.NotASigner"><code class="docutils literal notranslate"><span class="pre">NotASigner</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.NotEnoughSignatures"><code class="docutils literal notranslate"><span class="pre">NotEnoughSignatures</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.SafeClientException"><code class="docutils literal notranslate"><span class="pre">SafeClientException</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.SafeLogicError"><code class="docutils literal notranslate"><span class="pre">SafeLogicError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.UnsupportedChainError"><code class="docutils literal notranslate"><span class="pre">UnsupportedChainError</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.ValueRequired"><code class="docutils literal notranslate"><span class="pre">ValueRequired</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.handle_safe_logic_error"><code class="docutils literal notranslate"><span class="pre">handle_safe_logic_error</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="factory.html"><code class="docutils literal notranslate"><span class="pre">SafeFactory</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="multisend.html"><code class="docutils literal notranslate"><span class="pre">MultiSend</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html"><code class="docutils literal notranslate"><span class="pre">DeploymentAsset</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html#ape_safe.packages.DeploymentInfo"><code class="docutils literal notranslate"><span class="pre">DeploymentInfo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html#ape_safe.packages.DeploymentType"><code class="docutils literal notranslate"><span class="pre">DeploymentType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html#ape_safe.packages.PackageType"><code class="docutils literal notranslate"><span class="pre">PackageType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="types.html"><code class="docutils literal notranslate"><span class="pre">SafeCacheData</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">SafeAccount</span></code></a><ul>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.address"><code class="docutils literal notranslate">.address</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.alias"><code class="docutils literal notranslate">.alias</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.call"><code class="docutils literal notranslate">.call()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.compute_prev_signer"><code class="docutils literal notranslate">.compute_prev_signer()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.create_safe_tx"><code class="docutils literal notranslate">.create_safe_tx()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.new_nonce"><code class="docutils literal notranslate">.new_nonce</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.next_nonce"><code class="docutils literal notranslate">.next_nonce</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.prepare_transaction"><code class="docutils literal notranslate">.prepare_transaction()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.propose"><code class="docutils literal notranslate">.propose()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.propose_safe_tx"><code class="docutils literal notranslate">.propose_safe_tx()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.sign_message"><code class="docutils literal notranslate">.sign_message()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.sign_transaction"><code class="docutils literal notranslate">.sign_transaction()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeAccount.submit_safe_tx"><code class="docutils literal notranslate">.submit_safe_tx()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeContainer"><code class="docutils literal notranslate"><span class="pre">SafeContainer</span></code></a><ul>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeContainer.accounts"><code class="docutils literal notranslate">.accounts</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeContainer.aliases"><code class="docutils literal notranslate">.aliases</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeContainer.delete_account"><code class="docutils literal notranslate">.delete_account()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeContainer.load_account"><code class="docutils literal notranslate">.load_account()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.accounts.SafeContainer.save_account"><code class="docutils literal notranslate">.save_account()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">ape-safe</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">&lt;no title&gt;</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  
+
+
+<div class="copy-page-wrapper relative pb-4 lg:absolute lg:top-8 lg:right-6 xl:right-12">
+  <div id="copy-page-trigger">
+    <button
+      type="button"
+      class="js-copy px-3 py-1 inline-flex items-center gap-1"
+      data-url="../_sources/methoddocs/accounts.md.txt"
+    >
+      <i class="i-lucide" data-icon="copy"></i>
+      <span>Copy page</span>
+    </button>
+    <button class="js-menu px-2 py-1" type="button" aria-label="More actions"
+      aria-haspopup="menu" aria-expanded="false" aria-controls="copy-page-content">
+      <i class="i-lucide chevron-down"></i>
+    </button>
+  </div>
+  <div id="copy-page-content" role="menu" aria-orientation="vertical" aria-hidden="true">
+    <div role="presentation">
+      <div class="flex flex-col" role="group">
+        <button class="js-copy" type="button" role="menuitem"
+          data-url="../_sources/methoddocs/accounts.md.txt">
+          <span class="iconify-icon">
+            <i class="i-lucide" data-icon="copy"></i>
+          </span>
+          <span>Copy page</span>
+        </button>
+        <a role="menuitem" href="../_sources/methoddocs/accounts.md.txt" target="_blank" rel="nofollow">
+          
+            <iconify-icon icon="bi:markdown"></iconify-icon>
+            <span>View as Markdown</span>
+          
+        </a>
+        
+        <a role="menuitem" href="https://chatgpt.com/?hints=search&q=Read%20../_sources/methoddocs/accounts.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:openai"></iconify-icon>
+          <span>Open in ChatGPT</span>
+        </a>
+        
+        
+        <a role="menuitem" href="https://claude.ai/new?q=Read%20../_sources/methoddocs/accounts.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:claude"></iconify-icon>
+          <span>Open in Claude</span>
+        </a>
+        
+        
+      </div>
+    </div>
+  </div>
+</div>
+<article class="yue" role="main">
+          <dl class="py class" id="module-ape_safe.accounts">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ape_safe.accounts.</span></span><span class="sig-name descname"><span class="pre">SafeAccount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">account_file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ape_safe.accounts.SafeAccount" title="Link to this definition"></a></dt>
+<dd><dl class="py property">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.address">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_AddressValidator</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ape_safe.accounts.SafeAccount.address" title="Link to this definition"></a></dt>
+<dd><p>The address of this account. Subclasses must override and provide this value.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.alias">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">alias</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#ape_safe.accounts.SafeAccount.alias" title="Link to this definition"></a></dt>
+<dd><p>A shortened-name for quicker access to the account.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.call">
+<span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TransactionAPI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impersonate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">call_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ReceiptAPI</span></span></span><a class="headerlink" href="#ape_safe.accounts.SafeAccount.call" title="Link to this definition"></a></dt>
+<dd><p>Make a transaction call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>AccountsError</strong> – When the nonce is invalid or the sender does
+    not have enough funds.</p></li>
+<li><p><strong>TransactionError</strong> – When the required confirmations are negative.</p></li>
+<li><p><strong>SignatureError</strong> – When the user does not sign the transaction.</p></li>
+<li><p><strong>APINotImplementedError</strong> – When setting <code class="docutils literal notranslate"><span class="pre">private=True</span></code> and using
+    a provider that does not support private transactions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>txn</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionAPI</span></code>) – An invoke-transaction.</p></li>
+<li><p><strong>send_everything</strong> (<em>bool</em>) – <code class="docutils literal notranslate"><span class="pre">True</span></code> will send the difference from balance and fee.
+Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>private</strong> (<em>bool</em>) – <code class="docutils literal notranslate"><span class="pre">True</span></code> will use the
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">send_private_transaction()</span></code> method.</p></li>
+<li><p><strong>sign</strong> (<em>bool</em>) – <code class="docutils literal notranslate"><span class="pre">False</span></code> to not sign the transaction (useful for providers like Titanoboa
+which still use a sender but don’t need to sign).</p></li>
+<li><p><strong>**signer_options</strong> – Additional kwargs given to the signer to modify the signing operation.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiptAPI</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.compute_prev_signer">
+<span class="sig-name descname"><span class="pre">compute_prev_signer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_AddressValidator</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseAddress</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_AddressValidator</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ape_safe.accounts.SafeAccount.compute_prev_signer" title="Link to this definition"></a></dt>
+<dd><p>Sometimes it’s handy to have “previous owner” for ownership change operations,
+this function makes it easy to calculate.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.create_safe_tx">
+<span class="sig-name descname"><span class="pre">create_safe_tx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TransactionAPI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">safe_tx_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SafeTxV1</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SafeTxV2</span></span></span><a class="headerlink" href="#ape_safe.accounts.SafeAccount.create_safe_tx" title="Link to this definition"></a></dt>
+<dd><p>Create the Safe transaction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>txn</strong> (Optional[<code class="docutils literal notranslate"><span class="pre">TransactionAPI</span></code>]) – The transaction</p></li>
+<li><p><strong>**safe_tx_kwargs</strong> – The safe transaction specifications, such as <code class="docutils literal notranslate"><span class="pre">operation</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The Safe Transaction to be used.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">SafeTx</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.new_nonce">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">new_nonce</span></span><a class="headerlink" href="#ape_safe.accounts.SafeAccount.new_nonce" title="Link to this definition"></a></dt>
+<dd><p>The next unused nonce in the system. This is different
+than <code class="docutils literal notranslate"><span class="pre">.next_nonce</span></code> because it includes all nonces the
+transaction service is aware of and not just the next
+on-chain nonce.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.next_nonce">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">next_nonce</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#ape_safe.accounts.SafeAccount.next_nonce" title="Link to this definition"></a></dt>
+<dd><p>The next nonce for on-chain. If you have multiple transactions
+are in the queue but not published on chain, the next nonce
+refers to the earliest nonce in that queue.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.prepare_transaction">
+<span class="sig-name descname"><span class="pre">prepare_transaction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TransactionAPI</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TransactionAPI</span></span></span><a class="headerlink" href="#ape_safe.accounts.SafeAccount.prepare_transaction" title="Link to this definition"></a></dt>
+<dd><p>Set default values on a transaction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>AccountsError</strong> – When the account cannot afford the transaction
+    or the nonce is invalid.</p></li>
+<li><p><strong>TransactionError</strong> – When given negative required confirmations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>txn</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionAPI</span></code>) – The transaction to prepare.</p></li>
+<li><p><strong>**kwargs</strong> – Sub-classes, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">AccountAPI</span></code>, use additional kwargs.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionAPI</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.propose">
+<span class="sig-name descname"><span class="pre">propose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TransactionAPI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submitter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AccountAPI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_AddressValidator</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">safe_tx_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SafeTxID</span></span></span><a class="headerlink" href="#ape_safe.accounts.SafeAccount.propose" title="Link to this definition"></a></dt>
+<dd><p>Propose a transaction to the Safe API client</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.propose_safe_tx">
+<span class="sig-name descname"><span class="pre">propose_safe_tx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">safe_tx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SafeTxV1</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SafeTxV2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submitter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AccountAPI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_AddressValidator</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigs_by_signer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_AddressValidator</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MessageSignature</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contractTransactionHash</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SafeTxID</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SafeTxID</span></span></span><a class="headerlink" href="#ape_safe.accounts.SafeAccount.propose_safe_tx" title="Link to this definition"></a></dt>
+<dd><p>Propose a safe_tx to the Safe API client</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.sign_message">
+<span class="sig-name descname"><span class="pre">sign_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">signer_options</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">MessageSignature</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#ape_safe.accounts.SafeAccount.sign_message" title="Link to this definition"></a></dt>
+<dd><p>Sign a message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>msg</strong> (<em>Any</em>) – The message to sign. Account plugins can handle various types of messages.
+For example, <code class="xref py py-class docutils literal notranslate"><span class="pre">KeyfileAccount</span></code> can handle
+<code class="xref py py-class docutils literal notranslate"><span class="pre">SignableMessage</span></code>, str, int, and bytes.
+See these
+<a class="reference external" href="https://eth-account.readthedocs.io/en/stable/eth_account.html#eth_account.messages.SignableMessage">docs</a>  # noqa: E501
+for more type information on the <code class="xref py py-class docutils literal notranslate"><span class="pre">SignableMessage</span></code> type.</p></li>
+<li><p><strong>**signer_options</strong> – Additional kwargs given to the signer to modify the signing operation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The signature corresponding to the message.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">MessageSignature</span></code> (optional)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.sign_transaction">
+<span class="sig-name descname"><span class="pre">sign_transaction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TransactionAPI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submitter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AccountAPI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_AddressValidator</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">AccountAPI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_AddressValidator</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signatures_required</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">signer_options</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TransactionAPI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#ape_safe.accounts.SafeAccount.sign_transaction" title="Link to this definition"></a></dt>
+<dd><p>Sign the created safe transaction for the safe client to post.
+<strong>NOTE</strong> <code class="docutils literal notranslate"><span class="pre">signatures_required</span></code> is required if the transaction is increasting the
+threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>txn</strong> (<code class="docutils literal notranslate"><span class="pre">TransactionAPI</span></code>) – The contract transaction.</p></li>
+<li><p><strong>submit</strong> (<em>bool</em>) – The option to submit the transaction. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>submitter</strong> (Union[<code class="docutils literal notranslate"><span class="pre">AccountAPI</span></code>, <code class="docutils literal notranslate"><span class="pre">AddressType</span></code>, str, None]) – Determine who is submitting the transaction. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>skip</strong> (Optional[list[Union[<code class="docutils literal notranslate"><span class="pre">AccountAPI,</span> <span class="pre">`AddressType</span></code>, str]]]) – Allow bypassing any specified signer. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>signatures_required</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The amount of signers required to confirm the transaction. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>**signer_options</strong> – Other signer options.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns <code class="docutils literal notranslate"><span class="pre">None</span></code> if the transaction is successful.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[<code class="docutils literal notranslate"><span class="pre">TransactionAPI</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeAccount.submit_safe_tx">
+<span class="sig-name descname"><span class="pre">submit_safe_tx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">safe_tx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SafeTxV1</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SafeTxV2</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SafeTxID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impersonate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">txn_options</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ReceiptAPI</span></span></span><a class="headerlink" href="#ape_safe.accounts.SafeAccount.submit_safe_tx" title="Link to this definition"></a></dt>
+<dd><p>Submit the safe transaction using the submitter after all signatures have been collected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>safe_tx</strong> (<code class="docutils literal notranslate"><span class="pre">SafeTX</span></code>) – The safe transaction to submit.</p></li>
+<li><p><strong>submitter</strong> (Union[<code class="docutils literal notranslate"><span class="pre">AccountAPI</span></code>, <code class="docutils literal notranslate"><span class="pre">AddressType</span></code>, str, <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – The submitter to use for the transaction. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">ReceiptAPI</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeContainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ape_safe.accounts.</span></span><span class="sig-name descname"><span class="pre">SafeContainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">account_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">AccountAPI</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ape_safe.accounts.SafeContainer" title="Link to this definition"></a></dt>
+<dd><dl class="py property">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeContainer.accounts">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">accounts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">AccountAPI</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ape_safe.accounts.SafeContainer.accounts" title="Link to this definition"></a></dt>
+<dd><p>All accounts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Iterator[<code class="xref py py-class docutils literal notranslate"><span class="pre">AccountAPI</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeContainer.aliases">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aliases</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ape_safe.accounts.SafeContainer.aliases" title="Link to this definition"></a></dt>
+<dd><p>All available aliases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Iterator[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeContainer.delete_account">
+<span class="sig-name descname"><span class="pre">delete_account</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ape_safe.accounts.SafeContainer.delete_account" title="Link to this definition"></a></dt>
+<dd><p>Delete the local Safe account.
+<strong>NOTE</strong>: If the account does not exist, nothing happens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>alias</strong> (<em>str</em>) – The alias the Safe account is saved under.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeContainer.load_account">
+<span class="sig-name descname"><span class="pre">load_account</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ape_safe.accounts.SafeAccount" title="ape_safe.accounts.SafeAccount"><span class="pre">SafeAccount</span></a></span></span><a class="headerlink" href="#ape_safe.accounts.SafeContainer.load_account" title="Link to this definition"></a></dt>
+<dd><p>Load the Safe account.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exceptions.html#ape_safe.exceptions.ApeSafeError" title="ape_safe.exceptions.ApeSafeError"><strong>ApeSafeError</strong></a> – When the alias does
+    not exist.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>alias</strong> (<em>str</em>) – The alias the Safe account is saved under.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The Safe account loaded.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#ape_safe.accounts.SafeAccount" title="ape_safe.accounts.SafeAccount"><code class="xref py py-class docutils literal notranslate"><span class="pre">SafeAccount</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.accounts.SafeContainer.save_account">
+<span class="sig-name descname"><span class="pre">save_account</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ape_safe.accounts.SafeContainer.save_account" title="Link to this definition"></a></dt>
+<dd><p>Save a new Safe to your ape configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exceptions.html#ape_safe.exceptions.ApeSafeError" title="ape_safe.exceptions.ApeSafeError"><strong>ApeSafeError</strong></a> – When the alias
+    already exists.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>alias</strong> (<em>str</em>) – The alias to save the Safe under.</p></li>
+<li><p><strong>address</strong> (<em>str</em>) – The address of the Safe account.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../commands/modules.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Modules</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="cli.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">&lt;no title&gt;</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+</html>
