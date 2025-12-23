@@ -114,7 +114,7 @@ class UnexecutedTxData(BaseModel):
     @classmethod
     def from_safe_tx(cls, safe_tx: SafeTx, confirmations_required: int) -> "UnexecutedTxData":
         return cls(
-            safe=safe_tx.eip712_domain.verifyingContract,
+            safe=safe_tx._eip712_domain_.verifyingContract,
             submissionDate=datetime.now(timezone.utc),
             modified=datetime.now(timezone.utc),
             confirmationsRequired=confirmations_required,
