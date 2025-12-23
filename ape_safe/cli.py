@@ -10,6 +10,7 @@ from ape.cli import (
     ape_cli_context,
     network_option,
 )
+from eip712 import hash_message
 
 from ape_safe._cli.click_ext import safe_argument
 
@@ -172,11 +173,11 @@ def propose_from_simulation():
                 cli_ctx.logger.info("Using public network, proposing SafeTx to Safe API")
                 safe.propose_safe_tx(safe_tx, submitter=submitter)
 
-                safe_tx_id = safe_tx._message_hash_
+                safe_tx_id = hash_message(safe_tx)
                 cli_ctx.logger.success(f"'{safe_tx_id.to_0x_hex()}' proposed to queue")
 
             else:
-                safe_tx_id = safe_tx._message_hash_
+                safe_tx_id = hash_message(safe_tx)
                 cli_ctx.logger.info(
                     f"SafeTxID '{safe_tx_id.to_0x_hex()}' already in queue "
                     f"({len(confirmations)}/{safe.confirmations_required})"
