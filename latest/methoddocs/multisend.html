@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=a318c5d4" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -103,7 +103,6 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.SafeClientException"><code class="docutils literal notranslate"><span class="pre">SafeClientException</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.SafeLogicError"><code class="docutils literal notranslate"><span class="pre">SafeLogicError</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.UnsupportedChainError"><code class="docutils literal notranslate"><span class="pre">UnsupportedChainError</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.ValueRequired"><code class="docutils literal notranslate"><span class="pre">ValueRequired</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.handle_safe_logic_error"><code class="docutils literal notranslate"><span class="pre">handle_safe_logic_error</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="factory.html"><code class="docutils literal notranslate"><span class="pre">SafeFactory</span></code></a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">MultiSend</span></code></a></li>
@@ -125,6 +124,7 @@ data-aria-dark="Switch to auto color mode">
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#ape_safe.multisend.MultiSend.add"><code class="docutils literal notranslate">add()</span></code></a></li>
+<li><a class="reference internal" href="#ape_safe.multisend.MultiSend.add_call"><code class="docutils literal notranslate">add_call()</span></code></a></li>
 <li><a class="reference internal" href="#ape_safe.multisend.MultiSend.add_from_calldata"><code class="docutils literal notranslate">add_from_calldata()</span></code></a></li>
 <li><a class="reference internal" href="#ape_safe.multisend.MultiSend.add_from_receipt"><code class="docutils literal notranslate">add_from_receipt()</span></code></a></li>
 <li><a class="reference internal" href="#ape_safe.multisend.MultiSend.as_transaction"><code class="docutils literal notranslate">as_transaction()</span></code></a></li>
@@ -226,8 +226,16 @@ via the MultiSend contract.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="ape_safe.multisend.MultiSend.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ape_safe.multisend.MultiSend" title="ape_safe.multisend.MultiSend"><span class="pre">MultiSend</span></a></span></span><a class="headerlink" href="#ape_safe.multisend.MultiSend.add" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">call</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ContractMethodHandler</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ape_safe.multisend.MultiSend" title="ape_safe.multisend.MultiSend"><span class="pre">MultiSend</span></a></span></span><a class="headerlink" href="#ape_safe.multisend.MultiSend.add" title="Link to this definition"></a></dt>
 <dd><p>Append a call to the MultiSend session object.</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">method1</span><span class="p">)</span>  <span class="c1"># Method with no args</span>
+</span><span data-line="2"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">method2</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>  <span class="c1"># Method with args</span>
+</span><span data-line="3"><span class="n">batch</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">method3</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">value</span><span class="o">=...</span><span class="p">)</span>  <span class="c1"># Payable method</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">batch</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>InvalidOption</strong> – If one of the kwarg modifiers is not able to be used.</p>
@@ -243,6 +251,24 @@ via the MultiSend contract.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="ape_safe.multisend.MultiSend.add_call">
+<span class="sig-name descname"><span class="pre">add_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_AddressValidator</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">HexBytes</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ape_safe.multisend.MultiSend" title="ape_safe.multisend.MultiSend"><span class="pre">MultiSend</span></a></span></span><a class="headerlink" href="#ape_safe.multisend.MultiSend.add_call" title="Link to this definition"></a></dt>
+<dd><p>Append a raw call to the MultiSend session object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>InvalidOption</strong> – If one of the kwarg modifiers is not able to be used.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>target</strong> – The address to send the message to.</p></li>
+<li><p><strong>data</strong> – The data to send to the target. Defaults to empty.</p></li>
+<li><p><strong>value</strong> – int The amount of ether to forward with the call. Defaults to 0.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="ape_safe.multisend.MultiSend.add_from_calldata">
 <span class="sig-name descname"><span class="pre">add_from_calldata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calldata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ape_safe.multisend.MultiSend" title="ape_safe.multisend.MultiSend"><span class="pre">MultiSend</span></a></span></span><a class="headerlink" href="#ape_safe.multisend.MultiSend.add_from_calldata" title="Link to this definition"></a></dt>
 <dd><p>Decode all calls from a multisend calldata and add them to this MultiSend.</p>
@@ -251,6 +277,15 @@ via the MultiSend contract.</p>
 <dd class="field-odd"><p><strong>calldata</strong> – Calldata encoding the <code class="docutils literal notranslate"><span class="pre">MultiSend.multiSend</span></code> call.</p>
 </dd>
 </dl>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># NOTE: Previously submitted MultiSend SafeTx</span>
+</span><span data-line="2"><span class="n">receipt</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">get_receipt</span><span class="p">(</span><span class="s2">&quot;0x...&quot;</span><span class="p">)</span>
+</span><span data-line="3"><span class="n">batch</span><span class="o">.</span><span class="n">add_from_calldata</span><span class="p">(</span><span class="n">receipt</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># NOTE: `batch` now has all of the same calls in it as the MultiSend in `receipt` did</span>
+</span><span data-line="6"><span class="n">batch</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span></pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -264,7 +299,8 @@ Especially useful for more complex simulations.</p>
 </span><span data-line="3">    <span class="k">assert</span> <span class="n">contract</span><span class="o">.</span><span class="n">viewMethod</span><span class="p">()</span> <span class="o">==</span> <span class="o">...</span>
 </span><span data-line="4">    <span class="n">batch</span><span class="o">.</span><span class="n">add_from_receipt</span><span class="p">(</span><span class="n">receipt</span><span class="p">)</span>
 </span><span data-line="5">
-</span><span data-line="6"><span class="n">batch</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span data-line="6"><span class="c1"># NOTE: `receipt` is no longer on the chain (only in fork)</span>
+</span><span data-line="7"><span class="n">batch</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </span></pre></div>
 </div>
 <dl class="field-list simple">
@@ -346,7 +382,7 @@ Defaults to max available from SDK.</p>
 <footer class="sy-foot">
   <div class="sy-foot-inner sy-container mx-auto">
     <div class="sy-foot-reserved md:flex justify-between items-center">
-      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+      <div class="sy-foot-copyright"><p>2026, ApeWorX LTD</p>
   
   <p>
     Made with
