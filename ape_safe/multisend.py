@@ -135,7 +135,7 @@ class MultiSend(ManagerAccessMixin):
     def add_call(
         self,
         target: AddressType | str,
-        data: HexBytes = HexBytes(""),
+        data: HexBytes = "",
         value: int = 0,
     ) -> "MultiSend":
         """
