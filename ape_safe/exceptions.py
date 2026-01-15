@@ -126,11 +126,6 @@ class MulticallException(ApeSafeException):
     pass
 
 
-class ValueRequired(MulticallException):
-    def __init__(self, amount: int):
-        super().__init__(f"This transaction must send at least '{amount / 1e18}' ether.")
-
-
 class UnsupportedChainError(MulticallException):
     def __init__(self):
         super().__init__("Multicall not supported on this chain.")

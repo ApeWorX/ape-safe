@@ -10,7 +10,7 @@ from packaging.version import Version
 from ape_safe.client.types import OperationType, SafeTxID
 
 from .accounts import SafeAccount, get_signatures
-from .exceptions import UnsupportedChainError, ValueRequired
+from .exceptions import UnsupportedChainError
 from .packages import MANIFESTS_BY_VERSION, PackageType, get_multisend
 
 if TYPE_CHECKING:
@@ -169,6 +169,7 @@ class MultiSend(ManagerAccessMixin):
                 assert contract.viewMethod() == ...
                 batch.add_from_receipt(receipt)
 
+            # NOTE: `receipt` is no longer on the chain (only in fork)
             batch(...)
 
         Args:
@@ -182,11 +183,6 @@ class MultiSend(ManagerAccessMixin):
             }
         )
         return self
-
-    def _validate_safe_tx(self, safe_tx: "SafeTx") -> None:
-        required_value = sum(call["value"] for call in self.calls)
-        if required_value > safe_tx.value:
-            raise ValueRequired(required_value)
 
     @property
     def encoded_calls(self):
@@ -227,7 +223,6 @@ class MultiSend(ManagerAccessMixin):
         submitter = safe_tx_kwargs.pop("submitter", None)
         sigs_by_signer = safe_tx_kwargs.pop("sigs_by_signer", None)
         safe_tx = self.as_safe_tx(safe, **safe_tx_kwargs)
-        self._validate_safe_tx(safe_tx)
         return safe.propose_safe_tx(
             safe_tx,
             submitter=submitter,
