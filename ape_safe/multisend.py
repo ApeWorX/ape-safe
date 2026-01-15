@@ -15,7 +15,11 @@ from .packages import MANIFESTS_BY_VERSION, PackageType, get_multisend
 
 if TYPE_CHECKING:
     from ape.api import ReceiptAPI, TransactionAPI
-    from ape.contracts.base import ContractInstance, ContractTransactionHandler
+    from ape.contracts.base import (
+        ContractInstance,
+        ContractMethodHandler,
+        ContractTransactionHandler,
+    )
     from eip712.common import SafeTx
 
 
@@ -128,14 +132,51 @@ class MultiSend(ManagerAccessMixin):
     def handler(self) -> "ContractTransactionHandler":
         return self.contract.multiSend
 
+    def add_call(
+        self,
+        target: AddressType | str,
+        data: HexBytes = HexBytes(""),
+        value: int = 0,
+    ) -> "MultiSend":
+        """
+        Append a raw call to the MultiSend session object.
+
+        Raises:
+            :class:`InvalidOption`: If one of the kwarg modifiers is not able to be used.
+
+        Args:
+            target: The address to send the message to.
+            data: The data to send to the target. Defaults to empty.
+            value: int The amount of ether to forward with the call. Defaults to 0.
+        """
+        if value < 0:
+            raise ValueError("`value=` must be positive.")
+
+        self.calls.append(
+            {
+                "target": self.conversion_manager.convert(target, AddressType),
+                "value": value,
+                "callData": data,
+            }
+        )
+        return self
+
     def add(
         self,
-        call,
+        call: "ContractMethodHandler",
         *args,
         value: int = 0,
     ) -> "MultiSend":
         """
         Append a call to the MultiSend session object.
+
+        Usage::
+
+            batch.add(contract.method1)  # Method with no args
+            batch.add(contract.method2, *args)  # Method with args
+            batch.add(contract.method3, *args, value=...)  # Payable method
+
+            batch(...)
 
         Raises:
             :class:`InvalidOption`: If one of the kwarg modifiers is not able to be used.
@@ -145,17 +186,8 @@ class MultiSend(ManagerAccessMixin):
             *args: The arguments to invoke the method with.
             value: int The amount of ether to forward with the call. Defaults to 0.
         """
-        if value < 0:
-            raise ValueError("`value=` must be positive.")
 
-        self.calls.append(
-            {
-                "target": call.contract.address,
-                "value": value,
-                "callData": call.encode_input(*args),
-            }
-        )
-        return self
+        return self.add_call(call.contract, data=call.encode_input(*args), value=value)
 
     def add_from_receipt(self, receipt: "ReceiptAPI") -> "MultiSend":
         """
@@ -175,14 +207,8 @@ class MultiSend(ManagerAccessMixin):
         Args:
             receipt: :class:`~ape.api.ReceiptAPI` The receipt object to pull information from for the call to add.
         """
-        self.calls.append(
-            {
-                "target": receipt.receiver,
-                "value": receipt.value,
-                "callData": receipt.data,
-            }
-        )
-        return self
+
+        return self.add_call(receipt.receiver, data=receipt.data, value=receipt.value)
 
     @property
     def encoded_calls(self):
@@ -297,6 +323,15 @@ class MultiSend(ManagerAccessMixin):
 
         Args:
             calldata: Calldata encoding the ``MultiSend.multiSend`` call.
+
+        Usage::
+
+            # NOTE: Previously submitted MultiSend SafeTx
+            receipt = chain.get_receipt("0x...")
+            batch.add_from_calldata(receipt.data)
+
+            # NOTE: `batch` now has all of the same calls in it as the MultiSend in `receipt` did
+            batch(...)
         """
         _, args = self.contract.decode_input(calldata)
         buffer = BytesIO(args["transactions"])
