@@ -98,6 +98,7 @@ class SafeModuleManager(ManagerAccessMixin):
                 self._get_previous_module(module),
                 module,
                 sender=self._safe,
+                submitter=submitter,
                 **txn_kwargs,
             )
 
@@ -129,7 +130,12 @@ class SafeModuleManager(ManagerAccessMixin):
             return self._safe.propose(txn=txn, submitter=submitter)
 
         else:
-            return self._safe.contract.setModuleGuard(guard, sender=self._safe, **txn_kwargs)
+            return self._safe.contract.setModuleGuard(
+                guard,
+                sender=self._safe,
+                submitter=submitter,
+                **txn_kwargs,
+            )
 
     @handle_safe_logic_error()
     def remove_guard(self, **txn_kwargs) -> Union["ReceiptAPI", "SafeTxID"]:
