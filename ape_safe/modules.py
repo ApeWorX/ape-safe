@@ -132,7 +132,7 @@ class SafeModuleManager(ManagerAccessMixin):
         else:
             return self._safe.contract.setModuleGuard(
                 guard,
-                sender=self._safe, 
+                sender=self._safe,
                 submitter=submitter,
                 **txn_kwargs,
             )
