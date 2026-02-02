@@ -20,9 +20,22 @@ if TYPE_CHECKING:
     from ape_safe.accounts import SafeAccount
 
 
-def propose_from_simulation():
+def execute_safetx_flag(argname: str = "execute_safetx", **option_kwargs):
+    if "help" not in option_kwargs:
+        option_kwargs["help"] = (
+            "Execute the SafeTx on-chain, or propose it to the Safe API. Defaults to proposing."
+        )
+
+    if "default" not in option_kwargs:
+        # NOTE: If overriding default, override `help=` to state what the default is too
+        option_kwargs["default"] = False
+
+    return click.option("--execute/--propose", argname, **option_kwargs)
+
+
+def batch_from_simulation():
     """
-    Create and propose a new SafeTx from transaction receipts inside a fork.
+    Create a new batch transaction from collected receipts after executing inside an isolated fork.
 
     Usage::
 
@@ -85,6 +98,10 @@ def propose_from_simulation():
             "--submitter",
             prompt="Select an account to submit or propose transaction(s)",
         )
+        @execute_safetx_flag(
+            help="Execute the collected batch on-chain, or propose this transaction to the Safe API. "
+            "Defaults to proposing, unless invoked as a forked simulation.",
+        )
         @click.option(
             "--nonce",
             type=int,
@@ -97,6 +114,7 @@ def propose_from_simulation():
             cli_ctx: ApeCliContextObject,
             network: "NetworkAPI",
             submitter: "AccountAPI",
+            execute_safetx: bool,
             nonce: Optional[int],
             safe: "SafeAccount",
         ):
@@ -164,9 +182,12 @@ def propose_from_simulation():
                     nonce=nonce,
                 )
 
-            if network.is_fork:  # Testing, execute as a simulation (don't set nonce)
+            if execute_safetx:  # Execute live
+                safe.submit_safe_tx(safe_tx, submitter=submitter)
+
+            elif network.is_fork:  # Execute as a simulation (using current nonce)
                 cli_ctx.logger.info("Using fork network, dry-running SafeTx")
-                safe.create_execute_transaction(safe_tx, {}, impersonate=True, submitter=submitter)
+                safe.submit_safe_tx(safe_tx, impersonate=True, submitter=submitter)
 
             elif not (confirmations := safe.get_api_confirmations(safe_tx)):
                 # Real mainnet, propose if not already in queue
@@ -187,3 +208,14 @@ def propose_from_simulation():
         return new_cmd
 
     return decorator
+
+
+# TODO: Remove in v1?
+propose_from_simulation = batch_from_simulation
+
+
+__all__ = [
+    batch_from_simulation.__name__,
+    execute_safetx_flag.__name__,
+    safe_argument.__name__,
+]
