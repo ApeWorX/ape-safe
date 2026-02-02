@@ -9,7 +9,8 @@ from ape.cli import (
 from ape.exceptions import ChainError, ProviderNotConnectedError
 from eth_typing import ChecksumAddress
 
-from ape_safe._cli.click_ext import SafeCliContext, safe_argument, safe_cli_ctx
+from ape_safe._cli.click_ext import SafeCliContext, safe_cli_ctx
+from ape_safe.cli import safe_argument
 from ape_safe.client import SafeClient
 from ape_safe.exceptions import NoVersionDetected
 
