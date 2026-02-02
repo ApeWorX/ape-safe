@@ -33,9 +33,9 @@ def execute_safetx_flag(argname: str = "execute_safetx", **option_kwargs):
     return click.option("--execute/--propose", argname, **option_kwargs)
 
 
-def propose_from_simulation():
+def batch_from_simulation():
     """
-    Create and propose a new SafeTx from transaction receipts inside a fork.
+    Create a new batch transaction from collected receipts after executing inside an isolated fork.
 
     Usage::
 
@@ -210,8 +210,12 @@ def propose_from_simulation():
     return decorator
 
 
+# TODO: Remove in v1?
+propose_from_simulation = batch_from_simulation
+
+
 __all__ = [
+    batch_from_simulation.__name__,
     execute_safetx_flag.__name__,
-    propose_from_simulation.__name__,
     safe_argument.__name__,
 ]
