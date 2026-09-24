@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ape-safe"
-description = "ape-safe: Ape plugin"
+description = "ape-safe: Gnosis Safe account plugin for Ape"
 readme = "README.md"
 authors = [
     {name = "ApeWorX Ltd.", email = "admin@apeworx.io"}
