@@ -14,45 +14,41 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@v6
 
-        - name: Setup Python
-          uses: actions/setup-python@v5
+        - name: Install uv
+          uses: astral-sh/setup-uv@v7
           with:
               python-version: "3.10"
 
         - name: Install Dependencies
-          run: |
-            python -m pip install --upgrade pip
-            pip install .[lint]
+          run: uv sync --group lint
 
-        - name: Run Ruff Lint
-          run: ruff check .
+        - name: Run Ruff Linter
+          run: uv run ruff check .
 
-        - name: Run Ruff Format
-          run: ruff format --check .
+        - name: Run Ruff Formatter
+          run: uv run ruff format --check .
 
         - name: Run mdformat
-          run: mdformat . --check
+          run: uv run mdformat --check *.md
 
     type-check:
         runs-on: ubuntu-latest
 
         steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@v6
 
-        - name: Setup Python
-          uses: actions/setup-python@v5
+        - name: Install uv
+          uses: astral-sh/setup-uv@v7
           with:
               python-version: "3.10"
 
         - name: Install Dependencies
-          run: |
-            python -m pip install --upgrade pip
-            pip install .[lint,test]
+          run: uv sync --group lint --group test
 
         - name: Run MyPy
-          run: mypy .
+          run: uv run mypy .
 
     functional:
         runs-on: ${{ matrix.os }}
@@ -60,36 +56,41 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-latest, macos-latest]   # eventually add `windows-latest`
-                # NOTE: Don't test 3.9, it has weird issues on CI
-                python-version: ["3.10", "3.11", "3.12", "3.13"]
-
-        env:
-          GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
         steps:
-        - uses: actions/checkout@v4
-
-        - name: Install Foundry
-          uses: foundry-rs/foundry-toolchain@v1
+        - uses: actions/checkout@v6
           with:
-              version: nightly
+            fetch-depth: 0
 
-        - name: Setup Ape
-          uses: ApeWorX/github-action@v3
+        - name: Install uv
+          uses: astral-sh/setup-uv@v7
           with:
               python-version: ${{ matrix.python-version }}
 
-        - name: Install Package
-          run: |
-            python -m pip install --upgrade pip
-            pip install .[test]
+        - name: Install Dependencies
+          run: uv sync --group test
 
-        - name: Run Functional Tests
-          env:
-            APE_SAFE_GATEWAY_API_KEY: ${{ secrets.APE_SAFE_GATEWAY_API_KEY }}
-          run: ape test -n 0 tests/functional/ -s --cov -v WARNING
+        - name: Run Tests
+          run: uv run pytest -m "not fuzzing" -s --cov=ape_safe -n auto
 
-        - name: Run Integration Tests
-          env:
-            APE_SAFE_GATEWAY_API_KEY: ${{ secrets.APE_SAFE_GATEWAY_API_KEY }}
-          run: ape test -n 0 tests/integration/ -s --cov -v WARNING
+# NOTE: uncomment this block after you've marked tests with @pytest.mark.fuzzing
+#    fuzzing:
+#        runs-on: ubuntu-latest
+#
+#        strategy:
+#            fail-fast: true
+#
+#        steps:
+#        - uses: actions/checkout@v6
+#
+#        - name: Install uv
+#          uses: astral-sh/setup-uv@v7
+#          with:
+#              python-version: "3.10"
+#
+#        - name: Install Dependencies
+#          run: uv sync --group test
+#
+#        - name: Run Tests
+#          run: uv run pytest -m "fuzzing" --no-cov -s

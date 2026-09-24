@@ -1,6 +1,6 @@
 import runpy
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Optional, Union, cast
+from typing import TYPE_CHECKING, cast
 
 import click
 import rich
@@ -95,7 +95,7 @@ def _list(cli_ctx, safe, verbose) -> None:
                         value_str = f"{value}"
 
                     if len(value_str) > 42:
-                        value_str = f"{humanize_hash(cast(Hash32, HexBytes(value_str)))}"
+                        value_str = f"{humanize_hash(cast('Hash32', HexBytes(value_str)))}"
 
                     data[field_name] = value_str
 
@@ -193,7 +193,7 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
 
     from ape_safe.utils import get_safe_tx_hash
 
-    submitter: Optional[AccountAPI] = execute if isinstance(execute, AccountAPI) else None
+    submitter: AccountAPI | None = execute if isinstance(execute, AccountAPI) else None
     pending_transactions = list(
         safe.client.get_transactions(confirmed=False, starting_nonce=safe.next_nonce)
     )
@@ -319,7 +319,7 @@ def reject(cli_ctx: SafeCliContext, safe, txn_ids, execute):
             click.echo(f"Transaction '{txn.safe_tx_hash}' already canceled!")
             continue
 
-        elif click.confirm(f"{txn}\nCancel Transaction?"):
+        if click.confirm(f"{txn}\nCancel Transaction?"):
             try:
                 safe.transfer(
                     safe,
@@ -382,7 +382,7 @@ def show_confs(cli_ctx, safe, txn_id):
             click.echo()
 
 
-def _show_confs(confs, extra_line: bool = True, prefix: Optional[str] = None):
+def _show_confs(confs, extra_line: bool = True, prefix: str | None = None):
     prefix = prefix or ""
     length = len(confs)
     for idx, conf in enumerate(confs):
@@ -394,8 +394,8 @@ def _show_confs(confs, extra_line: bool = True, prefix: Optional[str] = None):
 
 # Helper method for handling transactions in a loop.
 def _filter_tx_from_ids(
-    txn_ids: Sequence[Union[int, str]], txn: "UnexecutedTxData"
-) -> Sequence[Union[int, str]]:
+    txn_ids: Sequence[int | str], txn: "UnexecutedTxData"
+) -> Sequence[int | str]:
     if txn.nonce in txn_ids:
         # Filter out all transactions with the same nonce
         return [x for x in txn_ids if x != txn.nonce]
@@ -458,12 +458,12 @@ def ensure(cli_ctx, ecosystem, network, submitter, safe):
             "No queue scripts detected under `scripts/` above current Safe nonce."
         )
 
-    elif min(pending_scripts) != starting_nonce:
+    if min(pending_scripts) != starting_nonce:
         raise click.UsageError(
             f"Next nonce for {safe.address} is {starting_nonce}, not {min(pending_scripts)}."
         )
 
-    elif missing_nonces := sorted(
+    if missing_nonces := sorted(
         set(range(starting_nonce, max(pending_scripts) + 1)) - set(pending_scripts)
     ):
         display_str = ", ".join(map(str, missing_nonces))

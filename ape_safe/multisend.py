@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 from ape import convert
 from ape.types import AddressType, HexBytes
@@ -56,8 +56,8 @@ class MultiSend(ManagerAccessMixin):
 
     def __init__(
         self,
-        safe: Optional[SafeAccount] = None,
-        version: Union[Version, str, None] = None,
+        safe: SafeAccount | None = None,
+        version: Version | str | None = None,
     ) -> None:
         """
         Initialize a new MultiSend session object. By default, there are no calls to make.
@@ -83,7 +83,7 @@ class MultiSend(ManagerAccessMixin):
         self.calls: list[dict] = []
 
     @classmethod
-    def inject(cls, version: Union[Version, str, None] = None):
+    def inject(cls, version: Version | str | None = None):
         """
         Create the multisend module contract on-chain, so we can use it.
         Must use a provider that supports ``debug_setCode``.
@@ -227,7 +227,7 @@ class MultiSend(ManagerAccessMixin):
             for call in self.calls
         ]
 
-    def as_safe_tx(self, safe: Optional[SafeAccount] = None, **safe_tx_kwargs) -> "SafeTx":
+    def as_safe_tx(self, safe: SafeAccount | None = None, **safe_tx_kwargs) -> "SafeTx":
         if not (safe or (safe := self.safe)):
             raise ValueError("Must provide `safe=` to call this function")
 
@@ -240,7 +240,7 @@ class MultiSend(ManagerAccessMixin):
 
     def propose(
         self,
-        safe: Optional[SafeAccount] = None,
+        safe: SafeAccount | None = None,
         **safe_tx_kwargs,
     ) -> SafeTxID:
         if not (safe or (safe := self.safe)):
@@ -257,7 +257,7 @@ class MultiSend(ManagerAccessMixin):
 
     def as_transaction(
         self,
-        safe: Optional[SafeAccount] = None,
+        safe: SafeAccount | None = None,
         impersonate: bool = False,
         **txn_kwargs,
     ) -> "TransactionAPI":
@@ -294,7 +294,7 @@ class MultiSend(ManagerAccessMixin):
 
     def __call__(
         self,
-        safe: Optional[SafeAccount] = None,
+        safe: SafeAccount | None = None,
         **txn_kwargs,
     ) -> "ReceiptAPI":
         """

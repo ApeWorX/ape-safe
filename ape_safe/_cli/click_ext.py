@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, NoReturn, Optional, Union, cast
+from typing import TYPE_CHECKING, NoReturn, Union, cast
 
 import click
 from ape.cli import ApeCliContextObject, ape_cli_context
@@ -19,12 +19,10 @@ class SafeCliContext(ApeCliContextObject):
         # NOTE: Would only happen in local development of this plugin.
         assert "safe" in self.account_manager.containers, "Are all API methods implemented?"
 
-        from ape_safe.accounts import SafeContainer
-
         safe_container = self.account_manager.containers["safe"]
-        return cast(SafeContainer, safe_container)
+        return cast("SafeContainer", safe_container)
 
-    def abort_txns_not_found(self, txn_ids: Sequence[Union[int, str]]) -> NoReturn:
+    def abort_txns_not_found(self, txn_ids: Sequence[int | str]) -> NoReturn:
         self.abort(f"Pending transaction(s) '{', '.join([f'{x}' for x in txn_ids])}' not found.")
 
 
@@ -62,20 +60,19 @@ class CallbackFactory:
                 return access.account_manager.load(alias)
 
             # If there is only 1 safe, just use that.
-            elif len(safes) == 1:
+            if len(safes) == 1:
                 return next(safes.accounts)
 
-            elif len(safes) == 0:
+            if len(safes) == 0:
                 raise Abort("First, add a safe account using command:\n\t`ape safe add`")
 
             options = ", ".join(safes.aliases)
             raise MissingParameter(message=f"Must specify one of '{options}').")
 
-        elif value in safes.aliases:
+        if value in safes.aliases:
             return access.account_manager.load(value)
 
-        else:
-            raise BadOptionUsage("--safe", f"No safe with alias '{value}'")
+        raise BadOptionUsage("--safe", f"No safe with alias '{value}'")
 
     @classmethod
     def submitter_callback(cls, ctx, param, val):
@@ -88,11 +85,11 @@ class CallbackFactory:
             return access.account_manager.load(val)
 
         # Account address - execute using this account.
-        elif val in access.account_manager:
+        if val in access.account_manager:
             return access.account_manager[val]
 
         # Saying "yes, execute". Use first "local signer".
-        elif val.lower() in ("true", "t", "1"):
+        if val.lower() in ("true", "t", "1"):
             safe = access.account_manager.load(ctx.params["alias"])
             if not safe.local_signers:
                 ctx.obj.abort("Cannot use `--execute TRUE` without a local signer.")
@@ -102,7 +99,7 @@ class CallbackFactory:
         return None
 
     @classmethod
-    def sender_callback(cls, ctx, param, val) -> Optional[Union["AccountAPI", bool]]:
+    def sender_callback(cls, ctx, param, val) -> Union["AccountAPI", bool] | None:
         """
         Either returns the account or ``False`` meaning don't execute.
         NOTE: The handling of the `--execute` flag in the `pending` CLI
@@ -112,7 +109,7 @@ class CallbackFactory:
         return cls._get_execute_callback(ctx, param, val, name="sender")
 
     @classmethod
-    def execute_callback(cls, ctx, param, val) -> Optional[Union["AccountAPI", bool]]:
+    def execute_callback(cls, ctx, param, val) -> Union["AccountAPI", bool] | None:
         """
         Either returns the account or ``False`` meaning don't execute.
         """
@@ -127,11 +124,11 @@ class CallbackFactory:
             # Avoid this by always doing `--execute false`.
             return None
 
-        elif submitter := cls.submitter_callback(ctx, param, val):
+        if submitter := cls.submitter_callback(ctx, param, val):
             return submitter
 
         # Saying "no, do not execute", even if we could.
-        elif val.lower() in ("false", "f", "0"):
+        if val.lower() in ("false", "f", "0"):
             return False
 
         raise BadOptionUsage(

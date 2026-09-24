@@ -1,5 +1,6 @@
 import inspect
-from typing import TYPE_CHECKING, Callable, Optional
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import click
 from ape.api.accounts import ImpersonatedAccount
@@ -97,7 +98,7 @@ def propose_from_simulation():
             cli_ctx: ApeCliContextObject,
             network: "NetworkAPI",
             submitter: "AccountAPI",
-            nonce: Optional[int],
+            nonce: int | None,
             safe: "SafeAccount",
         ):
             if "safe" in args:
@@ -139,7 +140,7 @@ def propose_from_simulation():
                     if txn.sender != safe.address:
                         raise RuntimeError("Don't execute other transactions!")
 
-                    elif txn.failed:
+                    if txn.failed:
                         raise RuntimeError("Transaction failed!")
 
                     total_gas_used += txn.gas_used

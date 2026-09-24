@@ -25,7 +25,7 @@ Using the Safe contract provides methods to modify the Safe's owner set:
 receipt = safe.contract.addOwnerWithThreshold(
     "0xNewOwnerAddress",
     safe.confirmations_required,  # NOTE: Can also change threshold as the same time
-    sender=safe
+    sender=safe,
 )
 
 # Remove an owner
@@ -34,7 +34,7 @@ receipt = safe.contract.removeOwner(
     safe.compute_prev_signer("0xOwnerToRemove"),
     "0xOwnerToRemove",
     safe.confirmations_required,  # NOTE: Can also change threshold as the same time
-    sender=safe
+    sender=safe,
 )
 
 # Swap an owner
@@ -44,14 +44,11 @@ receipt = safe.contract.swapOwner(
     "0xOldOwner",
     "0xNewOwner",
     # NOTE: Cannot modify threshold this way
-    sender=safe
+    sender=safe,
 )
 
 # Change threshold
-receipt = safe.contract.changeThreshold(
-    new_threshold,
-    sender=safe
-)
+receipt = safe.contract.changeThreshold(new_threshold, sender=safe)
 ```
 
 Note that these are multisig transactions themselves and require the appropriate number of confirmations.
