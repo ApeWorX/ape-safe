@@ -371,10 +371,7 @@ def show_confs(cli_ctx, safe, txn_id):
         header = f"Showing confirmations for transaction '{txn.nonce}'"
         operation_name = txn.operation.name if txn.data else "transfer"
         is_rejection = not txn.value and not txn.data and txn.to == txn.safe
-        if is_rejection:
-            header = f"{header} rejection"
-        else:
-            header = f"{header} {operation_name}"
+        header = f"{header} rejection" if is_rejection else f"{header} {operation_name}"
 
         rich.print(header)
         _show_confs(txn.confirmations)

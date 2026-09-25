@@ -147,8 +147,8 @@ print(f"MultiSend contract: {ms.contract.address}")
 When using MultiSend, remember:
 
 1. All operations are atomic - if one fails, all fail
-2. Some operations may not be compatible with batching
-3. Gas estimation may be challenging for complex batches
+1. Some operations may not be compatible with batching
+1. Gas estimation may be challenging for complex batches
 
 Typically the most common issues have to do with gas estimation, which you can set directly:
 

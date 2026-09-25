@@ -62,7 +62,7 @@ class SafeContainer(AccountContainerAPI):
         # NOTE: Make sure these Safes exist in our local cache
         for required_safe, safe_cache_data in self.config.require.items():
             # NOTE: If alias `required_safe` already exists, skip overwriting it
-            if required_safe not in map(lambda p: p.stem, account_files):
+            if required_safe not in (p.stem for p in account_files):
                 safe_cache_file = self.data_folder / f"{required_safe}.json"
                 safe_cache_file.write_text(safe_cache_data.model_dump_json(), encoding="utf-8")
                 account_files.append(safe_cache_file)
@@ -492,9 +492,8 @@ class SafeAccount(AccountAPI):
             and submitter.address not in sigs_by_signer
             and len(sigs_by_signer) < self.confirmations_required
             and (submitter.address in self.signers or submitter.address in self.all_delegates())
-        ):
-            if sig := submitter.sign_message(safe_tx):
-                sigs_by_signer[submitter.address] = sig
+        ) and (sig := submitter.sign_message(safe_tx)):
+            sigs_by_signer[submitter.address] = sig
 
         # NOTE: Signatures don't have to be in order for Safe API post
         self.client.post_transaction(
@@ -569,7 +568,7 @@ class SafeAccount(AccountAPI):
 
         # Bypass signature collection logic and attempt to submit by impersonation
         # NOTE: Only works for fork and local network providers that support `set_storage`
-        signatures = dict()
+        signatures = {}
         for signer_address in self.signers[: self.confirmations_required]:
             # NOTE: `approvedHashes` is `address => safe_tx_hash => num_confs` @ slot 8
             # TODO: Use native ape slot indexing, once available
@@ -922,7 +921,7 @@ class SafeAccount(AccountAPI):
             available_signers := [
                 acc
                 for acc in self.local_signers
-                if acc.address not in set(c.owner for c in confirmations)
+                if acc.address not in {c.owner for c in confirmations}
             ]
         ):
             raise ApeSafeError("No local signers available to sign.")

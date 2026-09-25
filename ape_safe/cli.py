@@ -111,11 +111,7 @@ def propose_from_simulation():
             total_gas_used = 0
 
             if nonce is None:
-                if script_name_nonce is not None:
-                    nonce = script_name_nonce
-
-                else:
-                    nonce = safe.next_nonce
+                nonce = script_name_nonce if script_name_nonce is not None else safe.next_nonce
 
             with (
                 cli_ctx.chain_manager.isolate()

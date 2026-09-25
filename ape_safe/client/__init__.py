@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 APE_SAFE_VERSION = get_package_version(__name__)
 APE_SAFE_USER_AGENT = f"Ape-Safe/{APE_SAFE_VERSION} {USER_AGENT}"
 # NOTE: Origin must be a string, but can be json that contains url & name fields
-ORIGIN = json.dumps(dict(url="https://apeworx.io", name="Ape Safe", ua=APE_SAFE_USER_AGENT))
+ORIGIN = json.dumps({"url": "https://apeworx.io", "name": "Ape Safe", "ua": APE_SAFE_USER_AGENT})
 assert len(ORIGIN) <= 200  # NOTE: Must be less than 200 chars
 
 # URL for the multichain client gateway
@@ -107,7 +107,7 @@ class SafeClient(RequestsClient):
     def _request(self, method: str, url: str, json: dict | None = None, **kwargs) -> "Response":
         # NOTE: Add authorization header
         headers = kwargs.pop("headers", {})
-        headers.update(dict(Authorization=f"Bearer {GATEWAY_API_KEY}"))
+        headers.update({"Authorization": f"Bearer {GATEWAY_API_KEY}"})
         return super()._request(method, url, json=json, headers=headers, **kwargs)
 
     @property

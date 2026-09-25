@@ -109,7 +109,7 @@ class BaseSafeClient(ABC):
                 continue  # NOTE: Skip transactions not in the filter
 
             if filter_by_missing_signers and filter_by_missing_signers.issubset(
-                set(conf.owner for conf in txn.confirmations)
+                {conf.owner for conf in txn.confirmations}
             ):
                 # NOTE: Skip if all signers from `filter_by_missing_signers`
                 #       are in `txn.confirmations`
@@ -166,11 +166,7 @@ class RequestsClient(BaseSafeClient):
         api_version = kwargs.pop("api_version", "v1")
 
         # NOTE: paged requests include full url already
-        if url.startswith(self.base_url):
-            api_url = url
-
-        else:
-            api_url = f"{self.base_url}/{api_version}{url}"
+        api_url = url if url.startswith(self.base_url) else f"{self.base_url}/{api_version}{url}"
 
         do_fail = not kwargs.pop("allow_failure", False)
 

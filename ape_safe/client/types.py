@@ -1,14 +1,16 @@
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Annotated, NewType, Union, cast
+from typing import TYPE_CHECKING, Annotated, NewType, Union, cast
 
 from ape.types import AddressType, HexBytes
 from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
-from eth_pydantic_types import HexStr
 from eth_utils import add_0x_prefix, to_hex
 from pydantic import AliasChoices, BaseModel, BeforeValidator, Field, field_validator
 
 from ape_safe.utils import get_safe_tx_hash
+
+if TYPE_CHECKING:
+    from eth_pydantic_types import HexStr
 
 SafeTx = Union[SafeTxV1, SafeTxV2]
 SafeTxID = NewType("SafeTxID", str)
@@ -65,7 +67,7 @@ class SafeDetails(BaseModel):
     version: str
 
     @field_validator("modules", mode="before")
-    def convert_none_to_empty_list(cls, value):
+    def convert_none_to_empty_list(self, value):
         if not value:
             return []
         return value
