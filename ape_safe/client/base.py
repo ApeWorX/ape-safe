@@ -2,7 +2,7 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 import certifi
 import urllib3
@@ -46,7 +46,7 @@ class BaseSafeClient(ABC):
     def _all_transactions(self) -> Iterator[SafeApiTxData]: ...
 
     @abstractmethod
-    def get_safe_tx(self, safe_tx_hash: SafeTxID) -> Optional[SafeApiTxData]: ...
+    def get_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeApiTxData | None: ...
 
     @abstractmethod
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]: ...
@@ -59,24 +59,24 @@ class BaseSafeClient(ABC):
     @abstractmethod
     def post_signatures(
         self,
-        safe_tx_or_hash: Union[SafeTx, SafeTxID],
+        safe_tx_or_hash: SafeTx | SafeTxID,
         signatures: dict[AddressType, MessageSignature],
     ): ...
 
     @abstractmethod
     def estimate_gas_cost(
         self, receiver: AddressType, value: int, data: bytes, operation: int = 0
-    ) -> Optional[int]: ...
+    ) -> int | None: ...
 
     """Shared methods"""
 
     def get_transactions(
         self,
-        confirmed: Optional[bool] = None,
+        confirmed: bool | None = None,
         starting_nonce: int = 0,
-        ending_nonce: Optional[int] = None,
-        filter_by_ids: Optional[set[SafeTxID]] = None,
-        filter_by_missing_signers: Optional[set[AddressType]] = None,
+        ending_nonce: int | None = None,
+        filter_by_ids: set[SafeTxID] | None = None,
+        filter_by_missing_signers: set[AddressType] | None = None,
     ) -> Iterator[SafeApiTxData]:
         """
         confirmed: Confirmed if True, not confirmed if False, both if None
@@ -109,7 +109,7 @@ class BaseSafeClient(ABC):
                 continue  # NOTE: Skip transactions not in the filter
 
             if filter_by_missing_signers and filter_by_missing_signers.issubset(
-                set(conf.owner for conf in txn.confirmations)
+                {conf.owner for conf in txn.confirmations}
             ):
                 # NOTE: Skip if all signers from `filter_by_missing_signers`
                 #       are in `txn.confirmations`
@@ -149,28 +149,24 @@ class RequestsClient(BaseSafeClient):
         session.mount("https://", adapter)
         return session
 
-    def _get(self, url: str, params: Optional[dict] = None, **kwargs) -> "Response":
+    def _get(self, url: str, params: dict | None = None, **kwargs) -> "Response":
         return self._request("GET", url, params=params, **kwargs)
 
-    def _post(self, url: str, json: Optional[dict] = None, **kwargs) -> "Response":
+    def _post(self, url: str, json: dict | None = None, **kwargs) -> "Response":
         return self._request("POST", url, json=json, **kwargs)
 
-    def _delete(self, url: str, json: Optional[dict] = None, **kwargs) -> "Response":
+    def _delete(self, url: str, json: dict | None = None, **kwargs) -> "Response":
         return self._request("DELETE", url, json=json, **kwargs)
 
     @cached_property
     def _http(self):
         return urllib3.PoolManager(ca_certs=certifi.where())
 
-    def _request(self, method: str, url: str, json: Optional[dict] = None, **kwargs) -> "Response":
+    def _request(self, method: str, url: str, json: dict | None = None, **kwargs) -> "Response":
         api_version = kwargs.pop("api_version", "v1")
 
         # NOTE: paged requests include full url already
-        if url.startswith(self.base_url):
-            api_url = url
-
-        else:
-            api_url = f"{self.base_url}/{api_version}{url}"
+        api_url = url if url.startswith(self.base_url) else f"{self.base_url}/{api_version}{url}"
 
         do_fail = not kwargs.pop("allow_failure", False)
 

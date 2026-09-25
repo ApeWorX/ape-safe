@@ -1,5 +1,5 @@
 from contextlib import ContextDecorator
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from ape.exceptions import (
     AccountsError,
@@ -57,7 +57,7 @@ class NotEnoughSignatures(ApeSafeException, SignatureError):
 
 
 class ClientUnavailable(ApeSafeException):
-    def __init__(self, message: Optional[str] = None) -> None:
+    def __init__(self, message: str | None = None) -> None:
         super().__init__(message or "Client unavailable.")
 
 
@@ -113,7 +113,7 @@ class handle_safe_logic_error(ContextDecorator):
             if message.startswith("GS") and message in SAFE_ERROR_CODES:
                 raise SafeLogicError(exc.message.replace("revert: ", "")) from exc
 
-            elif message in SAFE_ERROR_CODES.values():
+            if message in SAFE_ERROR_CODES.values():
                 # For pre-v1.3.0 safes, normalize to GS code from error message
                 raise SafeLogicError(
                     list(SAFE_ERROR_CODES.keys())[list(SAFE_ERROR_CODES.values()).index(message)]
@@ -141,7 +141,7 @@ class ActionNotPerformedError(SafeClientException):
 
 
 class ClientResponseError(SafeClientException):
-    def __init__(self, endpoint_url: str, response: "Response", message: Optional[str] = None):
+    def __init__(self, endpoint_url: str, response: "Response", message: str | None = None):
         self.endpoint_url = endpoint_url
         self.response = response
         message = message or f"Exception when calling '{endpoint_url}':\n{response.text}"

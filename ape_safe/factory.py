@@ -1,6 +1,6 @@
 import secrets
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Union
 
 from ape.types import AddressType
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
@@ -48,19 +48,19 @@ class SafeFactory(ManagerAccessMixin):
         owners: Iterable[Union["BaseAddress", "AddressType", str]],
         threshold: int,
         callback_address: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
-        callback_calldata: Optional[bytes] = None,
+        callback_calldata: bytes | None = None,
         fallback_handler: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
         payment_token: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
-        payment_amount: Union[str, int] = 0,
+        payment_amount: str | int = 0,
         payment_receiver: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
-        salt: Optional[int] = None,
-        version: Union[Version, str, None] = None,
+        salt: int | None = None,
+        version: Version | str | None = None,
         **txn_kwargs,
     ) -> "ContractInstance":
         if not (owners := [self.conversion_manager.convert(a, AddressType) for a in owners]):
             raise ValueError("Cannot make a Safe with 0 owners.")
 
-        elif not (1 <= threshold <= len(owners)):
+        if not (1 <= threshold <= len(owners)):
             raise ValueError(f"Threshold must be between '1' and '{len(owners)}'")
 
         if callback_address != ZERO_ADDRESS:
@@ -76,9 +76,9 @@ class SafeFactory(ManagerAccessMixin):
                 "If sending payments, must include both `payment_token` and `payment_receiver`"
             )
 
-        else:  # Both are not empty
-            payment_token = self.conversion_manager.convert(payment_token, AddressType)
-            payment_receiver = self.conversion_manager.convert(payment_receiver, AddressType)
+        # Both are not empty
+        payment_token = self.conversion_manager.convert(payment_token, AddressType)
+        payment_receiver = self.conversion_manager.convert(payment_receiver, AddressType)
 
         if not salt:
             salt = secrets.randbits(256)

@@ -12,7 +12,7 @@ def safe_container():
 
 
 # NOTE: Every test gets a different data folder
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(autouse=True)
 def patch_data_folder(monkeypatch, safe_container):
     with create_tempdir() as data_folder_override:
         monkeypatch.setattr(safe_container, "data_folder", data_folder_override)
@@ -21,7 +21,7 @@ def patch_data_folder(monkeypatch, safe_container):
 
 @pytest.fixture
 def runner():
-    yield CliRunner(mix_stderr=True)
+    return CliRunner(mix_stderr=True)
 
 
 @pytest.fixture

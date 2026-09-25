@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 APE_SAFE_VERSION = get_package_version(__name__)
 APE_SAFE_USER_AGENT = f"Ape-Safe/{APE_SAFE_VERSION} {USER_AGENT}"
 # NOTE: Origin must be a string, but can be json that contains url & name fields
-ORIGIN = json.dumps(dict(url="https://apeworx.io", name="Ape Safe", ua=APE_SAFE_USER_AGENT))
+ORIGIN = json.dumps({"url": "https://apeworx.io", "name": "Ape Safe", "ua": APE_SAFE_USER_AGENT})
 assert len(ORIGIN) <= 200  # NOTE: Must be less than 200 chars
 
 # URL for the multichain client gateway
@@ -77,8 +77,8 @@ class SafeClient(RequestsClient):
     def __init__(
         self,
         address: AddressType,
-        override_url: Optional[str] = None,
-        chain_id: Optional[int] = None,
+        override_url: str | None = None,
+        chain_id: int | None = None,
     ) -> None:
         self.address = address
         self.chain_id = chain_id
@@ -89,7 +89,7 @@ class SafeClient(RequestsClient):
             if chain_id not in EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID:
                 raise ValueError(f"Chain ID {chain_id} is not a supported chain.")
 
-            elif not GATEWAY_API_KEY:
+            if not GATEWAY_API_KEY:
                 raise ValueError(
                     """Must provide API key via 'APE_SAFE_GATEWAY_API_KEY='.
 
@@ -104,10 +104,10 @@ class SafeClient(RequestsClient):
 
         super().__init__(base_url)
 
-    def _request(self, method: str, url: str, json: Optional[dict] = None, **kwargs) -> "Response":
+    def _request(self, method: str, url: str, json: dict | None = None, **kwargs) -> "Response":
         # NOTE: Add authorization header
         headers = kwargs.pop("headers", {})
-        headers.update(dict(Authorization=f"Bearer {GATEWAY_API_KEY}"))
+        headers.update({"Authorization": f"Bearer {GATEWAY_API_KEY}"})
         return super()._request(method, url, json=json, headers=headers, **kwargs)
 
     @property
@@ -141,7 +141,7 @@ class SafeClient(RequestsClient):
 
             url = data.get("next")
 
-    def get_safe_tx(self, safe_tx_hash: SafeTxID) -> Optional[SafeApiTxData]:
+    def get_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeApiTxData | None:
         try:
             response = self._get(f"/multisig-transactions/{safe_tx_hash}", api_version="v2")
         except ClientResponseError:
@@ -200,7 +200,7 @@ class SafeClient(RequestsClient):
 
     def post_signatures(
         self,
-        safe_tx_or_hash: Union[SafeTx, SafeTxID],
+        safe_tx_or_hash: SafeTx | SafeTxID,
         signatures: dict[AddressType, MessageSignature],
     ):
         if isinstance(safe_tx_or_hash, (SafeTxV1, SafeTxV2)):
@@ -209,7 +209,7 @@ class SafeClient(RequestsClient):
         else:
             safe_tx_hash = safe_tx_or_hash
 
-        safe_tx_hash = cast(SafeTxID, to_hex(HexBytes(safe_tx_hash)))
+        safe_tx_hash = cast("SafeTxID", to_hex(HexBytes(safe_tx_hash)))
         url = f"/multisig-transactions/{safe_tx_hash}/confirmations"
         signature = to_hex(
             HexBytes(b"".join([x.encode_rsv() for x in order_by_signer(signatures)]))
@@ -224,7 +224,7 @@ class SafeClient(RequestsClient):
 
     def estimate_gas_cost(
         self, receiver: AddressType, value: int, data: bytes, operation: int = 0
-    ) -> Optional[int]:
+    ) -> int | None:
         url = f"/safes/{self.address}/multisig-transactions/estimations"
         request: dict = {
             "to": receiver,

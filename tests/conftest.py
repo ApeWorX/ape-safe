@@ -15,7 +15,7 @@ from ape_safe.factory import SafeFactory
 contracts_directory = Path(__file__).parent / "contracts"
 safe_package_versions = [
     m.stem.replace("safe-v", "")
-    for m in cast(Path, (get_pkg_resources("ape_safe") / "manifests")).glob("safe-v*.json")
+    for m in cast("Path", (get_pkg_resources("ape_safe") / "manifests")).glob("safe-v*.json")
 ]
 
 
