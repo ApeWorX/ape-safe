@@ -74,6 +74,7 @@ class SafeDetails(BaseModel):
 
 class SignatureType(str, Enum):
     APPROVED_HASH = "APPROVED_HASH"
+    CONTRACT_SIGNATURE = "CONTRACT_SIGNATURE"
     EOA = "EOA"
     ETH_SIGN = "ETH_SIGN"
 
@@ -112,7 +113,9 @@ class UnexecutedTxData(BaseModel):
     signatures: Optional[HexBytes] = None
 
     @classmethod
-    def from_safe_tx(cls, safe_tx: SafeTx, confirmations_required: int) -> "UnexecutedTxData":
+    def from_safe_tx(
+        cls, safe_tx: SafeTx, confirmations_required: int
+    ) -> "UnexecutedTxData":
         return cls(
             safe=safe_tx._eip712_domain_.verifyingContract,
             submissionDate=datetime.now(timezone.utc),
@@ -196,7 +199,9 @@ class ExecutedTxData(UnexecutedTxData):
     is_successful: bool = Field(alias="isSuccessful")
     eth_gas_price: int = Field(alias="ethGasPrice")
     max_fee_per_gas: Optional[int] = Field(default=None, alias="maxFeePerGas")
-    max_priority_fee_per_gas: Optional[int] = Field(default=None, alias="maxPriorityFeePerGas")
+    max_priority_fee_per_gas: Optional[int] = Field(
+        default=None, alias="maxPriorityFeePerGas"
+    )
     gas_used: int = Field(alias="gasUsed")
     fee: int
     origin: str
