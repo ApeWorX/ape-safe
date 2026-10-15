@@ -126,7 +126,8 @@ indent-style = "space"
 
 [tool.pytest.ini_options]
 addopts = """
-    -p no:ape_test
+    -p no:pytest_ethereum
+    -n 0
     --cov-branch
     --cov-report term
     --cov-report html

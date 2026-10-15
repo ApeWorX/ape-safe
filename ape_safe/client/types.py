@@ -67,7 +67,8 @@ class SafeDetails(BaseModel):
     version: str
 
     @field_validator("modules", mode="before")
-    def convert_none_to_empty_list(self, value):
+    @classmethod
+    def convert_none_to_empty_list(cls, value):
         if not value:
             return []
         return value
