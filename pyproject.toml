@@ -47,6 +47,8 @@ test = [
     "pytest-xdist",
     "pytest-cov",
     "hypothesis>=6.2.0,<7",
+    "ape-foundry>=0.8.7",
+    "ape-solidity>=0.8",
 ]
 lint = [
     "mypy>=1.15.0,<2",
