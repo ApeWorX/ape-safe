@@ -77,7 +77,7 @@ jobs:
           run: uv sync --group test
 
         - name: Run Tests
-          run: uv run pytest -m "not fuzzing" -s --cov=ape_safe -n auto
+          run: uv run pytest -m "not fuzzing" -s --cov=ape_safe -n 0
 
 # NOTE: uncomment this block after you've marked tests with @pytest.mark.fuzzing
 #    fuzzing:
