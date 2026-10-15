@@ -45,13 +45,12 @@ class SafeModuleManager(ManagerAccessMixin):
             txn = self._safe.contract.enableModule.as_transaction(module, **txn_kwargs)
             return self._safe.propose(txn=txn, submitter=submitter)
 
-        else:
-            return self._safe.contract.enableModule(
-                module,
-                sender=self._safe,
-                submitter=submitter,
-                **txn_kwargs,
-            )
+        return self._safe.contract.enableModule(
+            module,
+            sender=self._safe,
+            submitter=submitter,
+            **txn_kwargs,
+        )
 
     def __iter__(self) -> "Iterator[ContractInstance]":
         start_module = self.SENTINEL
@@ -93,14 +92,13 @@ class SafeModuleManager(ManagerAccessMixin):
             )
             return self._safe.propose(txn=txn, submitter=submitter)
 
-        else:
-            return self._safe.contract.disableModule(
-                self._get_previous_module(module),
-                module,
-                sender=self._safe,
-                submitter=submitter,
-                **txn_kwargs,
-            )
+        return self._safe.contract.disableModule(
+            self._get_previous_module(module),
+            module,
+            sender=self._safe,
+            submitter=submitter,
+            **txn_kwargs,
+        )
 
     @property
     def guard(self) -> Optional["ContractInstance"]:
@@ -129,13 +127,12 @@ class SafeModuleManager(ManagerAccessMixin):
             txn = self._safe.contract.setModuleGuard.as_transaction(guard, **txn_kwargs)
             return self._safe.propose(txn=txn, submitter=submitter)
 
-        else:
-            return self._safe.contract.setModuleGuard(
-                guard,
-                sender=self._safe,
-                submitter=submitter,
-                **txn_kwargs,
-            )
+        return self._safe.contract.setModuleGuard(
+            guard,
+            sender=self._safe,
+            submitter=submitter,
+            **txn_kwargs,
+        )
 
     @handle_safe_logic_error()
     def remove_guard(self, **txn_kwargs) -> Union["ReceiptAPI", "SafeTxID"]:

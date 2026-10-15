@@ -125,3 +125,9 @@ dmypy.json
 
 # setuptools-scm
 version.py
+
+# uv (do not commit lockfiles — ApeWorX packaging standard)
+uv.lock
+
+# ruff
+.ruff_cache/

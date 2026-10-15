@@ -1,7 +1,7 @@
 from enum import Enum
 from functools import cache
 from importlib import resources
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 import requests
 from ape.managers.project import ProjectManager
@@ -32,7 +32,7 @@ class PackageType(str, Enum):
     PROXY_FACTORY = "SafeProxyFactory"
     MULTISEND = "MultiSend"
 
-    def __call__(self, version: Union[Version, str]) -> "ContractContainer":
+    def __call__(self, version: Version | str) -> "ContractContainer":
         if not isinstance(version, Version):
             version = Version(version.lstrip("v"))
 
@@ -45,17 +45,16 @@ class PackageType(str, Enum):
             # NOTE: Always use `MultiSendCallOnly` to prevent against delegatecall issues
             return package.MultiSendCallOnly
 
-        elif self is PackageType.PROXY_FACTORY:
+        if self is PackageType.PROXY_FACTORY:
             if version == Version("1.1.1"):
                 return package.ProxyFactory
 
-            elif version <= Version("1.3.0"):
+            if version <= Version("1.3.0"):
                 return package.GnosisSafeProxyFactory
 
-            else:
-                return package.SafeProxyFactory
+            return package.SafeProxyFactory
 
-        elif version > Version("1.3.0"):
+        if version > Version("1.3.0"):
             # NOTE: Use `SafeL2` as it has an extra event
             SafeSingleton = package.SafeL2
 
@@ -91,7 +90,7 @@ class DeploymentAsset(BaseModel):
     version: str
     deployments: dict[DeploymentType, DeploymentInfo]
     # ChainID => DeploymentType
-    networkAddresses: dict[int, Union[DeploymentType, list[DeploymentType]]]
+    networkAddresses: dict[int, DeploymentType | list[DeploymentType]]
 
 
 BASE_ASSETS_URL = (
@@ -100,7 +99,7 @@ BASE_ASSETS_URL = (
 
 
 def get_deployment_artifact(
-    package_type: PackageType, chain_id: int, version: Union[Version, str]
+    package_type: PackageType, chain_id: int, version: Version | str
 ) -> "ContractInstance":
     if not isinstance(version, Version):
         version = Version(version.lstrip("v"))
@@ -136,15 +135,15 @@ def get_deployment_artifact(
 
 
 @cache
-def get_singleton(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
+def get_singleton(chain_id: int, version: Version | str) -> "ContractInstance":
     return get_deployment_artifact(PackageType.SINGLETON, chain_id, version)
 
 
 @cache
-def get_factory(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
+def get_factory(chain_id: int, version: Version | str) -> "ContractInstance":
     return get_deployment_artifact(PackageType.PROXY_FACTORY, chain_id, version)
 
 
 @cache
-def get_multisend(chain_id: int, version: Union[Version, str]) -> "ContractInstance":
+def get_multisend(chain_id: int, version: Version | str) -> "ContractInstance":
     return get_deployment_artifact(PackageType.MULTISEND, chain_id, version)

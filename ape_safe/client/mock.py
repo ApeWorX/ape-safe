@@ -1,6 +1,6 @@
 from collections.abc import Iterator
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional, Union, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
 from eth_utils import keccak, to_hex
@@ -72,8 +72,8 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
                 if tx:
                     yield tx
 
-    def get_safe_tx(self, safe_tx_hash: SafeTxID) -> Optional[SafeApiTxData]:
-        tx_hash = cast(SafeTxID, to_hex(HexBytes(safe_tx_hash)))
+    def get_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeApiTxData | None:
+        tx_hash = cast("SafeTxID", to_hex(HexBytes(safe_tx_hash)))
 
         if safe_tx := self.transactions.get(tx_hash):
             return safe_tx
@@ -85,7 +85,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         return None
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
-        tx_hash = cast(SafeTxID, to_hex(HexBytes(safe_tx_hash)))
+        tx_hash = cast("SafeTxID", to_hex(HexBytes(safe_tx_hash)))
         if safe_tx_data := self.transactions.get(tx_hash):
             yield from safe_tx_data.confirmations
 
@@ -121,7 +121,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
                 "At least one signature must be from a valid owner of the safe"
             )
 
-        tx_id = cast(SafeTxID, to_hex(HexBytes(safe_tx_data.safe_tx_hash)))
+        tx_id = cast("SafeTxID", to_hex(HexBytes(safe_tx_data.safe_tx_hash)))
         self.transactions[tx_id] = safe_tx_data
         if safe_tx_data.nonce in self.transactions_by_nonce:
             self.transactions_by_nonce[safe_tx_data.nonce].append(tx_id)
@@ -130,7 +130,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
 
     def post_signatures(
         self,
-        safe_tx_or_hash: Union[SafeTx, SafeTxID],
+        safe_tx_or_hash: SafeTx | SafeTxID,
         signatures: dict["AddressType", "MessageSignature"],
     ):
         for signer, signature in signatures.items():
@@ -139,7 +139,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
                 if isinstance(safe_tx_or_hash, (str, bytes, int))
                 else get_safe_tx_hash(safe_tx_or_hash)
             )
-            tx_id = cast(SafeTxID, to_hex(HexBytes(safe_tx_id)))
+            tx_id = cast("SafeTxID", to_hex(HexBytes(safe_tx_id)))
             self.transactions[tx_id].confirmations.append(
                 SafeTxConfirmation(
                     owner=signer,
@@ -151,7 +151,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
 
     def estimate_gas_cost(
         self, receiver: "AddressType", value: int, data: bytes, operation: int = 0
-    ) -> Optional[int]:
+    ) -> int | None:
         return None  # Estimate gas normally
 
     def get_delegates(self) -> dict["AddressType", list["AddressType"]]:
@@ -178,7 +178,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
         if delegator.address not in self.safe_details.owners:
             raise SafeClientException(f"'{delegator.address}' not a valid owner.")
 
-        elif delegator.address not in self.delegates:
+        if delegator.address not in self.delegates:
             raise SafeClientException(
                 f"'{delegate}' not a valid delegate for '{delegator.address}'."
             )
