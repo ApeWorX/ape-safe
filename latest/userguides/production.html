@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,8 @@
   --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
 }
 </style>
-    <meta property="og:type" content="website"/>
+    
+  <meta property="og:type" content="website"/>
   <meta property="og:url" content="ape-safe/userguides/production.html"/>
   <meta property="og:title" content="Managing your Safe in Production"/>
     <meta name="twitter:card" content="summary"/>
@@ -191,10 +192,10 @@ data-aria-dark="Switch to auto color mode">
   </div>
 </div><article class="yue" role="main">
           <section id="managing-your-safe-in-production">
-<h1>Managing your Safe in Production<a class="headerlink" href="#managing-your-safe-in-production" title="Link to this heading"></a></h1>
+<h1>Managing your Safe in Production<a class="headerlink" href="#managing-your-safe-in-production" title="Link to this heading">#</a></h1>
 <p>When co-managing a Safe with a larger team, ape-safe brings extra tools to the table to help you.</p>
 <section id="queue-scripts">
-<h2>Queue Scripts<a class="headerlink" href="#queue-scripts" title="Link to this heading"></a></h2>
+<h2>Queue Scripts<a class="headerlink" href="#queue-scripts" title="Link to this heading">#</a></h2>
 <p>You can define “queue scripts” which are scripts under your project’s <code class="docutils literal notranslate"><span class="pre">scripts/</span></code> folder that use
 the <a class="reference external" href="../methoddocs/cli"><code class="docutils literal notranslate"><span class="pre">propose_from_simulation</span></code></a> decorator in your script.</p>
 <div class="admonition important">
@@ -216,9 +217,9 @@ value of <code class="docutils literal notranslate"><span class="pre">nonce</spa
 </span><span data-line="7">    <span class="c1"># This entire function is executed within a fork/isolated context</span>
 </span><span data-line="8">
 </span><span data-line="9">    <span class="c1"># Use normal Ape features</span>
-</span><span data-line="10">    <span class="n">my_contract</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="s2">&quot;&lt;address&gt;&quot;</span><span class="p">)</span>
+</span><span data-line="10">    <span class="n">my_contract</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="s2">"&lt;address&gt;"</span><span class="p">)</span>
 </span><span data-line="11">
-</span><span data-line="12">    <span class="c1"># Any transaction is performed as if `sender=safe.address` (using Ape&#39;s default sender support)</span>
+</span><span data-line="12">    <span class="c1"># Any transaction is performed as if `sender=safe.address` (using Ape's default sender support)</span>
 </span><span data-line="13">    <span class="n">my_contract</span><span class="o">.</span><span class="n">mutableMethod</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </span><span data-line="14">
 </span><span data-line="15">    <span class="c1"># You can make assertions that will cause your simulation to fail if tripped</span>
@@ -247,7 +248,7 @@ in order to access their values within your simulation.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">submitter</span></code> is needed, <code class="docutils literal notranslate"><span class="pre">safe</span></code> must also be present in the args.</p>
 </div>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@propose_from_simulation</span><span class="p">()</span>
-</span><span data-line="2"><span class="c1"># NOTE: Can also just use `def cli(safe):` if you don&#39;t need `submitter`</span>
+</span><span data-line="2"><span class="c1"># NOTE: Can also just use `def cli(safe):` if you don't need `submitter`</span>
 </span><span data-line="3"><span class="k">def</span><span class="w"> </span><span class="nf">cli</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">submitter</span><span class="p">):</span>
 </span><span data-line="4">    <span class="c1"># You can use `safe` or `submitter` in your script to query values from the chain</span>
 </span><span data-line="5">    <span class="n">bal_before</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">balanceOf</span><span class="p">(</span><span class="n">submitter</span><span class="p">)</span>
@@ -262,7 +263,7 @@ in order to access their values within your simulation.</p>
 </div>
 </section>
 <section id="queue-management">
-<h2>Queue Management<a class="headerlink" href="#queue-management" title="Link to this heading"></a></h2>
+<h2>Queue Management<a class="headerlink" href="#queue-management" title="Link to this heading">#</a></h2>
 <p>We also provide a command <a class="reference external" href="../../commands/pending#ape-safe-pending-ensure"><code class="docutils literal notranslate"><span class="pre">ape</span> <span class="pre">safe</span> <span class="pre">pending</span> <span class="pre">ensure</span></code></a>
 that allows you to execute <strong>all</strong> matching queue scripts you have defined in <code class="docutils literal notranslate"><span class="pre">scripts/</span></code>.
 This allows you to check side-effects from running all commands in the queue,
@@ -336,5 +337,5 @@ scripts can be reviewed by signers, and access is controlled behind Github’s a
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
 </html>

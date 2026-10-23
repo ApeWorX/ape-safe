@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,8 @@
   --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
 }
 </style>
-    <meta property="og:type" content="website"/>
+    
+  <meta property="og:type" content="website"/>
   <meta property="og:url" content="ape-safe/userguides/transactions.html"/>
   <meta property="og:title" content="Transaction Workflows"/>
     <meta name="twitter:card" content="summary"/>
@@ -217,10 +218,10 @@ data-aria-dark="Switch to auto color mode">
   </div>
 </div><article class="yue" role="main">
           <section id="transaction-workflows">
-<h1>Transaction Workflows<a class="headerlink" href="#transaction-workflows" title="Link to this heading"></a></h1>
+<h1>Transaction Workflows<a class="headerlink" href="#transaction-workflows" title="Link to this heading">#</a></h1>
 <p>This guide explains the lifecycle of a Safe transaction and how to manage each stage of the process.</p>
 <section id="transaction-lifecycle">
-<h2>Transaction Lifecycle<a class="headerlink" href="#transaction-lifecycle" title="Link to this heading"></a></h2>
+<h2>Transaction Lifecycle<a class="headerlink" href="#transaction-lifecycle" title="Link to this heading">#</a></h2>
 <p>Safe transactions follow a specific workflow:</p>
 <ol class="arabic simple">
 <li><p><strong>Creation</strong>: A transaction is created and signed by the first signer (or a delegate)</p></li>
@@ -230,25 +231,25 @@ data-aria-dark="Switch to auto color mode">
 </ol>
 </section>
 <section id="creating-and-proposing-transactions">
-<h2>Creating and Proposing Transactions<a class="headerlink" href="#creating-and-proposing-transactions" title="Link to this heading"></a></h2>
+<h2>Creating and Proposing Transactions<a class="headerlink" href="#creating-and-proposing-transactions" title="Link to this heading">#</a></h2>
 <p>You can create transactions very easily using your safe account like any other Ape account type:</p>
 <section id="via-python-api">
-<h3>Via Python API<a class="headerlink" href="#via-python-api" title="Link to this heading"></a></h3>
+<h3>Via Python API<a class="headerlink" href="#via-python-api" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create a simple transfer</span>
 </span><span data-line="2"><span class="c1"># NOTE: This will fail to execute due to `submit=False`,</span>
 </span><span data-line="3"><span class="c1">#       but will successfully submit to the Safe Gateway</span>
-</span><span data-line="4"><span class="n">safe</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="s2">&quot;0xRecipientAddress&quot;</span><span class="p">,</span> <span class="s2">&quot;1 ether&quot;</span><span class="p">,</span> <span class="n">submit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">safe</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="s2">"0xRecipientAddress"</span><span class="p">,</span> <span class="s2">"1 ether"</span><span class="p">,</span> <span class="n">submit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </span></pre></div>
 </div>
 <p>You can also do more complex contract interactions:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Load a contract</span>
-</span><span data-line="2"><span class="n">token</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="s2">&quot;0xTokenAddress&quot;</span><span class="p">)</span>
+</span><span data-line="2"><span class="n">token</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="s2">"0xTokenAddress"</span><span class="p">)</span>
 </span><span data-line="3">
 </span><span data-line="4"><span class="c1"># Call a contract method</span>
 </span><span data-line="5"><span class="c1"># NOTE: This will fail to execute due to `submit=False`,</span>
 </span><span data-line="6"><span class="c1">#       but will successfully submit to the Safe Gateway</span>
 </span><span data-line="7"><span class="n">token</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span>
-</span><span data-line="8">    <span class="s2">&quot;0xRecipientAddress&quot;</span><span class="p">,</span>
+</span><span data-line="8">    <span class="s2">"0xRecipientAddress"</span><span class="p">,</span>
 </span><span data-line="9">    <span class="n">amount</span><span class="p">,</span>
 </span><span data-line="10">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">,</span>
 </span><span data-line="11">    <span class="n">submit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -257,9 +258,9 @@ data-aria-dark="Switch to auto color mode">
 </div>
 </section>
 <section id="via-cli">
-<h3>Via CLI<a class="headerlink" href="#via-cli" title="Link to this heading"></a></h3>
+<h3>Via CLI<a class="headerlink" href="#via-cli" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Propose a simple ETH transfer</span>
-</span><span data-line="2">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>propose<span class="w"> </span>--to<span class="w"> </span>0xRecipientAddress<span class="w"> </span>--value<span class="w"> </span><span class="s2">&quot;1 ether&quot;</span>
+</span><span data-line="2">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>propose<span class="w"> </span>--to<span class="w"> </span>0xRecipientAddress<span class="w"> </span>--value<span class="w"> </span><span class="s2">"1 ether"</span>
 </span><span data-line="3">
 </span><span data-line="4"><span class="c1"># Propose a contract interaction</span>
 </span><span data-line="5">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>propose<span class="w"> </span>--to<span class="w"> </span>0xTokenAddress<span class="w"> </span>--data<span class="w"> </span>0x123abc...
@@ -268,19 +269,19 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 <section id="listing-pending-transactions">
-<h2>Listing Pending Transactions<a class="headerlink" href="#listing-pending-transactions" title="Link to this heading"></a></h2>
+<h2>Listing Pending Transactions<a class="headerlink" href="#listing-pending-transactions" title="Link to this heading">#</a></h2>
 <p>Once a transaction has been signed and proposed to the Safe Gateway, you can fetch them from the service</p>
 <section id="id1">
-<h3>Via Python API<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Get all pending transactions in the Safe Gateway&#39;s queue</span>
+<h3>Via Python API<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Get all pending transactions in the Safe Gateway's queue</span>
 </span><span data-line="2"><span class="k">for</span> <span class="n">tx</span><span class="p">,</span> <span class="n">confirmations</span> <span class="ow">in</span> <span class="n">safe</span><span class="o">.</span><span class="n">pending_transactions</span><span class="p">():</span>
-</span><span data-line="3">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Nonce: </span><span class="si">{</span><span class="n">tx</span><span class="o">.</span><span class="n">nonce</span><span class="si">}</span><span class="s2">, To: </span><span class="si">{</span><span class="n">tx</span><span class="o">.</span><span class="n">to</span><span class="si">}</span><span class="s2">, Data: </span><span class="si">{</span><span class="n">tx</span><span class="o">.</span><span class="n">data</span><span class="si">}</span><span class="s2">, Value: </span><span class="si">{</span><span class="n">tx</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span data-line="4">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Confirmations: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">confirmations</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">confirmations_required</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="3">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Nonce: </span><span class="si">{</span><span class="n">tx</span><span class="o">.</span><span class="n">nonce</span><span class="si">}</span><span class="s2">, To: </span><span class="si">{</span><span class="n">tx</span><span class="o">.</span><span class="n">to</span><span class="si">}</span><span class="s2">, Data: </span><span class="si">{</span><span class="n">tx</span><span class="o">.</span><span class="n">data</span><span class="si">}</span><span class="s2">, Value: </span><span class="si">{</span><span class="n">tx</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="4">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Confirmations: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">confirmations</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">confirmations_required</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
 <section id="id2">
-<h3>Via CLI<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<h3>Via CLI<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># List pending transactions</span>
 </span><span data-line="2">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>list
 </span><span data-line="3">
@@ -294,24 +295,24 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 <section id="adding-confirmations-to-transactions">
-<h2>Adding Confirmations to Transactions<a class="headerlink" href="#adding-confirmations-to-transactions" title="Link to this heading"></a></h2>
+<h2>Adding Confirmations to Transactions<a class="headerlink" href="#adding-confirmations-to-transactions" title="Link to this heading">#</a></h2>
 <p>You can also add more confirmations (signatures) to proposed transactions in the Safe Gateway queue.</p>
 <section id="id3">
-<h3>Via Python API<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<h3>Via Python API<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Find transaction by nonce</span>
 </span><span data-line="2"><span class="k">for</span> <span class="n">tx</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">safe</span><span class="o">.</span><span class="n">pending_transactions</span><span class="p">():</span>
-</span><span data-line="3">    <span class="k">if</span> <span class="n">tx</span><span class="o">.</span><span class="n">nonce</span> <span class="o">==</span> <span class="mi">42</span><span class="p">:</span>  <span class="c1"># The nonce you&#39;re looking for</span>
+</span><span data-line="3">    <span class="k">if</span> <span class="n">tx</span><span class="o">.</span><span class="n">nonce</span> <span class="o">==</span> <span class="mi">42</span><span class="p">:</span>  <span class="c1"># The nonce you're looking for</span>
 </span><span data-line="4">        <span class="c1"># Add signatures from local signers</span>
 </span><span data-line="5">        <span class="n">signatures</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">add_signatures</span><span class="p">(</span><span class="n">tx</span><span class="p">)</span>
 </span><span data-line="6">
 </span><span data-line="7">        <span class="c1"># Check if we have enough signatures to execute</span>
 </span><span data-line="8">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">signatures</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">safe</span><span class="o">.</span><span class="n">confirmations_required</span><span class="p">:</span>
-</span><span data-line="9">            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Transaction ready to execute&quot;</span><span class="p">)</span>
+</span><span data-line="9">            <span class="nb">print</span><span class="p">(</span><span class="s2">"Transaction ready to execute"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
 <section id="id4">
-<h3>Via CLI<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<h3>Via CLI<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Approve by transaction hash</span>
 </span><span data-line="2">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>approve<span class="w"> </span>0x123abc...
 </span><span data-line="3">
@@ -322,25 +323,25 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 <section id="executing-transactions">
-<h2>Executing Transactions<a class="headerlink" href="#executing-transactions" title="Link to this heading"></a></h2>
+<h2>Executing Transactions<a class="headerlink" href="#executing-transactions" title="Link to this heading">#</a></h2>
 <p>When a transaction has enough signatures, it can then be executed on-chain.</p>
 <section id="id5">
-<h3>Via Python API<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<h3>Via Python API<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">accounts</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="c1"># Get a regular account to submit the transaction</span>
-</span><span data-line="4"><span class="n">submitter</span> <span class="o">=</span> <span class="n">accounts</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;my-account&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">submitter</span> <span class="o">=</span> <span class="n">accounts</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"my-account"</span><span class="p">)</span>
 </span><span data-line="5">
 </span><span data-line="6"><span class="c1"># Find and execute a transaction that has enough signatures</span>
 </span><span data-line="7"><span class="k">for</span> <span class="n">tx</span><span class="p">,</span> <span class="n">confirmations</span> <span class="ow">in</span> <span class="n">safe</span><span class="o">.</span><span class="n">pending_transactions</span><span class="p">():</span>
 </span><span data-line="8">    <span class="k">if</span> <span class="n">tx</span><span class="o">.</span><span class="n">nonce</span> <span class="o">==</span> <span class="mi">42</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">confirmations</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">safe</span><span class="o">.</span><span class="n">confirmations_required</span><span class="p">:</span>
 </span><span data-line="9">        <span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">submit_safe_tx</span><span class="p">(</span><span class="n">tx</span><span class="p">,</span> <span class="n">submitter</span><span class="o">=</span><span class="n">submitter</span><span class="p">)</span>
-</span><span data-line="10">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Transaction executed: </span><span class="si">{</span><span class="n">receipt</span><span class="o">.</span><span class="n">txn_hash</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="10">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Transaction executed: </span><span class="si">{</span><span class="n">receipt</span><span class="o">.</span><span class="n">txn_hash</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
 <section id="id6">
-<h3>Via CLI<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<h3>Via CLI<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Execute a transaction with a specific submitter</span>
 </span><span data-line="2">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>execute<span class="w"> </span><span class="m">42</span><span class="w"> </span>--submitter<span class="w"> </span>my-account
 </span><span data-line="3">
@@ -351,18 +352,18 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 <section id="rejecting-transactions">
-<h2>Rejecting Transactions<a class="headerlink" href="#rejecting-transactions" title="Link to this heading"></a></h2>
+<h2>Rejecting Transactions<a class="headerlink" href="#rejecting-transactions" title="Link to this heading">#</a></h2>
 <p>Rejecting a transaction replaces it with a 0 ETH self-send transaction at the same nonce, effectively cancelling it.
 This is useful if you have mistakenly placed a bad transaction in your queue that you need to avoid executing.</p>
 <section id="id7">
-<h3>Via Python API<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<h3>Via Python API<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create a rejection transaction for nonce 42</span>
 </span><span data-line="2"><span class="n">safe</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nonce</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
 <section id="id8">
-<h3>Via CLI<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<h3>Via CLI<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Reject a transaction</span>
 </span><span data-line="2">ape<span class="w"> </span>safe<span class="w"> </span>pending<span class="w"> </span>reject<span class="w"> </span><span class="m">42</span>
 </span><span data-line="3">
@@ -373,7 +374,7 @@ This is useful if you have mistakenly placed a bad transaction in your queue tha
 </section>
 </section>
 <section id="transaction-nonce-management">
-<h2>Transaction Nonce Management<a class="headerlink" href="#transaction-nonce-management" title="Link to this heading"></a></h2>
+<h2>Transaction Nonce Management<a class="headerlink" href="#transaction-nonce-management" title="Link to this heading">#</a></h2>
 <p>Safe uses nonces to ensure transactions are executed in a specific order:</p>
 <ul class="simple">
 <li><p>Only one transaction can be executed per nonce</p></li>
@@ -382,10 +383,10 @@ This is useful if you have mistakenly placed a bad transaction in your queue tha
 </ul>
 <p>To check the next available nonce:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Next on-chain nonce</span>
-</span><span data-line="2"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Next nonce: </span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">next_nonce</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="2"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Next nonce: </span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">next_nonce</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span data-line="3">
 </span><span data-line="4"><span class="c1"># Next available nonce (including pending)</span>
-</span><span data-line="5"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New nonce: </span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">new_nonce</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="5"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"New nonce: </span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">new_nonce</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 <div class="admonition note">
@@ -394,7 +395,7 @@ This is useful if you have mistakenly placed a bad transaction in your queue tha
 </div>
 </section>
 <section id="transaction-signatures">
-<h2>Transaction Signatures<a class="headerlink" href="#transaction-signatures" title="Link to this heading"></a></h2>
+<h2>Transaction Signatures<a class="headerlink" href="#transaction-signatures" title="Link to this heading">#</a></h2>
 <p>Safe uses EIP-712 signatures for off-chain approval:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape_safe.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_safe_tx_hash</span>
 </span><span data-line="2">
@@ -454,5 +455,5 @@ This is useful if you have mistakenly placed a bad transaction in your queue tha
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
 </html>

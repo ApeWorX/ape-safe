@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,8 @@
   --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
 }
 </style>
-    <meta property="og:type" content="website"/>
+    
+  <meta property="og:type" content="website"/>
   <meta property="og:url" content="ape-safe/userguides/safe_management.html"/>
   <meta property="og:title" content="Safe Management"/>
     <meta name="twitter:card" content="summary"/>
@@ -194,10 +195,10 @@ data-aria-dark="Switch to auto color mode">
   </div>
 </div><article class="yue" role="main">
           <section id="safe-management">
-<h1>Safe Management<a class="headerlink" href="#safe-management" title="Link to this heading"></a></h1>
+<h1>Safe Management<a class="headerlink" href="#safe-management" title="Link to this heading">#</a></h1>
 <p>This guide explains how to modify your Safe configuration programmatically.</p>
 <section id="working-with-safe-contracts">
-<h2>Working with Safe Contracts<a class="headerlink" href="#working-with-safe-contracts" title="Link to this heading"></a></h2>
+<h2>Working with Safe Contracts<a class="headerlink" href="#working-with-safe-contracts" title="Link to this heading">#</a></h2>
 <p>You can directly access the underlying Safe protocol smart contract via <code class="docutils literal notranslate"><span class="pre">safe.contract</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Accessible as `safe.signers`</span>
 </span><span data-line="2"><span class="n">owners</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">getOwners</span><span class="p">()</span>
@@ -210,63 +211,60 @@ data-aria-dark="Switch to auto color mode">
 </div>
 </section>
 <section id="changing-safe-ownership-and-threshold">
-<h2>Changing Safe Ownership and Threshold<a class="headerlink" href="#changing-safe-ownership-and-threshold" title="Link to this heading"></a></h2>
+<h2>Changing Safe Ownership and Threshold<a class="headerlink" href="#changing-safe-ownership-and-threshold" title="Link to this heading">#</a></h2>
 <p>Using the Safe contract provides methods to modify the Safe’s owner set:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Add a new owner with the current threshold</span>
 </span><span data-line="2"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">addOwnerWithThreshold</span><span class="p">(</span>
-</span><span data-line="3">    <span class="s2">&quot;0xNewOwnerAddress&quot;</span><span class="p">,</span>
+</span><span data-line="3">    <span class="s2">"0xNewOwnerAddress"</span><span class="p">,</span>
 </span><span data-line="4">    <span class="n">safe</span><span class="o">.</span><span class="n">confirmations_required</span><span class="p">,</span>  <span class="c1"># NOTE: Can also change threshold as the same time</span>
-</span><span data-line="5">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span>
+</span><span data-line="5">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">,</span>
 </span><span data-line="6"><span class="p">)</span>
 </span><span data-line="7">
 </span><span data-line="8"><span class="c1"># Remove an owner</span>
-</span><span data-line="9"><span class="n">prev_owner</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">&quot;0xOwnerToRemove&quot;</span><span class="p">)</span>
+</span><span data-line="9"><span class="n">prev_owner</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">"0xOwnerToRemove"</span><span class="p">)</span>
 </span><span data-line="10"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">removeOwner</span><span class="p">(</span>
-</span><span data-line="11">    <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">&quot;0xOwnerToRemove&quot;</span><span class="p">),</span>
-</span><span data-line="12">    <span class="s2">&quot;0xOwnerToRemove&quot;</span><span class="p">,</span>
+</span><span data-line="11">    <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">"0xOwnerToRemove"</span><span class="p">),</span>
+</span><span data-line="12">    <span class="s2">"0xOwnerToRemove"</span><span class="p">,</span>
 </span><span data-line="13">    <span class="n">safe</span><span class="o">.</span><span class="n">confirmations_required</span><span class="p">,</span>  <span class="c1"># NOTE: Can also change threshold as the same time</span>
-</span><span data-line="14">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span>
+</span><span data-line="14">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">,</span>
 </span><span data-line="15"><span class="p">)</span>
 </span><span data-line="16">
 </span><span data-line="17"><span class="c1"># Swap an owner</span>
-</span><span data-line="18"><span class="n">prev_owner</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">&quot;0xOldOwner&quot;</span><span class="p">)</span>
+</span><span data-line="18"><span class="n">prev_owner</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">"0xOldOwner"</span><span class="p">)</span>
 </span><span data-line="19"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">swapOwner</span><span class="p">(</span>
-</span><span data-line="20">    <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">&quot;0xOwnerToRemove&quot;</span><span class="p">),</span>
-</span><span data-line="21">    <span class="s2">&quot;0xOldOwner&quot;</span><span class="p">,</span>
-</span><span data-line="22">    <span class="s2">&quot;0xNewOwner&quot;</span><span class="p">,</span>
+</span><span data-line="20">    <span class="n">safe</span><span class="o">.</span><span class="n">compute_prev_signer</span><span class="p">(</span><span class="s2">"0xOwnerToRemove"</span><span class="p">),</span>
+</span><span data-line="21">    <span class="s2">"0xOldOwner"</span><span class="p">,</span>
+</span><span data-line="22">    <span class="s2">"0xNewOwner"</span><span class="p">,</span>
 </span><span data-line="23">    <span class="c1"># NOTE: Cannot modify threshold this way</span>
-</span><span data-line="24">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span>
+</span><span data-line="24">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">,</span>
 </span><span data-line="25"><span class="p">)</span>
 </span><span data-line="26">
 </span><span data-line="27"><span class="c1"># Change threshold</span>
-</span><span data-line="28"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">changeThreshold</span><span class="p">(</span>
-</span><span data-line="29">    <span class="n">new_threshold</span><span class="p">,</span>
-</span><span data-line="30">    <span class="n">sender</span><span class="o">=</span><span class="n">safe</span>
-</span><span data-line="31"><span class="p">)</span>
+</span><span data-line="28"><span class="n">receipt</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">changeThreshold</span><span class="p">(</span><span class="n">new_threshold</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">)</span>
 </span></pre></div>
 </div>
 <p>Note that these are multisig transactions themselves and require the appropriate number of confirmations.</p>
 </section>
 <section id="safe-modules">
-<h2>Safe Modules<a class="headerlink" href="#safe-modules" title="Link to this heading"></a></h2>
+<h2>Safe Modules<a class="headerlink" href="#safe-modules" title="Link to this heading">#</a></h2>
 <p>The Safe protocol supports configuring “Modules”, which are contracts that have special capabilities to access your Safe.</p>
 <p>You can enable or disable modules using the Safe contract as followsnot :</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">assert</span> <span class="ow">not</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">isModuleEnabled</span><span class="p">(</span><span class="s2">&quot;0xModule&quot;</span><span class="p">)</span>
-</span><span data-line="2"><span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">enableModule</span><span class="p">(</span><span class="s2">&quot;0xModule&quot;</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">)</span>
-</span><span data-line="3"><span class="k">assert</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">isModuleEnabled</span><span class="p">(</span><span class="s2">&quot;0xModule&quot;</span><span class="p">)</span>
-</span><span data-line="4"><span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">disableModule</span><span class="p">(</span><span class="s2">&quot;0xModule&quot;</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">)</span>
-</span><span data-line="5"><span class="k">assert</span> <span class="ow">not</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">isModuleEnabled</span><span class="p">(</span><span class="s2">&quot;0xModule&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">assert</span> <span class="ow">not</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">isModuleEnabled</span><span class="p">(</span><span class="s2">"0xModule"</span><span class="p">)</span>
+</span><span data-line="2"><span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">enableModule</span><span class="p">(</span><span class="s2">"0xModule"</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">)</span>
+</span><span data-line="3"><span class="k">assert</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">isModuleEnabled</span><span class="p">(</span><span class="s2">"0xModule"</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">disableModule</span><span class="p">(</span><span class="s2">"0xModule"</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">safe</span><span class="p">)</span>
+</span><span data-line="5"><span class="k">assert</span> <span class="ow">not</span> <span class="n">safe</span><span class="o">.</span><span class="n">contract</span><span class="o">.</span><span class="n">isModuleEnabled</span><span class="p">(</span><span class="s2">"0xModule"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 <!-- TODO better module support -->
 </section>
 <section id="safe-guard">
-<h2>Safe Guard<a class="headerlink" href="#safe-guard" title="Link to this heading"></a></h2>
+<h2>Safe Guard<a class="headerlink" href="#safe-guard" title="Link to this heading">#</a></h2>
 <p>Since version v1.3.0, the Safe protocol supports setting a transaction “Guard”, which is a contract that can disallow certain actions to occur unless conditions are met after a proposed transaction executes.
 To check if your safe has a Guard implemented, you can use the <code class="docutils literal notranslate"><span class="pre">.guard</span></code> property, which will return a contract if the guard is set.</p>
 <p>You can also change or set a guard using the <code class="docutils literal notranslate"><span class="pre">.set_guard</span></code> function:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">assert</span> <span class="ow">not</span> <span class="n">safe</span><span class="o">.</span><span class="n">guard</span>
-</span><span data-line="2"><span class="n">safe</span><span class="o">.</span><span class="n">set_guard</span><span class="p">(</span><span class="s2">&quot;0xMyGuard&quot;</span><span class="p">,</span> <span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
+</span><span data-line="2"><span class="n">safe</span><span class="o">.</span><span class="n">set_guard</span><span class="p">(</span><span class="s2">"0xMyGuard"</span><span class="p">,</span> <span class="n">submitter</span><span class="o">=</span><span class="n">me</span><span class="p">)</span>
 </span><span data-line="3"><span class="k">assert</span> <span class="n">safe</span><span class="o">.</span><span class="n">guard</span>
 </span></pre></div>
 </div>
@@ -278,7 +276,7 @@ If a Guard is set improperly, it may render your Safe (and all it’s assets) pe
 </div>
 </section>
 <section id="understanding-safe-versions">
-<h2>Understanding Safe Versions<a class="headerlink" href="#understanding-safe-versions" title="Link to this heading"></a></h2>
+<h2>Understanding Safe Versions<a class="headerlink" href="#understanding-safe-versions" title="Link to this heading">#</a></h2>
 <p>Safe contracts have different versions with varying features. Ape Safe supports all major Safe versions:</p>
 <ul class="simple">
 <li><p>Safe v1.1.1</p></li>
@@ -335,5 +333,5 @@ If a Guard is set improperly, it may render your Safe (and all it’s assets) pe
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
 </html>

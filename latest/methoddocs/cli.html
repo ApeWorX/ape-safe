@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,8 @@
   --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
 }
 </style>
-    <meta property="og:type" content="website"/>
+    
+  <meta property="og:type" content="website"/>
   <meta property="og:url" content="ape-safe/methoddocs/cli.html"/>
   <meta property="og:title" content="&lt;no title&gt;"/>
     <meta name="twitter:card" content="summary"/>
@@ -188,7 +189,7 @@ data-aria-dark="Switch to auto color mode">
 </div><article class="yue" role="main">
           <dl class="py function" id="module-ape_safe.cli">
 <dt class="sig sig-object py" id="ape_safe.cli.propose_from_simulation">
-<span class="sig-prename descclassname"><span class="pre">ape_safe.cli.</span></span><span class="sig-name descname"><span class="pre">propose_from_simulation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ape_safe.cli.propose_from_simulation" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">ape_safe.cli.</span></span><span class="sig-name descname"><span class="pre">propose_from_simulation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ape_safe.cli.propose_from_simulation" title="Link to this definition">#</a></dt>
 <dd><p>Create and propose a new SafeTx from transaction receipts inside a fork.</p>
 <p>Usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@propose_from_simulation</span><span class="p">()</span>
@@ -197,7 +198,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="4"><span class="k">def</span><span class="w"> </span><span class="nf">cli</span><span class="p">():</span>
 </span><span data-line="5">    <span class="c1"># This entire function is executed within a fork/isolated context</span>
 </span><span data-line="6">    <span class="c1"># Use normal Ape features</span>
-</span><span data-line="7">    <span class="n">my_contract</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="s2">&quot;&lt;address&gt;&quot;</span><span class="p">)</span>
+</span><span data-line="7">    <span class="n">my_contract</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="s2">"&lt;address&gt;"</span><span class="p">)</span>
 </span><span data-line="8">
 </span><span data-line="9">    <span class="c1"># Any transaction is performed as if `sender=safe.address`</span>
 </span><span data-line="10">    <span class="n">my_contract</span><span class="o">.</span><span class="n">mutableMethod</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
@@ -265,5 +266,5 @@ data-aria-dark="Switch to auto color mode">
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
 </html>

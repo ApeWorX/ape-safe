@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,8 @@
   --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
 }
 </style>
-    <meta property="og:type" content="website"/>
+    
+  <meta property="og:type" content="website"/>
   <meta property="og:url" content="ape-safe/commands/modules.html"/>
   <meta property="og:title" content="Modules"/>
     <meta name="twitter:card" content="summary"/>
@@ -196,16 +197,16 @@ data-aria-dark="Switch to auto color mode">
   </div>
 </div><article class="yue" role="main">
           <section id="modules">
-<h1>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h1>
+<h1>Modules<a class="headerlink" href="#modules" title="Link to this heading">#</a></h1>
 <section id="ape-safe-modules">
-<h2>ape safe modules<a class="headerlink" href="#ape-safe-modules" title="Link to this heading"></a></h2>
+<h2>ape safe modules<a class="headerlink" href="#ape-safe-modules" title="Link to this heading">#</a></h2>
 <p>Commands for handling safe modules</p>
 <p class="rubric">Usage</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>modules<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
 </span></pre></div>
 </div>
 <section id="ape-safe-modules-disable">
-<h3>disable<a class="headerlink" href="#ape-safe-modules-disable" title="Link to this heading"></a></h3>
+<h3>disable<a class="headerlink" href="#ape-safe-modules-disable" title="Link to this heading">#</a></h3>
 <p>Disable MODULE for SAFE</p>
 <p><strong>WARNING</strong>: This is a potentially destructive action and may impact operations of your safe.</p>
 <p class="rubric">Usage</p>
@@ -215,36 +216,36 @@ data-aria-dark="Switch to auto color mode">
 <p class="rubric">Options</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-disable-v">
-<span id="cmdoption-ape-safe-modules-disable-verbosity"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbosity</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;LVL&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-modules-disable-v" title="Link to this definition"></a></dt>
+<span id="cmdoption-ape-safe-modules-disable-verbosity"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbosity</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;LVL&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-modules-disable-v" title="Link to this definition">#</a></dt>
 <dd><p>One of ERROR, WARNING, SUCCESS, INFO, or DEBUG</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-disable-account">
-<span class="sig-name descname"><span class="pre">--account</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-modules-disable-account" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">--account</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-modules-disable-account" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-disable-propose">
-<span class="sig-name descname"><span class="pre">--propose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-disable-propose" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">--propose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-disable-propose" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Arguments</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-disable-arg-SAFE">
-<span class="sig-name descname"><span class="pre">SAFE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-disable-arg-SAFE" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">SAFE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-disable-arg-SAFE" title="Link to this definition">#</a></dt>
 <dd><p>Required argument</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-disable-arg-MODULE">
-<span class="sig-name descname"><span class="pre">MODULE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-disable-arg-MODULE" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">MODULE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-disable-arg-MODULE" title="Link to this definition">#</a></dt>
 <dd><p>Required argument</p>
 </dd></dl>
 
 </section>
 <section id="ape-safe-modules-enable">
-<h3>enable<a class="headerlink" href="#ape-safe-modules-enable" title="Link to this heading"></a></h3>
+<h3>enable<a class="headerlink" href="#ape-safe-modules-enable" title="Link to this heading">#</a></h3>
 <p>Enable MODULE for SAFE</p>
 <p><strong>WARNING</strong>: This is a potentially destructive action and may make your safe vulnerable.</p>
 <p class="rubric">Usage</p>
@@ -254,36 +255,36 @@ data-aria-dark="Switch to auto color mode">
 <p class="rubric">Options</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-enable-v">
-<span id="cmdoption-ape-safe-modules-enable-verbosity"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbosity</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;LVL&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-modules-enable-v" title="Link to this definition"></a></dt>
+<span id="cmdoption-ape-safe-modules-enable-verbosity"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbosity</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;LVL&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-modules-enable-v" title="Link to this definition">#</a></dt>
 <dd><p>One of ERROR, WARNING, SUCCESS, INFO, or DEBUG</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-enable-account">
-<span class="sig-name descname"><span class="pre">--account</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-modules-enable-account" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">--account</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account&gt;</span></span><a class="headerlink" href="#cmdoption-ape-safe-modules-enable-account" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-enable-propose">
-<span class="sig-name descname"><span class="pre">--propose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-enable-propose" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">--propose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-enable-propose" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Arguments</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-enable-arg-SAFE">
-<span class="sig-name descname"><span class="pre">SAFE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-enable-arg-SAFE" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">SAFE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-enable-arg-SAFE" title="Link to this definition">#</a></dt>
 <dd><p>Required argument</p>
 </dd></dl>
 
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-enable-arg-MODULE">
-<span class="sig-name descname"><span class="pre">MODULE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-enable-arg-MODULE" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">MODULE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-enable-arg-MODULE" title="Link to this definition">#</a></dt>
 <dd><p>Required argument</p>
 </dd></dl>
 
 </section>
 <section id="ape-safe-modules-guard">
-<h3>guard<a class="headerlink" href="#ape-safe-modules-guard" title="Link to this heading"></a></h3>
+<h3>guard<a class="headerlink" href="#ape-safe-modules-guard" title="Link to this heading">#</a></h3>
 <p>Show module guard (if enabled) for SAFE</p>
 <p class="rubric">Usage</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>modules<span class="w"> </span>guard<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>SAFE
@@ -292,13 +293,13 @@ data-aria-dark="Switch to auto color mode">
 <p class="rubric">Arguments</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-guard-arg-SAFE">
-<span class="sig-name descname"><span class="pre">SAFE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-guard-arg-SAFE" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">SAFE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-guard-arg-SAFE" title="Link to this definition">#</a></dt>
 <dd><p>Required argument</p>
 </dd></dl>
 
 </section>
 <section id="ape-safe-modules-list">
-<h3>list<a class="headerlink" href="#ape-safe-modules-list" title="Link to this heading"></a></h3>
+<h3>list<a class="headerlink" href="#ape-safe-modules-list" title="Link to this heading">#</a></h3>
 <p>List all modules enabled for SAFE</p>
 <p class="rubric">Usage</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">ape<span class="w"> </span>safe<span class="w"> </span>modules<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>SAFE
@@ -307,7 +308,7 @@ data-aria-dark="Switch to auto color mode">
 <p class="rubric">Arguments</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-ape-safe-modules-list-arg-SAFE">
-<span class="sig-name descname"><span class="pre">SAFE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-list-arg-SAFE" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">SAFE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ape-safe-modules-list-arg-SAFE" title="Link to this definition">#</a></dt>
 <dd><p>Required argument</p>
 </dd></dl>
 
@@ -361,5 +362,5 @@ data-aria-dark="Switch to auto color mode">
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
 </html>
