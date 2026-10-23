@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from enum import Enum
-from typing import TYPE_CHECKING, Annotated, NewType, Union, cast
+from typing import TYPE_CHECKING, Annotated, NewType, cast
 
 from ape.types import AddressType, HexBytes
 from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
@@ -12,7 +12,7 @@ from ape_safe.utils import get_safe_tx_hash
 if TYPE_CHECKING:
     from eth_pydantic_types import HexStr
 
-SafeTx = Union[SafeTxV1, SafeTxV2]
+SafeTx = SafeTxV1 | SafeTxV2
 SafeTxID = NewType("SafeTxID", str)
 
 
@@ -205,7 +205,7 @@ class ExecutedTxData(UnexecutedTxData):
     data_decoded: dict | None = Field(default=None, alias="dataDecoded")
 
 
-SafeApiTxData = Union[ExecutedTxData, UnexecutedTxData]
+SafeApiTxData = ExecutedTxData | UnexecutedTxData
 
 
 class DelegateInfo(BaseModel):

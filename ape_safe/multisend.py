@@ -63,10 +63,10 @@ class MultiSend(ManagerAccessMixin):
         Initialize a new MultiSend session object. By default, there are no calls to make.
 
         Args:
-            safe (Optional[:class:`~ape_safe.accounts.SafeAccount`]):
+            safe (:class:`~ape_safe.accounts.SafeAccount` | None):
               The Safe account to use for executing this batch.
               If not provided, then is required for other methods below.
-            version (Union[:class:`~packaging.version.Version`, str, None]):
+            version (:class:`~packaging.version.Version` | str | None):
               The version of ``MultiSend``/``MultiSendCallOnly`` contract to use from SDK.
               Defaults to auto-detection if ``safe`` arg is present, or uses max available.
         """
@@ -89,7 +89,7 @@ class MultiSend(ManagerAccessMixin):
         Must use a provider that supports ``debug_setCode``.
 
         Args:
-            version (Union[:class:`~versioning.Version`, str, None]):
+            version (:class:`~versioning.Version` | str | None):
               The version of ``MultiSend``/``MultiSendCallOnly`` contract to use from SDK.
               Defaults to max available from SDK.
 
@@ -265,7 +265,7 @@ class MultiSend(ManagerAccessMixin):
         Encode the MultiSend transaction as a ``TransactionAPI`` object, but do not execute it.
 
         Args:
-            safe (Optional[:class:`~ape_safe.accounts.SafeAccount`]):
+            safe (:class:`~ape_safe.accounts.SafeAccount` | None):
               The Safe account to use for executing this batch.
               If not provided, then it uses value provided to
               :func:`~ape_safe.multisend.MultiSend.__init__`.
@@ -306,7 +306,7 @@ class MultiSend(ManagerAccessMixin):
               on the current chain at the expected address.
 
         Args:
-            safe (Optional[:class:`~ape_safe.accounts.SafeAccount`]):
+            safe (:class:`~ape_safe.accounts.SafeAccount` | None):
               The Safe account to use for executing this batch.
               If not provided, then it uses value provided to
               :func:`~ape_safe.multisend.MultiSend.__init__`.

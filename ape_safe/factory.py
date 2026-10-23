@@ -1,6 +1,6 @@
 import secrets
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 from ape.types import AddressType
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
@@ -45,14 +45,14 @@ class SafeFactory(ManagerAccessMixin):
 
     def create(
         self,
-        owners: Iterable[Union["BaseAddress", "AddressType", str]],
+        owners: "Iterable[BaseAddress | AddressType | str]",
         threshold: int,
-        callback_address: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
+        callback_address: "BaseAddress | AddressType | str" = ZERO_ADDRESS,
         callback_calldata: bytes | None = None,
-        fallback_handler: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
-        payment_token: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
+        fallback_handler: "BaseAddress | AddressType | str" = ZERO_ADDRESS,
+        payment_token: "BaseAddress | AddressType | str" = ZERO_ADDRESS,
         payment_amount: str | int = 0,
-        payment_receiver: Union["BaseAddress", "AddressType", str] = ZERO_ADDRESS,
+        payment_receiver: "BaseAddress | AddressType | str" = ZERO_ADDRESS,
         salt: int | None = None,
         version: Version | str | None = None,
         **txn_kwargs,

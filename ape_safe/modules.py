@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 from ape.types import AddressType
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
@@ -27,7 +27,7 @@ class SafeModuleManager(ManagerAccessMixin):
     def __repr__(self) -> str:
         return f"<{self.__class__.__qualname__} safe={self._safe.address}"
 
-    def __contains__(self, module: Union[str, AddressType, "ContractInstance"]) -> bool:
+    def __contains__(self, module: "str | AddressType | ContractInstance") -> bool:
         if self._safe.version >= Version("1.2.0"):
             return self._safe.contract.isModuleEnabled(module)
 
@@ -36,11 +36,11 @@ class SafeModuleManager(ManagerAccessMixin):
     @handle_safe_logic_error()
     def enable(
         self,
-        module: Union[str, AddressType, "ContractInstance"],
-        submitter: Union["AccountAPI", AddressType, str, None] = None,
+        module: "str | AddressType | ContractInstance",
+        submitter: "AccountAPI | AddressType | str | None" = None,
         propose: bool = False,
         **txn_kwargs,
-    ) -> Union["ReceiptAPI", "SafeTxID"]:
+    ) -> "ReceiptAPI | SafeTxID":
         if propose:
             txn = self._safe.contract.enableModule.as_transaction(module, **txn_kwargs)
             return self._safe.propose(txn=txn, submitter=submitter)
@@ -63,9 +63,7 @@ class SafeModuleManager(ManagerAccessMixin):
             if start_module == self.SENTINEL:
                 break
 
-    def _get_previous_module(
-        self, module: Union[str, AddressType, "ContractInstance"]
-    ) -> "AddressType":
+    def _get_previous_module(self, module: "str | AddressType | ContractInstance") -> "AddressType":
         prev_module = self.SENTINEL
 
         for next_module in self:
@@ -79,11 +77,11 @@ class SafeModuleManager(ManagerAccessMixin):
     @handle_safe_logic_error()
     def disable(
         self,
-        module: Union[str, AddressType, "ContractInstance"],
-        submitter: Union["AccountAPI", AddressType, str, None] = None,
+        module: "str | AddressType | ContractInstance",
+        submitter: "AccountAPI | AddressType | str | None" = None,
         propose: bool = False,
         **txn_kwargs,
-    ) -> Union["ReceiptAPI", "SafeTxID"]:
+    ) -> "ReceiptAPI | SafeTxID":
         if propose:
             txn = self._safe.contract.disableModule.as_transaction(
                 self._get_previous_module(module),
@@ -101,7 +99,7 @@ class SafeModuleManager(ManagerAccessMixin):
         )
 
     @property
-    def guard(self) -> Optional["ContractInstance"]:
+    def guard(self) -> "ContractInstance | None":
         if (
             module_guard_address := to_checksum_address(
                 self.provider.get_storage(
@@ -118,11 +116,11 @@ class SafeModuleManager(ManagerAccessMixin):
     @handle_safe_logic_error()
     def set_guard(
         self,
-        guard: Union[str, AddressType, "ContractInstance"],
-        submitter: Union["AccountAPI", AddressType, str, None] = None,
+        guard: "str | AddressType | ContractInstance",
+        submitter: "AccountAPI | AddressType | str | None" = None,
         propose: bool = False,
         **txn_kwargs,
-    ) -> Union["ReceiptAPI", "SafeTxID"]:
+    ) -> "ReceiptAPI | SafeTxID":
         if propose:
             txn = self._safe.contract.setModuleGuard.as_transaction(guard, **txn_kwargs)
             return self._safe.propose(txn=txn, submitter=submitter)
@@ -135,5 +133,5 @@ class SafeModuleManager(ManagerAccessMixin):
         )
 
     @handle_safe_logic_error()
-    def remove_guard(self, **txn_kwargs) -> Union["ReceiptAPI", "SafeTxID"]:
+    def remove_guard(self, **txn_kwargs) -> "ReceiptAPI | SafeTxID":
         return self.set_guard(ZERO_ADDRESS, **txn_kwargs)

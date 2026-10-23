@@ -113,10 +113,10 @@ select = [
 ignore = ["TC003", "N801", "N802", "N803", "N806", "N813", "N815", "N818", "PYI036"]
 
 [tool.ruff.lint.per-file-ignores]
-"ape_safe/**/*.py" = ["RET504", "RET505", "SIM110", "B904", "E501", "B007", "ARG001", "ARG002", "ARG003", "N801", "N802", "N803", "N806", "N813", "N815", "N818", "PYI036", "SIM102", "SIM105", "UP007"]
+"ape_safe/**/*.py" = ["RET504", "RET505", "SIM110", "B904", "E501", "B007", "ARG001", "ARG002", "ARG003", "N801", "N802", "N803", "N806", "N813", "N815", "N818", "PYI036", "SIM102", "SIM105"]
 "version.py" = ["ALL"]
 "__init__.py" = ["F401"]
-"tests/**/*.py" = ["ARG001", "ARG002", "DTZ005", "PT011", "PT007", "RET504", "RET505", "SIM110", "B904", "E501", "ARG003", "N801", "N802", "N803", "N806", "N813", "N815", "N818", "PYI036", "SIM102", "SIM105", "UP007"]  # Pytest fixtures may appear unused
+"tests/**/*.py" = ["ARG001", "ARG002", "DTZ005", "PT011", "PT007", "RET504", "RET505", "SIM110", "B904", "E501", "ARG003", "N801", "N802", "N803", "N806", "N813", "N815", "N818", "PYI036", "SIM102", "SIM105"]  # Pytest fixtures may appear unused
 
 [tool.ruff.lint.isort]
 force-wrap-aliases = true

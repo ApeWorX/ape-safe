@@ -3,7 +3,7 @@ import os
 from collections.abc import Iterator
 from datetime import datetime
 from functools import reduce
-from typing import TYPE_CHECKING, Optional, Union, cast
+from typing import TYPE_CHECKING, cast
 
 from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import USER_AGENT, get_package_version

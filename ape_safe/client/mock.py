@@ -1,6 +1,6 @@
 from collections.abc import Iterator
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 from ape.utils import ZERO_ADDRESS, ManagerAccessMixin
 from eth_utils import keccak, to_hex
@@ -157,7 +157,7 @@ class MockSafeClient(BaseSafeClient, ManagerAccessMixin):
     def get_delegates(self) -> dict["AddressType", list["AddressType"]]:
         return self.delegates
 
-    def delegator_for_delegate(self, delegate: "AddressType") -> Optional["AddressType"]:
+    def delegator_for_delegate(self, delegate: "AddressType") -> "AddressType | None":
         for delegator, delegates in self.delegates.items():
             if delegate in delegates:
                 return delegator

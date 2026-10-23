@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, NoReturn, Union, cast
+from typing import TYPE_CHECKING, NoReturn, cast
 
 import click
 from ape.cli import ApeCliContextObject, ape_cli_context
@@ -99,7 +99,7 @@ class CallbackFactory:
         return None
 
     @classmethod
-    def sender_callback(cls, ctx, param, val) -> Union["AccountAPI", bool] | None:
+    def sender_callback(cls, ctx, param, val) -> "AccountAPI | bool | None":
         """
         Either returns the account or ``False`` meaning don't execute.
         NOTE: The handling of the `--execute` flag in the `pending` CLI
@@ -109,7 +109,7 @@ class CallbackFactory:
         return cls._get_execute_callback(ctx, param, val, name="sender")
 
     @classmethod
-    def execute_callback(cls, ctx, param, val) -> Union["AccountAPI", bool] | None:
+    def execute_callback(cls, ctx, param, val) -> "AccountAPI | bool | None":
         """
         Either returns the account or ``False`` meaning don't execute.
         """

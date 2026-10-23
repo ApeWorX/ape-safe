@@ -3,7 +3,7 @@ import json
 import os
 from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.api.networks import ForkedNetworkAPI
@@ -106,7 +106,7 @@ class SafeContainer(AccountContainerAPI):
         safe_accounts = cast("Iterator[SafeAccount]", self.accounts)
         yield from safe_accounts
 
-    def __contains__(self, item: Union[str, "SafeAccount"]) -> bool:
+    def __contains__(self, item: "str | SafeAccount") -> bool:
         if item is None:
             return False
 
@@ -271,7 +271,7 @@ class SafeAccount(AccountAPI):
         return safe_contract
 
     @cached_property
-    def fallback_handler(self) -> Optional["ContractInstance"]:
+    def fallback_handler(self) -> "ContractInstance | None":
         slot = keccak(text="fallback_manager.handler.address")
         value = self.provider.get_storage(self.address, slot)
         address = self.network_manager.ecosystem.decode_address(value[-20:])
@@ -284,7 +284,7 @@ class SafeAccount(AccountAPI):
         return SafeModuleManager(self)
 
     @property
-    def guard(self) -> Optional["ContractInstance"]:
+    def guard(self) -> "ContractInstance | None":
         if self.version < Version("1.3.0"):
             raise FeatureNotAvailable("Safe Guard", self.version)
 
@@ -297,7 +297,7 @@ class SafeAccount(AccountAPI):
 
     def set_guard(
         self,
-        new_guard: Union[str, AddressType, "BaseAddress"] = ZERO_ADDRESS,
+        new_guard: "str | AddressType | BaseAddress" = ZERO_ADDRESS,
         **tx_args,
     ) -> ReceiptAPI:
         if self.version < Version("1.3.0"):
@@ -423,7 +423,7 @@ class SafeAccount(AccountAPI):
         Create the Safe transaction.
 
         Args:
-            txn (Optional[``TransactionAPI``]): The transaction
+            txn (``TransactionAPI`` | None): The transaction
             **safe_tx_kwargs: The safe transaction specifications, such as ``operation``.
 
         Returns:
@@ -548,9 +548,7 @@ class SafeAccount(AccountAPI):
 
         return list(filter(lambda a: a in signers, accounts))
 
-    def _preapproved_signature(
-        self, signer: Union[AddressType, "BaseAddress", str]
-    ) -> MessageSignature:
+    def _preapproved_signature(self, signer: "AddressType | BaseAddress | str") -> MessageSignature:
         # Get the Safe-style "preapproval" signature type, which is a sentinel value used to denote
         # when a signer approved via some other method, such as `approveHash` or being `msg.sender`
         # TODO: Link documentation for this
@@ -613,7 +611,7 @@ class SafeAccount(AccountAPI):
             sender=submitter,
         )
 
-    def compute_prev_signer(self, signer: Union[str, AddressType, "BaseAddress"]) -> AddressType:
+    def compute_prev_signer(self, signer: "str | AddressType | BaseAddress") -> AddressType:
         """
         Sometimes it's handy to have "previous owner" for ownership change operations,
         this function makes it easy to calculate.
@@ -736,7 +734,7 @@ class SafeAccount(AccountAPI):
 
         Args:
             safe_tx (``SafeTX``): The safe transaction to submit.
-            submitter (Union[``AccountAPI``, ``AddressType``, str, ``None``]):
+            submitter (``AccountAPI`` | ``AddressType`` | str | ``None``):
                 The submitter to use for the transaction. Defaults to ``None``.
 
         Returns:
@@ -784,16 +782,16 @@ class SafeAccount(AccountAPI):
         Args:
             txn (``TransactionAPI``): The contract transaction.
             submit (bool): The option to submit the transaction. Defaults to ``True``.
-            submitter (Union[``AccountAPI``, ``AddressType``, str, None]):
+            submitter (``AccountAPI`` | ``AddressType`` | str | None):
                 Determine who is submitting the transaction. Defaults to ``None``.
-            skip (Optional[list[Union[``AccountAPI, `AddressType``, str]]]):
+            skip (list[``AccountAPI`` | ``AddressType`` | str] | None):
                 Allow bypassing any specified signer. Defaults to ``None``.
-            signatures_required (Optional[int]):
+            signatures_required (int | None):
                 The amount of signers required to confirm the transaction. Defaults to ``None``.
             **signer_options: Other signer options.
 
         Returns:
-            Optional[``TransactionAPI``]: Returns ``None`` if the transaction is successful.
+            ``TransactionAPI`` | None: Returns ``None`` if the transaction is successful.
         """
 
         if not submit and submitter:
