@@ -79,7 +79,7 @@ jobs:
         - name: Run Tests
           env:
             APE_SAFE_GATEWAY_API_KEY: ${{ secrets.APE_SAFE_GATEWAY_API_KEY }}
-          run: uv run pytest -m "not fuzzing" -s --cov=ape_safe -n 0
+          run: uv run ape test -m "not fuzzing" -s --cov=ape_safe -n 0
 
 # NOTE: uncomment this block after you've marked tests with @pytest.mark.fuzzing
 #    fuzzing:
@@ -100,4 +100,4 @@ jobs:
 #          run: uv sync --group test
 #
 #        - name: Run Tests
-#          run: uv run pytest -m "fuzzing" --no-cov -s
+#          run: uv run ape test -m "fuzzing" --no-cov -s
