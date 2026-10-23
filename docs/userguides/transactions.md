@@ -7,9 +7,9 @@ This guide explains the lifecycle of a Safe transaction and how to manage each s
 Safe transactions follow a specific workflow:
 
 1. **Creation**: A transaction is created and signed by the first signer (or a delegate)
-2. **Proposal**: The transaction is proposed to the Safe Transaction Gateway Service
-3. **Confirmation**: Other signers then add their signatures (confirmations) to the transaction
-4. **Execution**: When enough signatures are collected, the transaction can be executed on-chain
+1. **Proposal**: The transaction is proposed to the Safe Transaction Gateway Service
+1. **Confirmation**: Other signers then add their signatures (confirmations) to the transaction
+1. **Execution**: When enough signatures are collected, the transaction can be executed on-chain
 
 ## Creating and Proposing Transactions
 

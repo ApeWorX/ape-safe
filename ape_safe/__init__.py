@@ -24,16 +24,15 @@ def __getattr__(name: str) -> Any:
 
         return MultiSend
 
-    elif name in ("SafeAccount", "SafeContainer"):
+    if name in ("SafeAccount", "SafeContainer"):
         return getattr(import_module("ape_safe.accounts"), name)
 
-    elif name == "SafeConfig":
+    if name == "SafeConfig":
         from ape_safe.config import SafeConfig
 
         return SafeConfig
 
-    else:
-        raise AttributeError(name)
+    raise AttributeError(name)
 
 
 __all__ = [
