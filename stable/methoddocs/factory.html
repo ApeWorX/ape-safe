@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=a318c5d4" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,8 @@
   --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
 }
 </style>
-    <meta property="og:type" content="website"/>
+    
+  <meta property="og:type" content="website"/>
   <meta property="og:url" content="ape-safe/methoddocs/factory.html"/>
   <meta property="og:title" content="&lt;no title&gt;"/>
     <meta name="twitter:card" content="summary"/>
@@ -103,7 +104,6 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.SafeClientException"><code class="docutils literal notranslate"><span class="pre">SafeClientException</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.SafeLogicError"><code class="docutils literal notranslate"><span class="pre">SafeLogicError</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.UnsupportedChainError"><code class="docutils literal notranslate"><span class="pre">UnsupportedChainError</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.ValueRequired"><code class="docutils literal notranslate"><span class="pre">ValueRequired</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html#ape_safe.exceptions.handle_safe_logic_error"><code class="docutils literal notranslate"><span class="pre">handle_safe_logic_error</span></code></a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">SafeFactory</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="multisend.html"><code class="docutils literal notranslate"><span class="pre">MultiSend</span></code></a></li>
@@ -189,7 +189,7 @@ data-aria-dark="Switch to auto color mode">
 </div><article class="yue" role="main">
           <dl class="py class" id="module-ape_safe.factory">
 <dt class="sig sig-object py" id="ape_safe.factory.SafeFactory">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ape_safe.factory.</span></span><span class="sig-name descname"><span class="pre">SafeFactory</span></span><a class="headerlink" href="#ape_safe.factory.SafeFactory" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ape_safe.factory.</span></span><span class="sig-name descname"><span class="pre">SafeFactory</span></span><a class="headerlink" href="#ape_safe.factory.SafeFactory" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 
@@ -219,7 +219,7 @@ data-aria-dark="Switch to auto color mode">
 <footer class="sy-foot">
   <div class="sy-foot-inner sy-container mx-auto">
     <div class="sy-foot-reserved md:flex justify-between items-center">
-      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+      <div class="sy-foot-copyright"><p>2026, ApeWorX LTD</p>
   
   <p>
     Made with
@@ -239,5 +239,5 @@ data-aria-dark="Switch to auto color mode">
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
 </html>
