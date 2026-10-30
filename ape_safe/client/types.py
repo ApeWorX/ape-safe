@@ -76,6 +76,7 @@ class SafeDetails(BaseModel):
 
 class SignatureType(str, Enum):
     APPROVED_HASH = "APPROVED_HASH"
+    CONTRACT_SIGNATURE = "CONTRACT_SIGNATURE"
     EOA = "EOA"
     ETH_SIGN = "ETH_SIGN"
 
