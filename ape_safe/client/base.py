@@ -45,6 +45,9 @@ class BaseSafeClient(ABC):
     @abstractmethod
     def _all_transactions(self) -> Iterator[SafeApiTxData]: ...
 
+    def _pending_transactions(self) -> Iterator[SafeApiTxData]:
+        return self._all_transactions()
+
     @abstractmethod
     def get_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeApiTxData | None: ...
 
@@ -84,7 +87,10 @@ class BaseSafeClient(ABC):
         next_nonce = self.get_next_nonce()
 
         # NOTE: We loop backwards.
-        for txn in self._all_transactions():
+        transactions = (
+            self._pending_transactions() if confirmed is False else self._all_transactions()
+        )
+        for txn in transactions:
             if ending_nonce is not None and txn.nonce > ending_nonce:
                 # NOTE: Skip all largest nonces first
                 continue
@@ -164,9 +170,10 @@ class RequestsClient(BaseSafeClient):
 
     def _request(self, method: str, url: str, json: dict | None = None, **kwargs) -> "Response":
         api_version = kwargs.pop("api_version", "v1")
+        base_url = kwargs.pop("base_url", self.base_url)
 
         # NOTE: paged requests include full url already
-        api_url = url if url.startswith(self.base_url) else f"{self.base_url}/{api_version}{url}"
+        api_url = url if url.startswith(f"{base_url}/") else f"{base_url}/{api_version}{url}"
 
         do_fail = not kwargs.pop("allow_failure", False)
 

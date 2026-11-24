@@ -518,10 +518,10 @@ class SafeAccount(AccountAPI):
         return self.propose_safe_tx(safe_tx, submitter=submitter)
 
     def pending_transactions(self) -> Iterator[tuple[SafeTx, list[SafeTxConfirmation]]]:
-        for executed_tx in self.client.get_transactions(confirmed=False):
+        for txn in self.client.get_transactions(confirmed=False):
             yield (
-                self.create_safe_tx(**executed_tx.model_dump(mode="json", by_alias=True)),
-                executed_tx.confirmations,
+                txn.as_safe_tx(version=str(self.version), chain_id=self.provider.chain_id),
+                txn.confirmations,
             )
 
     @property

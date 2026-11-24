@@ -3,8 +3,9 @@ from enum import Enum
 from typing import TYPE_CHECKING, Annotated, NewType, cast
 
 from ape.types import AddressType, HexBytes
+from ape.utils import ZERO_ADDRESS
 from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
-from eth_utils import add_0x_prefix, to_hex
+from eth_utils import add_0x_prefix, to_checksum_address, to_hex
 from pydantic import AliasChoices, BaseModel, BeforeValidator, Field, field_validator
 
 from ape_safe.utils import get_safe_tx_hash
@@ -114,6 +115,28 @@ class UnexecutedTxData(BaseModel):
     signatures: HexBytes | None = None
 
     @classmethod
+    def from_queue(cls, data: dict, threshold: int) -> "UnexecutedTxData":
+        return cls.model_validate(
+            {
+                **data,
+                "safe": to_checksum_address(data["safe"]),
+                "to": to_checksum_address(data.get("to") or ZERO_ADDRESS),
+                "gasToken": to_checksum_address(data.get("gasToken") or ZERO_ADDRESS),
+                "refundReceiver": to_checksum_address(data.get("refundReceiver") or ZERO_ADDRESS),
+                "submissionDate": data["created"],
+                "confirmationsRequired": threshold,
+                "confirmations": [
+                    {
+                        **confirmation,
+                        "owner": to_checksum_address(confirmation["owner"]),
+                        "submissionDate": confirmation["created"],
+                    }
+                    for confirmation in data["confirmations"]
+                ],
+            }
+        )
+
+    @classmethod
     def from_safe_tx(cls, safe_tx: SafeTx, confirmations_required: int) -> "UnexecutedTxData":
         return cls(
             safe=safe_tx._eip712_domain_.verifyingContract,
@@ -132,14 +155,15 @@ class UnexecutedTxData(BaseModel):
         )
 
         # NOTE: Safe pre-v1.3.0 did not have `baseGas` parameter
-        if not hasattr(tx_def, "baseGas"):
+        if issubclass(tx_def, SafeTxV1):
             return tx_def(  # type: ignore[call-arg]
                 to=self.to,
                 value=self.value,
-                data=self.data,
+                data=self.data or b"",
                 operation=self.operation,
                 gasToken=self.gas_token,
                 safeTxGas=self.safe_tx_gas,
+                dataGas=self.base_gas,
                 gasPrice=self.gas_price,
                 refundReceiver=self.refund_receiver,
                 nonce=self.nonce,
@@ -148,7 +172,7 @@ class UnexecutedTxData(BaseModel):
         return tx_def(  # type: ignore[call-arg]
             to=self.to,
             value=self.value,
-            data=self.data,
+            data=self.data or b"",
             operation=self.operation,
             gasToken=self.gas_token,
             safeTxGas=self.safe_tx_gas,
