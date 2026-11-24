@@ -335,6 +335,19 @@ def test_official_transaction_service_override_uses_the_queue(queue_client, monk
     assert http.call_args.args == ("GET", f"{QUEUE}/multisig-transactions/queue")
 
 
+def test_hosted_override_keeps_its_url_for_an_unlisted_chain(queue_client):
+    override = "https://api.safe.global/tx-service/example-chain/api"
+    client = SafeClient(SAFE, override_url=override, chain_id=9999)
+
+    assert client.base_url == override
+    assert client.chain_id == 9999
+
+
+def test_hosted_override_rejects_mismatched_chain(queue_client):
+    with pytest.raises(ValueError, match="is for chain 1"):
+        SafeClient(SAFE, override_url=INDEX, chain_id=10)
+
+
 def test_delegate_writes_sign_the_action_and_scope(queue_client, monkeypatch):
     client, http = queue_client
     monkeypatch.setattr(client_module.time, "time", lambda: 123 * 3600)

@@ -83,33 +83,41 @@ class SafeClient(RequestsClient):
         override_url: str | None = None,
         chain_id: int | None = None,
     ) -> None:
+        self.address = address
+        self._use_queue = not override_url
         if override_url:
             override = urlsplit(override_url)
             host = override.hostname or ""
-            if host == "safe.global" or host.endswith(".safe.global"):
-                # Hosted overrides also lose their off-chain endpoints at the cutoff.
-                if chain_id is None and override.path.startswith("/tx-service/"):
-                    chain_name = override.path.split("/")[2]
-                    chain_id = next(
-                        (
-                            key
-                            for key, name in EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID.items()
-                            if name == chain_name
-                        ),
-                        None,
+            self._use_queue = host == "api.safe.global" or (
+                host.startswith("safe-transaction-") and host.endswith(".safe.global")
+            )
+            if host == "api.safe.global" and override.path.startswith("/tx-service/"):
+                url_chain_name = override.path.split("/")[2]
+                url_chain_id = next(
+                    (
+                        key
+                        for key, name in EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID.items()
+                        if name == url_chain_name
+                    ),
+                    None,
+                )
+                if url_chain_id and chain_id and url_chain_id != chain_id:
+                    raise ValueError(
+                        f"The hosted Safe URL is for chain {url_chain_id}, not {chain_id}."
                     )
-                override_url = None
-
-        self.address = address
-        self.chain_id = chain_id
-        self._use_queue = not override_url
-
-        if override_url:
+                chain_id = chain_id or url_chain_id
             base_url = override_url.rstrip("/")
-        elif chain_id:
-            if chain_id not in EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID:
+        else:
+            if not chain_id:
+                raise ValueError("Must provide one of chain_id or override_url.")
+            chain_name = EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID.get(chain_id)
+            if chain_name is None:
                 raise ValueError(f"Chain ID {chain_id} is not a supported chain.")
+            base_url = f"{SAFE_CLIENT_GATEWAY_URL}/{chain_name}/api"
 
+        if self._use_queue:
+            if not chain_id:
+                raise ValueError("Provide chain_id when the hosted Safe URL does not identify it.")
             if not GATEWAY_API_KEY:
                 raise ValueError(
                     """Must provide API key via 'APE_SAFE_GATEWAY_API_KEY='.
@@ -117,12 +125,7 @@ class SafeClient(RequestsClient):
     Get one from https://developer.safe.global if you don't have one."""
                 )
 
-            base_url = (
-                f"{SAFE_CLIENT_GATEWAY_URL}/{EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID[chain_id]}/api"
-            )
-        else:
-            raise ValueError("Must provide one of chain_id or override_url.")
-
+        self.chain_id = chain_id
         super().__init__(base_url)
 
     def _request(self, method: str, url: str, json: dict | None = None, **kwargs) -> "Response":
