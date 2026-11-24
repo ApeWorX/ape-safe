@@ -91,6 +91,10 @@ class BaseSafeClient(ABC):
             self._pending_transactions() if confirmed is False else self._all_transactions()
         )
         for txn in transactions:
+            # ExecutedTxData is a subclass of UnexecutedTxData.
+            if txn.nonce < next_nonce and type(txn) is UnexecutedTxData:
+                continue  # Skip orphaned proposals before using nonce order to stop.
+
             if ending_nonce is not None and txn.nonce > ending_nonce:
                 # NOTE: Skip all largest nonces first
                 continue
@@ -106,10 +110,6 @@ class BaseSafeClient(ABC):
 
                 elif confirmed and not is_confirmed:
                     continue  # NOTE: Skip not confirmed transactions
-
-            # NOTE: use `type(txn) is ...` because ExecutedTxData is a subclass of UnexecutedTxData
-            if txn.nonce < next_nonce and type(txn) is UnexecutedTxData:
-                continue  # NOTE: Skip orphaned transactions
 
             if filter_by_ids and txn.safe_tx_hash not in filter_by_ids:
                 continue  # NOTE: Skip transactions not in the filter

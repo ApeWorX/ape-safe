@@ -163,14 +163,17 @@ class SafeClient(RequestsClient):
             yield from super()._pending_transactions()
             return
 
-        threshold = self.safe_details.threshold
+        details = self.safe_details
         params = {"safes": f"{self.address}:{self.chain_id}", "nonceOrder": "desc"}
         for txn in self._queue_results("/multisig-transactions/queue", params):
             if not self._matches_queue_scope(txn):
                 raise SafeClientException(
                     "Safe Queue Service returned a transaction outside this Safe and chain."
                 )
-            yield UnexecutedTxData.from_queue(txn, threshold)
+            if int(txn["nonce"]) < details.nonce:
+                break
+            if txn.get("txHash") is None:
+                yield UnexecutedTxData.from_queue(txn, details.threshold)
 
     def _all_transactions(self) -> Iterator[SafeApiTxData]:
         if self._use_queue:
@@ -478,16 +481,16 @@ class SafeClient(RequestsClient):
 
     def _queue_delegates(self, **params) -> Iterator[dict]:
         for entry in self._queue_results("/delegates", params):
-            safe = entry.get("safe")
-            chain_id = entry.get("chainId")
-            if (safe is None or safe.lower() == self.address.lower()) and (
-                chain_id is None or int(chain_id) == self.chain_id
-            ):
+            safe = (entry.get("safe") or ZERO_ADDRESS).lower()
+            chain_id = int(entry.get("chainId") or 0)
+            if safe in (ZERO_ADDRESS, self.address.lower()) and chain_id in (0, self.chain_id):
                 yield entry
 
     def add_delegate(self, delegate: "AddressType", label: str, delegator: "AccountAPI"):
         if self._use_queue:
-            if delegator.address not in self.safe_details.owners:
+            if delegator.address.lower() not in {
+                owner.lower() for owner in self.safe_details.owners
+            }:
                 raise SafeClientException(f"'{delegator.address}' is not an owner of this Safe.")
 
             payload = self._queue_delegate_payload(delegate, delegator, "add")
@@ -518,7 +521,7 @@ class SafeClient(RequestsClient):
 
     def remove_delegate(self, delegate: "AddressType", delegator: "AccountAPI"):
         if self._use_queue:
-            if ZERO_ADDRESS in (delegate, self.address):
+            if not self.chain_id or ZERO_ADDRESS in (delegate.lower(), self.address.lower()):
                 raise SafeClientException(
                     "Removing a delegate requires a specific delegate and Safe."
                 )
@@ -529,7 +532,10 @@ class SafeClient(RequestsClient):
             if response.status_code == 404:
                 if any(
                     entry["delegator"].lower() == delegator.address.lower()
-                    and (entry.get("safe") is None or entry.get("chainId") is None)
+                    and (
+                        (entry.get("safe") or ZERO_ADDRESS).lower() == ZERO_ADDRESS
+                        or int(entry.get("chainId") or 0) == 0
+                    )
                     for entry in self._queue_delegates(delegate=delegate)
                 ):
                     raise SafeClientException(

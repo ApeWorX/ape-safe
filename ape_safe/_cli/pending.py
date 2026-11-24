@@ -172,7 +172,10 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
             # Not a specified txn.
             continue
 
-        safe_tx = txn.as_safe_tx(version=str(safe.version), chain_id=safe.provider.chain_id)
+        safe_tx = txn.as_safe_tx(
+            version=str(safe.version),
+            chain_id=txn.queue_chain_id or safe.provider.chain_id,
+        )
         num_confirmations = len(txn.confirmations)
 
         if num_confirmations < safe.confirmations_required:
@@ -241,13 +244,8 @@ def execute(cli_ctx, safe, txn_ids, submitter, nonce):
 
 
 def _execute(safe: "SafeAccount", txn: "UnexecutedTxData", submitter: "AccountAPI", **tx_kwargs):
-    # perf: Avoid these imports during CLI load time for `ape --help` performance.
-    from ape.types import AddressType, MessageSignature
-
     safe_tx = txn.as_safe_tx(version=str(safe.version), chain_id=safe.provider.chain_id)
-    signatures: dict[AddressType, MessageSignature] = {
-        c.owner: MessageSignature.from_rsv(c.signature) for c in txn.confirmations
-    }
+    signatures = {conf.owner: conf.as_message_signature() for conf in txn.confirmations}
     tx_kwargs["submitter"] = submitter
     exc_tx = safe.create_execute_transaction(safe_tx, signatures, **tx_kwargs)
     submitter.call(exc_tx)

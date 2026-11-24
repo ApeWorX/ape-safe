@@ -16,7 +16,7 @@ from ape.utils import ZERO_ADDRESS, cached_property
 from ape_ethereum.proxies import ProxyInfo, ProxyType
 from ape_ethereum.transactions import TransactionType
 from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
-from eth_utils import keccak, to_bytes, to_canonical_address, to_int
+from eth_utils import keccak, to_bytes, to_int
 from ethpm_types import ContractType
 from ethpm_types.abi import ABIType, MethodABI
 from packaging.version import Version
@@ -39,7 +39,7 @@ from .factory import SafeFactory
 from .modules import SafeModuleManager
 from .packages import MANIFESTS_BY_VERSION, PackageType
 from .types import SafeCacheData
-from .utils import encode_signatures, get_safe_tx_hash
+from .utils import encode_signatures, get_safe_tx_hash, preapproved_signature
 
 if TYPE_CHECKING:
     from ape.api.address import BaseAddress
@@ -553,17 +553,7 @@ class SafeAccount(AccountAPI):
         return list(filter(lambda a: a in signers, accounts))
 
     def _preapproved_signature(self, signer: "AddressType | BaseAddress | str") -> MessageSignature:
-        # Get the Safe-style "preapproval" signature type, which is a sentinel value used to denote
-        # when a signer approved via some other method, such as `approveHash` or being `msg.sender`
-        # TODO: Link documentation for this
-        return MessageSignature(
-            v=1,  # Approved hash (e.g. submitter is approved)
-            r=(
-                b"\x00" * 12
-                + to_canonical_address(self.conversion_manager.convert(signer, AddressType))
-            ),
-            s=b"\x00" * 32,
-        )
+        return preapproved_signature(self.conversion_manager.convert(signer, AddressType))
 
     def _impersonate_approvals(self, safe_tx: SafeTx) -> dict[AddressType, MessageSignature]:
         safe_tx_hash = self.contract.getTransactionHash(*safe_tx)
@@ -698,15 +688,11 @@ class SafeAccount(AccountAPI):
             safe_tx_id = safe_tx
 
         try:
-            return {
-                conf.owner: MessageSignature(
-                    r=conf.signature[:32], s=conf.signature[32:64], v=conf.signature[64]
-                )
-                for conf in self.client.get_confirmations(safe_tx_id)
-            }
+            confirmations = list(self.client.get_confirmations(safe_tx_id))
         except SafeClientException as err:
             logger.error(str(err))
             return {}
+        return {conf.owner: conf.as_message_signature() for conf in confirmations}
 
     def _contract_approvals(self, safe_tx: SafeTx) -> Mapping[AddressType, MessageSignature]:
         safe_tx_hash = self.contract.getTransactionHash(*safe_tx)
@@ -724,13 +710,16 @@ class SafeAccount(AccountAPI):
         approvals.update(self._contract_approvals(safe_tx))
         return approvals
 
-    def _load_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeTx:
+    def _load_safe_tx(self, safe_tx_hash: SafeTxID, *, chain_id: int | None = None) -> SafeTx:
         txn = self.client.get_safe_tx(safe_tx_hash)
         if txn is None:
             raise ApeSafeError(
                 f"Transaction '{safe_tx_hash}' was not found for Safe {self.address}."
             )
-        return txn.as_safe_tx(version=str(self.version), chain_id=self.provider.chain_id)
+        return txn.as_safe_tx(
+            version=str(self.version),
+            chain_id=chain_id or txn.queue_chain_id or self.provider.chain_id,
+        )
 
     @handle_safe_logic_error()
     def submit_safe_tx(
@@ -752,7 +741,7 @@ class SafeAccount(AccountAPI):
         """
         if not isinstance(safe_tx, (SafeTxV1, SafeTxV2)):
             safe_tx_id = safe_tx
-            safe_tx = self._load_safe_tx(safe_tx_id)
+            safe_tx = self._load_safe_tx(safe_tx_id, chain_id=self.provider.chain_id)
 
         else:
             safe_tx_id = get_safe_tx_hash(safe_tx)

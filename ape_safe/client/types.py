@@ -2,14 +2,14 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING, Annotated, NewType, cast
 
-from ape.types import AddressType, HexBytes
+from ape.types import AddressType, HexBytes, MessageSignature
 from ape.utils import ZERO_ADDRESS
 from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
 from eth_utils import add_0x_prefix, to_checksum_address, to_hex
 from pydantic import AliasChoices, BaseModel, BeforeValidator, Field, field_validator
 
 from ape_safe.exceptions import SafeClientException
-from ape_safe.utils import get_safe_tx_hash
+from ape_safe.utils import get_safe_tx_hash, preapproved_signature
 
 if TYPE_CHECKING:
     from eth_pydantic_types import HexStr
@@ -78,6 +78,7 @@ class SafeDetails(BaseModel):
 
 class SignatureType(str, Enum):
     APPROVED_HASH = "APPROVED_HASH"
+    CONTRACT_SIGNATURE = "CONTRACT_SIGNATURE"
     EOA = "EOA"
     ETH_SIGN = "ETH_SIGN"
 
@@ -88,6 +89,25 @@ class SafeTxConfirmation(BaseModel):
     transaction_hash: HexBytes | None = Field(default=None, alias="transactionHash")
     signature: HexBytes
     signature_type: SignatureType | None = Field(default=None, alias="signatureType")
+
+    @classmethod
+    def from_queue(cls, data: dict) -> "SafeTxConfirmation":
+        owner = to_checksum_address(data["owner"])
+        signature = data.get("signature")
+        if data.get("signatureType") == SignatureType.APPROVED_HASH and signature in (
+            None,
+            "",
+            "0x",
+        ):
+            signature = preapproved_signature(owner).encode_rsv()
+        return cls.model_validate(
+            {**data, "owner": owner, "signature": signature, "submissionDate": data["created"]}
+        )
+
+    def as_message_signature(self) -> MessageSignature:
+        if self.signature_type == SignatureType.CONTRACT_SIGNATURE:
+            raise SafeClientException("Contract-owner signatures require dynamic Safe encoding.")
+        return MessageSignature.from_rsv(self.signature)
 
 
 class OperationType(int, Enum):
@@ -103,7 +123,9 @@ class UnexecutedTxData(BaseModel):
     operation: OperationType
     gas_token: AddressType = Field(alias="gasToken")
     safe_tx_gas: int = Field(alias="safeTxGas")
-    base_gas: int = Field(alias="baseGas", default=0)
+    base_gas: int = Field(
+        alias="baseGas", validation_alias=AliasChoices("baseGas", "dataGas"), default=0
+    )
     gas_price: int = Field(alias="gasPrice")
     refund_receiver: AddressType = Field(alias="refundReceiver")
     nonce: int
@@ -128,30 +150,19 @@ class UnexecutedTxData(BaseModel):
                 "submissionDate": data["created"],
                 "confirmationsRequired": threshold,
                 "queue_chain_id": data["chainId"],
-                "confirmations": [
-                    {
-                        **confirmation,
-                        "owner": to_checksum_address(confirmation["owner"]),
-                        "submissionDate": confirmation["created"],
-                    }
-                    for confirmation in data["confirmations"]
-                ],
+                "confirmations": [SafeTxConfirmation.from_queue(c) for c in data["confirmations"]],
             }
         )
 
     @classmethod
     def from_safe_tx(cls, safe_tx: SafeTx, confirmations_required: int) -> "UnexecutedTxData":
-        fields = safe_tx.model_dump()
-        if isinstance(safe_tx, SafeTxV1):
-            fields["baseGas"] = fields.pop("dataGas")
-
         return cls(
             safe=safe_tx._eip712_domain_.verifyingContract,
             submissionDate=datetime.now(timezone.utc),
             modified=datetime.now(timezone.utc),
             confirmationsRequired=confirmations_required,
             safeTxHash=get_safe_tx_hash(safe_tx),
-            **fields,
+            **safe_tx.model_dump(),
         )
 
     def as_safe_tx(self, version: str, chain_id: int | None = None) -> SafeTx:

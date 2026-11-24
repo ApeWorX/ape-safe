@@ -9,7 +9,7 @@ from eth_utils import to_checksum_address, to_hex
 from requests import Response
 
 from ape_safe import client as client_module
-from ape_safe.client import ExecutedTxData, SafeClient, UnexecutedTxData
+from ape_safe.client import ExecutedTxData, SafeClient, SafeTxConfirmation, UnexecutedTxData
 from ape_safe.exceptions import (
     ClientResponseError,
     MultisigTransactionNotFoundError,
@@ -116,6 +116,32 @@ def test_legacy_transaction_round_trips_data_gas():
     assert txn.as_safe_tx("1.1.1").signable_message == signed.signable_message
 
 
+@pytest.mark.parametrize("signature", [None, "", "0x"])
+def test_queue_approval_without_signature_reconstructs_safe_preapproval(signature):
+    approval = SafeTxConfirmation.from_queue(
+        {
+            "owner": OWNER.lower(),
+            "created": DATE,
+            "signatureType": "APPROVED_HASH",
+            "signature": signature,
+        }
+    ).as_message_signature()
+
+    assert approval.v == 1
+    assert to_hex(approval.r) == "0x" + "00" * 12 + OWNER.lower()[2:]
+    assert approval.s == b"\0" * 32
+
+
+def test_queue_contract_signature_can_be_read_without_treating_it_as_rsv():
+    approval = SafeTxConfirmation.from_queue(
+        {**confirmation(), "signatureType": "CONTRACT_SIGNATURE", "signature": "0x1234"}
+    )
+
+    assert approval.signature == b"\x12\x34"
+    with pytest.raises(SafeClientException, match="dynamic Safe encoding"):
+        approval.as_message_signature()
+
+
 def test_all_transactions_keeps_executed_history_on_transaction_service(queue_client):
     client, http = queue_client
     executed = {
@@ -138,11 +164,21 @@ def test_all_transactions_keeps_executed_history_on_transaction_service(queue_cl
         "confirmationsRequired": 2,
     }
     http.side_effect = [
-        response(200, {"results": [queue_tx(5)], "next": None}),
+        response(
+            200,
+            {
+                "results": [
+                    {**queue_tx(6), "txHash": executed["transactionHash"]},
+                    queue_tx(5),
+                    queue_tx(3),
+                ],
+                "next": None,
+            },
+        ),
         response(200, {"results": [executed], "next": None}),
     ]
 
-    pending, history = client.get_transactions()
+    pending, history = client.get_transactions(starting_nonce=4)
 
     assert pending.nonce == 5
     assert isinstance(history, ExecutedTxData)
@@ -260,7 +296,7 @@ def test_delegate_listing_includes_wider_scopes_for_current_owners(queue_client)
             {
                 "results": [
                     {**entry, "chainId": "1", "safe": SAFE.lower()},
-                    {**entry, "chainId": None, "safe": None},
+                    {**entry, "chainId": "0", "safe": ZERO_ADDRESS},
                 ]
             },
         ),
