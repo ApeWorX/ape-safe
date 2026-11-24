@@ -2,6 +2,8 @@ import pytest
 from ape.api import AccountAPI
 from ape.types import AddressType
 
+from ape_safe import client as client_module
+
 
 def test_init(safe, OWNERS, THRESHOLD, safe_contract):
     assert safe.contract == safe_contract
@@ -100,10 +102,11 @@ def test_safe_account_convert(safe):
     assert actual == safe.address
 
 
-def test_get_client(safe):
+def test_get_client(safe, monkeypatch):
     """
     Test getting a client for a specific chain ID.
     """
+    monkeypatch.setattr(client_module, "GATEWAY_API_KEY", "test-key")
     # Create a test deployed_chain_ids list
     safe_data = safe.account_data
     safe_data.deployed_chain_ids = [1, 10, 100]

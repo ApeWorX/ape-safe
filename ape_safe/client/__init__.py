@@ -75,7 +75,7 @@ EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID = {
 
 
 class SafeClient(RequestsClient):
-    """Client to use to communicate with Safe Client Gateway Service"""
+    """Client for the Safe Transaction and Queue Services."""
 
     def __init__(
         self,
@@ -83,13 +83,29 @@ class SafeClient(RequestsClient):
         override_url: str | None = None,
         chain_id: int | None = None,
     ) -> None:
+        if override_url:
+            override = urlsplit(override_url)
+            host = override.hostname or ""
+            if host == "safe.global" or host.endswith(".safe.global"):
+                # Hosted overrides also lose their off-chain endpoints at the cutoff.
+                if chain_id is None and override.path.startswith("/tx-service/"):
+                    chain_name = override.path.split("/")[2]
+                    chain_id = next(
+                        (
+                            key
+                            for key, name in EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID.items()
+                            if name == chain_name
+                        ),
+                        None,
+                    )
+                override_url = None
+
         self.address = address
         self.chain_id = chain_id
-        # Explicit overrides may point to a self-hosted Transaction Service.
         self._use_queue = not override_url
 
         if override_url:
-            base_url = override_url
+            base_url = override_url.rstrip("/")
         elif chain_id:
             if chain_id not in EIP3770_BLOCKCHAIN_NAMES_BY_CHAIN_ID:
                 raise ValueError(f"Chain ID {chain_id} is not a supported chain.")
@@ -202,27 +218,27 @@ class SafeClient(RequestsClient):
         return UnexecutedTxData.model_validate(data)
 
     def get_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeApiTxData | None:
-        if not self._use_queue:
-            return self._indexed_safe_tx(safe_tx_hash)
-
-        response = self._queue_request(
-            "GET", f"/multisig-transactions/{safe_tx_hash}", allow_failure=True
-        )
-        if response.status_code != 404:
-            self._check_queue_response(response)
-            txn = response.json()
-            if self._matches_queue_scope(txn) and txn.get("txHash") is None:
+        if self._use_queue:
+            txn = self._queue_transaction(safe_tx_hash)
+            if txn is not None and txn.get("txHash") is None:
                 return UnexecutedTxData.from_queue(txn, self.safe_details.threshold)
 
         return self._indexed_safe_tx(safe_tx_hash)
 
+    def _queue_transaction(self, safe_tx_hash: SafeTxID, *, required: bool = False) -> dict | None:
+        path = f"/multisig-transactions/{safe_tx_hash}"
+        response = self._queue_request("GET", path, allowed_statuses=(404,))
+        if response.status_code != 404:
+            txn = response.json()
+            if txn["safeTxHash"].lower() == safe_tx_hash.lower() and self._matches_queue_scope(txn):
+                return txn
+
+        if required:
+            raise MultisigTransactionNotFoundError(safe_tx_hash, response.url, response)
+        return None
+
     def _matches_queue_scope(self, txn: dict) -> bool:
         return txn["safe"].lower() == self.address.lower() and int(txn["chainId"]) == self.chain_id
-
-    @staticmethod
-    def _check_queue_response(response: "Response"):
-        if not response.ok:
-            raise ClientResponseError(response.url, response)
 
     def get_confirmations(self, safe_tx_hash: SafeTxID) -> Iterator[SafeTxConfirmation]:
         if safe_tx := self.get_safe_tx(safe_tx_hash):
@@ -268,18 +284,19 @@ class SafeClient(RequestsClient):
         if not signatures:
             raise SafeClientException("A Safe Queue Service proposal needs at least one signature.")
 
-        details = self.safe_details
-        tx_data = UnexecutedTxData.from_safe_tx(safe_tx, details.threshold)
-        if tx_data.safe.lower() != self.address.lower() or (
-            isinstance(safe_tx, SafeTxV2) and safe_tx._eip712_domain_.chainId != self.chain_id
+        domain = safe_tx._eip712_domain_
+        if (domain.verifyingContract or "").lower() != self.address.lower() or (
+            isinstance(safe_tx, SafeTxV2) and domain.chainId != self.chain_id
         ):
             raise SafeClientException("The proposal belongs to a different Safe or chain.")
+
+        safe_tx_hash = get_safe_tx_hash(safe_tx)
         if (expected_hash := kwargs.get("contractTransactionHash")) and (
-            expected_hash.lower() != tx_data.safe_tx_hash.lower()
+            expected_hash.lower() != safe_tx_hash.lower()
         ):
             raise SafeClientException("The supplied hash does not match the proposal.")
 
-        owners = {owner.lower() for owner in details.owners}
+        owners = {owner.lower() for owner in self.safe_details.owners}
         candidates = {address.lower(): signature for address, signature in signatures.items()}
         owner_signatures = {
             address: signature for address, signature in candidates.items() if address in owners
@@ -294,15 +311,16 @@ class SafeClient(RequestsClient):
         if proposer in owners:
             proposal_signatures.update(owner_signatures)
 
-        first_signatures = list(proposal_signatures.values())[:50]
+        fields = safe_tx.model_dump(mode="json")
+        if isinstance(safe_tx, SafeTxV1):
+            fields["baseGas"] = fields.pop("dataGas")
+
         payload = {
-            **tx_data.base_tx_dict,
+            **fields,
             "chainId": self.chain_id,
-            "safe": tx_data.safe,
-            "data": to_hex(tx_data.data) if tx_data.data else None,
-            "operation": int(tx_data.operation),
-            "baseGas": safe_tx.dataGas if isinstance(safe_tx, SafeTxV1) else safe_tx.baseGas,
-            "signatures": self._encode_queue_signatures(first_signatures),
+            "safe": self.address,
+            "data": to_hex(safe_tx.data) if safe_tx.data else None,
+            "signatures": self._encode_queue_signatures(list(proposal_signatures.values())[:50]),
             "originName": kwargs.get("originName", "Ape Safe"),
             "originUrl": kwargs.get("originUrl", "https://apeworx.io"),
         }
@@ -310,23 +328,22 @@ class SafeClient(RequestsClient):
             payload["notes"] = kwargs["notes"]
 
         response = self._queue_request(
-            "POST", "/multisig-transactions", json=payload, allow_failure=True
+            "POST", "/multisig-transactions", json=payload, allowed_statuses=(409,)
         )
         if response.status_code == 409:
             # A repeated proposal used to add confirmations. Keep that behavior explicitly.
-            response = self._queue_request("GET", f"/multisig-transactions/{tx_data.safe_tx_hash}")
+            response = self._queue_request("GET", f"/multisig-transactions/{safe_tx_hash}")
 
-        self._check_queue_response(response)
         result = response.json()
-        if result[
-            "safeTxHash"
-        ].lower() != tx_data.safe_tx_hash.lower() or not self._matches_queue_scope(result):
+        if result["safeTxHash"].lower() != safe_tx_hash.lower() or not self._matches_queue_scope(
+            result
+        ):
             raise SafeClientException("Safe Queue Service returned a different transaction.")
 
         if result.get("txHash") is None:
             confirmed = {confirmation["owner"].lower() for confirmation in result["confirmations"]}
             self._post_queue_signatures(
-                tx_data.safe_tx_hash,
+                safe_tx_hash,
                 {
                     owner: signature
                     for owner, signature in owner_signatures.items()
@@ -351,24 +368,27 @@ class SafeClient(RequestsClient):
         for offset in range(0, len(items), 50):
             batch = items[offset : offset + 50]
             payload = {"signatures": self._encode_queue_signatures([sig for _, sig in batch])}
-            response = self._queue_request("POST", url, json=payload, allow_failure=True)
+            response = self._queue_request("POST", url, json=payload, allowed_statuses=(404, 409))
             if response.status_code == 409:
                 # The service rejects the whole batch if another signer beat us to one approval.
-                txn = self.get_safe_tx(safe_tx_hash)
-                if txn is not None and not isinstance(txn, ExecutedTxData):
-                    confirmed = {confirmation.owner.lower() for confirmation in txn.confirmations}
+                txn = self._queue_transaction(safe_tx_hash)
+                if txn is not None and txn.get("txHash") is None:
+                    confirmed = {
+                        confirmation["owner"].lower() for confirmation in txn["confirmations"]
+                    }
                     missing = [sig for owner, sig in batch if owner not in confirmed]
                     if not missing:
                         continue
                     if len(missing) < len(batch):
                         payload = {"signatures": self._encode_queue_signatures(missing)}
                         response = self._queue_request(
-                            "POST", url, json=payload, allow_failure=True
+                            "POST", url, json=payload, allowed_statuses=(404,)
                         )
 
             if response.status_code == 404:
                 raise MultisigTransactionNotFoundError(safe_tx_hash, response.url, response)
-            self._check_queue_response(response)
+            if response.status_code == 409:
+                raise ClientResponseError(response.url, response)
 
     def post_signatures(
         self,
@@ -383,9 +403,12 @@ class SafeClient(RequestsClient):
 
         safe_tx_hash = cast("SafeTxID", to_hex(HexBytes(safe_tx_hash)))
         if self._use_queue:
-            self._post_queue_signatures(
-                safe_tx_hash, {owner.lower(): signature for owner, signature in signatures.items()}
-            )
+            if signatures:
+                self._queue_transaction(safe_tx_hash, required=True)
+                self._post_queue_signatures(
+                    safe_tx_hash,
+                    {owner.lower(): signature for owner, signature in signatures.items()},
+                )
             return
 
         url = f"/multisig-transactions/{safe_tx_hash}/confirmations"
@@ -417,15 +440,15 @@ class SafeClient(RequestsClient):
         delegates: dict[AddressType, list[AddressType]] = {}
 
         if self._use_queue:
-            for entry in self._queue_results(url, {"safe": self.address}):
-                chain_id = entry["chainId"]
-                if chain_id is None or int(chain_id) == self.chain_id:
-                    owner = to_checksum_address(entry["delegator"])
-                    delegate = to_checksum_address(entry["delegate"])
-                    addresses = delegates.setdefault(owner, [])
-                    if delegate not in addresses:
-                        addresses.append(delegate)
-
+            for owner in self.safe_details.owners:
+                addresses = list(
+                    dict.fromkeys(
+                        to_checksum_address(entry["delegate"])
+                        for entry in self._queue_delegates(delegator=owner)
+                    )
+                )
+                if addresses:
+                    delegates[owner] = addresses
             return delegates
 
         while url:
@@ -442,6 +465,26 @@ class SafeClient(RequestsClient):
 
         return delegates
 
+    def is_delegate(self, address: AddressType) -> bool:
+        if not self._use_queue:
+            return super().is_delegate(address)
+
+        # Searching by address also finds delegations valid for all Safes.
+        owners = {owner.lower() for owner in self.safe_details.owners}
+        return any(
+            entry["delegator"].lower() in owners
+            for entry in self._queue_delegates(delegate=address)
+        )
+
+    def _queue_delegates(self, **params) -> Iterator[dict]:
+        for entry in self._queue_results("/delegates", params):
+            safe = entry.get("safe")
+            chain_id = entry.get("chainId")
+            if (safe is None or safe.lower() == self.address.lower()) and (
+                chain_id is None or int(chain_id) == self.chain_id
+            ):
+                yield entry
+
     def add_delegate(self, delegate: "AddressType", label: str, delegator: "AccountAPI"):
         if self._use_queue:
             if delegator.address not in self.safe_details.owners:
@@ -449,13 +492,13 @@ class SafeClient(RequestsClient):
 
             payload = self._queue_delegate_payload(delegate, delegator, "add")
             payload["label"] = label
-            response = self._queue_request("POST", "/delegates", json=payload, allow_failure=True)
+            response = self._queue_request(
+                "POST", "/delegates", json=payload, allowed_statuses=(409,)
+            )
             if response.status_code == 409:
                 payload = self._queue_delegate_payload(delegate, delegator, "edit")
                 payload["label"] = label
                 self._queue_request("PATCH", "/delegates", json=payload)
-            else:
-                self._check_queue_response(response)
             return
 
         msg_hash = self.create_delegate_message(delegate)
@@ -480,7 +523,20 @@ class SafeClient(RequestsClient):
                     "Removing a delegate requires a specific delegate and Safe."
                 )
             payload = self._queue_delegate_payload(delegate, delegator, "delete")
-            self._queue_request("DELETE", "/delegates", json=payload)
+            response = self._queue_request(
+                "DELETE", "/delegates", json=payload, allowed_statuses=(404,)
+            )
+            if response.status_code == 404:
+                if any(
+                    entry["delegator"].lower() == delegator.address.lower()
+                    and (entry.get("safe") is None or entry.get("chainId") is None)
+                    for entry in self._queue_delegates(delegate=delegate)
+                ):
+                    raise SafeClientException(
+                        "This delegate is registered across multiple Safes or chains. "
+                        "Remove it from the service with its original scope."
+                    )
+                raise ClientResponseError(response.url, response)
             return
 
         msg_hash = self.create_delegate_message(delegate)

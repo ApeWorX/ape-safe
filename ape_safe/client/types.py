@@ -8,6 +8,7 @@ from eip712.common import SafeTxV1, SafeTxV2, create_safe_tx_def
 from eth_utils import add_0x_prefix, to_checksum_address, to_hex
 from pydantic import AliasChoices, BaseModel, BeforeValidator, Field, field_validator
 
+from ape_safe.exceptions import SafeClientException
 from ape_safe.utils import get_safe_tx_hash
 
 if TYPE_CHECKING:
@@ -113,6 +114,7 @@ class UnexecutedTxData(BaseModel):
     confirmations: list[SafeTxConfirmation] = []
     trusted: bool = True
     signatures: HexBytes | None = None
+    queue_chain_id: int | None = Field(default=None, exclude=True)
 
     @classmethod
     def from_queue(cls, data: dict, threshold: int) -> "UnexecutedTxData":
@@ -125,6 +127,7 @@ class UnexecutedTxData(BaseModel):
                 "refundReceiver": to_checksum_address(data.get("refundReceiver") or ZERO_ADDRESS),
                 "submissionDate": data["created"],
                 "confirmationsRequired": threshold,
+                "queue_chain_id": data["chainId"],
                 "confirmations": [
                     {
                         **confirmation,
@@ -138,49 +141,39 @@ class UnexecutedTxData(BaseModel):
 
     @classmethod
     def from_safe_tx(cls, safe_tx: SafeTx, confirmations_required: int) -> "UnexecutedTxData":
+        fields = safe_tx.model_dump()
+        if isinstance(safe_tx, SafeTxV1):
+            fields["baseGas"] = fields.pop("dataGas")
+
         return cls(
             safe=safe_tx._eip712_domain_.verifyingContract,
             submissionDate=datetime.now(timezone.utc),
             modified=datetime.now(timezone.utc),
             confirmationsRequired=confirmations_required,
             safeTxHash=get_safe_tx_hash(safe_tx),
-            **safe_tx.model_dump(),
+            **fields,
         )
 
     def as_safe_tx(self, version: str, chain_id: int | None = None) -> SafeTx:
+        chain_id = self.queue_chain_id if chain_id is None else chain_id
         tx_def = create_safe_tx_def(
             version=version,
             contract_address=self.safe,
             chain_id=chain_id,
         )
 
-        # NOTE: Safe pre-v1.3.0 did not have `baseGas` parameter
+        fields = {**self.base_tx_dict, "data": self.data or b""}
         if issubclass(tx_def, SafeTxV1):
-            return tx_def(  # type: ignore[call-arg]
-                to=self.to,
-                value=self.value,
-                data=self.data or b"",
-                operation=self.operation,
-                gasToken=self.gas_token,
-                safeTxGas=self.safe_tx_gas,
-                dataGas=self.base_gas,
-                gasPrice=self.gas_price,
-                refundReceiver=self.refund_receiver,
-                nonce=self.nonce,
+            fields["dataGas"] = fields.pop("baseGas")
+        safe_tx = tx_def(**fields)
+        if (
+            self.queue_chain_id is not None
+            and get_safe_tx_hash(safe_tx).lower() != self.safe_tx_hash.lower()
+        ):
+            raise SafeClientException(
+                f"Queue transaction '{self.safe_tx_hash}' does not match its signed fields on chain {chain_id}."
             )
-
-        return tx_def(  # type: ignore[call-arg]
-            to=self.to,
-            value=self.value,
-            data=self.data or b"",
-            operation=self.operation,
-            gasToken=self.gas_token,
-            safeTxGas=self.safe_tx_gas,
-            baseGas=self.base_gas,
-            gasPrice=self.gas_price,
-            refundReceiver=self.refund_receiver,
-            nonce=self.nonce,
-        )
+        return safe_tx
 
     @property
     def base_tx_dict(self) -> dict:

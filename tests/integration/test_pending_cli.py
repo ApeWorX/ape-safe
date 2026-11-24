@@ -60,6 +60,31 @@ def test_propose_with_sender(runner, cli, safe_account, receiver, chain):
     assert safe_account.next_nonce == nonce_at_start
 
 
+def test_propose_with_explicit_nonce(runner, cli, safe_account, receiver, chain):
+    result = runner.invoke(
+        cli,
+        [
+            "pending",
+            "propose",
+            "--safe",
+            safe_account.alias,
+            "--to",
+            receiver.address,
+            "--value",
+            "1",
+            "--nonce",
+            "7",
+            "--sender",
+            safe_account.local_signers[0].address,
+            "--network",
+            chain.provider.network_choice,
+        ],
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0, result.output
+    assert [tx.nonce for tx in safe_account.client.get_transactions(confirmed=False)] == [7]
+
+
 def test_propose_with_execute(runner, cli, safe_account, receiver, chain):
     # First, fund the safe so the tx does not fail.
     receiver.transfer(safe_account, "1 ETH")

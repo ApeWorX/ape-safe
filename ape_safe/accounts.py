@@ -429,6 +429,7 @@ class SafeAccount(AccountAPI):
         Returns:
             :class:`~ape_safe.client.SafeTx`: The Safe Transaction to be used.
         """
+        nonce = safe_tx_kwargs.get("nonce")
         return self.safe_tx_def(  # type: ignore[call-arg]
             # NOTE: Use `txn` only for these 3 commonly-used params
             to=(
@@ -446,7 +447,7 @@ class SafeAccount(AccountAPI):
             data=(txn.data or b"") if txn else safe_tx_kwargs.get("data", b""),
             # ...then use only kwargs for the rest
             # NOTE: Use `.new_nonce` to get latest nonce in off-chain txn queue
-            nonce=safe_tx_kwargs.get("nonce", self.new_nonce),
+            nonce=self.new_nonce if nonce is None else nonce,
             operation=safe_tx_kwargs.get("operation", OperationType.CALL),
             safeTxGas=self.conversion_manager.convert(safe_tx_kwargs.get("safeTxGas", 0), int),
             gasPrice=self.conversion_manager.convert(safe_tx_kwargs.get("gasPrice", 0), int),
@@ -491,7 +492,7 @@ class SafeAccount(AccountAPI):
             submitter is not None
             and submitter.address not in sigs_by_signer
             and len(sigs_by_signer) < self.confirmations_required
-            and (submitter.address in self.signers or submitter.address in self.all_delegates())
+            and (submitter.address in self.signers or self.client.is_delegate(submitter.address))
         ) and (sig := submitter.sign_message(safe_tx)):
             sigs_by_signer[submitter.address] = sig
 
@@ -520,7 +521,10 @@ class SafeAccount(AccountAPI):
     def pending_transactions(self) -> Iterator[tuple[SafeTx, list[SafeTxConfirmation]]]:
         for txn in self.client.get_transactions(confirmed=False):
             yield (
-                txn.as_safe_tx(version=str(self.version), chain_id=self.provider.chain_id),
+                txn.as_safe_tx(
+                    version=str(self.version),
+                    chain_id=txn.queue_chain_id or self.provider.chain_id,
+                ),
                 txn.confirmations,
             )
 
@@ -694,17 +698,15 @@ class SafeAccount(AccountAPI):
             safe_tx_id = safe_tx
 
         try:
-            client_confirmations = self.client.get_confirmations(safe_tx_id)
+            return {
+                conf.owner: MessageSignature(
+                    r=conf.signature[:32], s=conf.signature[32:64], v=conf.signature[64]
+                )
+                for conf in self.client.get_confirmations(safe_tx_id)
+            }
         except SafeClientException as err:
             logger.error(str(err))
             return {}
-
-        return {
-            conf.owner: MessageSignature(
-                r=conf.signature[:32], s=conf.signature[32:64], v=conf.signature[64]
-            )
-            for conf in client_confirmations
-        }
 
     def _contract_approvals(self, safe_tx: SafeTx) -> Mapping[AddressType, MessageSignature]:
         safe_tx_hash = self.contract.getTransactionHash(*safe_tx)
@@ -721,6 +723,14 @@ class SafeAccount(AccountAPI):
         # NOTE: Do this last because it should take precedence
         approvals.update(self._contract_approvals(safe_tx))
         return approvals
+
+    def _load_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeTx:
+        txn = self.client.get_safe_tx(safe_tx_hash)
+        if txn is None:
+            raise ApeSafeError(
+                f"Transaction '{safe_tx_hash}' was not found for Safe {self.address}."
+            )
+        return txn.as_safe_tx(version=str(self.version), chain_id=self.provider.chain_id)
 
     @handle_safe_logic_error()
     def submit_safe_tx(
@@ -742,9 +752,7 @@ class SafeAccount(AccountAPI):
         """
         if not isinstance(safe_tx, (SafeTxV1, SafeTxV2)):
             safe_tx_id = safe_tx
-            safe_tx = self.client.get_safe_tx(safe_tx_id).as_safe_tx(
-                version=str(self.version), chain_id=self.chain_manager.chain_id
-            )
+            safe_tx = self._load_safe_tx(safe_tx_id)
 
         else:
             safe_tx_id = get_safe_tx_hash(safe_tx)
@@ -903,9 +911,7 @@ class SafeAccount(AccountAPI):
     ) -> dict[AddressType, MessageSignature]:
         if not isinstance(safe_tx, (SafeTxV1, SafeTxV2)):
             safe_tx_id = safe_tx
-            safe_tx = self.client.get_safe_tx(safe_tx_id).as_safe_tx(
-                version=str(self.version), chain_id=self.chain_manager.chain_id
-            )
+            safe_tx = self._load_safe_tx(safe_tx_id)
 
         else:
             safe_tx_id = get_safe_tx_hash(safe_tx)

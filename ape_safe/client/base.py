@@ -132,6 +132,9 @@ class BaseSafeClient(ABC):
     @abstractmethod
     def get_delegates(self) -> dict[AddressType, list[AddressType]]: ...
 
+    def is_delegate(self, address: AddressType) -> bool:
+        return any(address in delegates for delegates in self.get_delegates().values())
+
     @abstractmethod
     def add_delegate(self, delegate: AddressType, label: str, delegator: "AccountAPI"): ...
 
@@ -176,6 +179,7 @@ class RequestsClient(BaseSafeClient):
         api_url = url if url.startswith(f"{base_url}/") else f"{base_url}/{api_version}{url}"
 
         do_fail = not kwargs.pop("allow_failure", False)
+        allowed_statuses = kwargs.pop("allowed_statuses", ())
 
         # Use `or 10` to handle when None is explicit.
         kwargs["timeout"] = kwargs.get("timeout") or 10
@@ -185,7 +189,7 @@ class RequestsClient(BaseSafeClient):
         kwargs["headers"] = {**DEFAULT_HEADERS, **headers}
         response = self.session.request(method, api_url, json=json, **kwargs)
 
-        if not response.ok and do_fail:
+        if not response.ok and do_fail and response.status_code not in allowed_statuses:
             raise ClientResponseError(api_url, response)
 
         return response

@@ -5,13 +5,16 @@ import pytest
 from ape.types import MessageSignature
 from ape.utils import ZERO_ADDRESS
 from eip712.common import create_safe_tx_def
-from eth_account._utils.encode_typed_data.encoding_and_hashing import hash_struct
-from eth_utils import keccak, to_checksum_address, to_hex
+from eth_utils import to_checksum_address, to_hex
 from requests import Response
 
 from ape_safe import client as client_module
-from ape_safe.client import ExecutedTxData, SafeClient
-from ape_safe.exceptions import ClientResponseError, SafeClientException
+from ape_safe.client import ExecutedTxData, SafeClient, UnexecutedTxData
+from ape_safe.exceptions import (
+    ClientResponseError,
+    MultisigTransactionNotFoundError,
+    SafeClientException,
+)
 from ape_safe.utils import get_safe_tx_hash
 
 SAFE = to_checksum_address("0x" + "ab" * 20)
@@ -77,8 +80,11 @@ def test_pending_list_pages_in_descending_nonce_order(queue_client):
     client, http = queue_client
     endpoint = f"{QUEUE}/multisig-transactions/queue"
     next_page = f"{endpoint}?safes={SAFE}:1&nonceOrder=desc&offset=1"
+    signed = create_safe_tx_def("1.4.1", SAFE, 1)(
+        to=ZERO_ADDRESS, nonce=8, safeTxGas=11, baseGas=22
+    )
     http.side_effect = [
-        response(200, {"results": [queue_tx(8)], "next": next_page}),
+        response(200, {"results": [queue_tx(8, get_safe_tx_hash(signed))], "next": next_page}),
         response(200, {"results": [queue_tx(6)], "next": None}),
     ]
 
@@ -92,14 +98,22 @@ def test_pending_list_pages_in_descending_nonce_order(queue_client):
     assert txn.to == txn.gas_token == txn.refund_receiver == ZERO_ADDRESS
     assert txn.confirmations[0].owner == OWNER
     assert txn.confirmations_required == 2
-    assert txn.as_safe_tx("1.4.1", chain_id=1).baseGas == 22
-    assert txn.as_safe_tx("1.1.1").dataGas == 22
+    assert txn.as_safe_tx("1.4.1").signable_message == signed.signable_message
+    with pytest.raises(SafeClientException, match="does not match its signed fields"):
+        txn.as_safe_tx("1.4.1", chain_id=10)
     first, second = http.call_args_list
     assert first.args == ("GET", endpoint)
     assert first.kwargs["params"] == {"safes": f"{SAFE}:1", "nonceOrder": "desc"}
     assert first.kwargs["headers"]["Authorization"] == "Bearer test-key"
     assert second.args == ("GET", endpoint)
     assert second.kwargs["params"] == {**first.kwargs["params"], "offset": 1}
+
+
+def test_legacy_transaction_round_trips_data_gas():
+    signed = create_safe_tx_def("1.1.1", SAFE)(to=ZERO_ADDRESS, nonce=8, dataGas=22)
+    txn = UnexecutedTxData.from_safe_tx(signed, confirmations_required=2)
+
+    assert txn.as_safe_tx("1.1.1").signable_message == signed.signable_message
 
 
 def test_all_transactions_keeps_executed_history_on_transaction_service(queue_client):
@@ -197,36 +211,68 @@ def test_lookup_does_not_treat_unavailable_queue_as_missing(queue_client):
 def test_confirmation_conflict_retries_only_missing_signatures(queue_client):
     client, http = queue_client
     tx_hash = "0x" + "ab" * 32
-    http.side_effect = [response(409), response(200, queue_tx(5, tx_hash)), response(201, [])]
+    transaction = response(200, queue_tx(5, tx_hash))
+    http.side_effect = [transaction, response(409), transaction, response(201, [])]
 
     client.post_signatures(tx_hash, {OWNER: SIGNATURE, OTHER_OWNER: OTHER_SIGNATURE})
 
-    first, lookup, retry = http.call_args_list
+    scope, first, lookup, retry = http.call_args_list
     assert (
         first.args == retry.args == ("POST", f"{QUEUE}/multisig-transactions/{tx_hash}/signatures")
     )
-    assert lookup.args == ("GET", f"{QUEUE}/multisig-transactions/{tx_hash}")
+    assert scope.args == lookup.args == ("GET", f"{QUEUE}/multisig-transactions/{tx_hash}")
     assert retry.kwargs["json"] == {"signatures": [to_hex(OTHER_SIGNATURE.encode_rsv())]}
 
 
-def test_delegates_use_the_active_chain_or_a_chain_wide_scope(queue_client):
+def test_confirmation_rejects_a_transaction_from_another_chain(queue_client):
+    client, http = queue_client
+    tx_hash = "0x" + "ab" * 32
+    http.return_value = response(200, {**queue_tx(5, tx_hash), "chainId": "10"})
+
+    with pytest.raises(MultisigTransactionNotFoundError):
+        client.post_signatures(tx_hash, {OWNER: SIGNATURE})
+
+    http.assert_called_once()
+    assert http.call_args.args == ("GET", f"{QUEUE}/multisig-transactions/{tx_hash}")
+
+
+def test_delegate_lookup_includes_all_safes_and_requires_a_current_owner(queue_client):
+    client, http = queue_client
+    entry = {"delegate": DELEGATE.lower(), "chainId": "1", "safe": None}
+    active = {**entry, "delegator": OWNER.lower()}
+    inactive = {**entry, "delegator": DELEGATE.lower()}
+    http.side_effect = [
+        response(200, {"results": [inactive]}),
+        response(200, {"results": [active]}),
+    ]
+
+    assert not client.is_delegate(DELEGATE)
+    assert client.is_delegate(DELEGATE)
+    assert http.call_args.kwargs["params"] == {"delegate": DELEGATE}
+
+
+def test_delegate_listing_includes_wider_scopes_for_current_owners(queue_client):
     client, http = queue_client
     entry = {"delegate": DELEGATE.lower(), "delegator": OWNER.lower()}
-    http.return_value = response(
-        200,
-        {
-            "results": [
-                {**entry, "chainId": "1"},
-                {**entry, "chainId": None},
-                {**entry, "chainId": "10", "delegator": OTHER_OWNER.lower()},
-            ],
-            "next": None,
-        },
-    )
+    http.side_effect = [
+        response(
+            200,
+            {
+                "results": [
+                    {**entry, "chainId": "1", "safe": SAFE.lower()},
+                    {**entry, "chainId": None, "safe": None},
+                ]
+            },
+        ),
+        response(200, {"results": [{**entry, "chainId": "10", "delegator": OTHER_OWNER.lower()}]}),
+    ]
 
     assert client.get_delegates() == {OWNER: [DELEGATE]}
     assert http.call_args.args == ("GET", f"{QUEUE}/delegates")
-    assert http.call_args.kwargs["params"] == {"safe": SAFE}
+    assert [call.kwargs["params"] for call in http.call_args_list] == [
+        {"delegator": OWNER},
+        {"delegator": OTHER_OWNER},
+    ]
 
 
 def test_explicit_transaction_service_keeps_legacy_requests(monkeypatch):
@@ -240,6 +286,17 @@ def test_explicit_transaction_service_keeps_legacy_requests(monkeypatch):
         "GET",
         f"https://self-hosted.example/api/v1/safes/{SAFE}/multisig-transactions",
     )
+
+
+def test_official_transaction_service_override_uses_the_queue(queue_client, monkeypatch):
+    _, http = queue_client
+    client = SafeClient(SAFE, override_url=f"{INDEX}/")
+    http.return_value = response(200, {"results": []})
+    monkeypatch.setattr(client.session, "request", http)
+
+    assert list(client.get_transactions(confirmed=False)) == []
+    assert client.chain_id == 1
+    assert http.call_args.args == ("GET", f"{QUEUE}/multisig-transactions/queue")
 
 
 def test_delegate_writes_sign_the_action_and_scope(queue_client, monkeypatch):
@@ -257,20 +314,14 @@ def test_delegate_writes_sign_the_action_and_scope(queue_client, monkeypatch):
         ("PATCH", f"{QUEUE}/delegates"),
         ("DELETE", f"{QUEUE}/delegates"),
     ]
-    domain_hash = hash_struct(
-        "EIP712Domain",
-        {
-            "EIP712Domain": [
-                {"name": "name", "type": "string"},
-                {"name": "version", "type": "string"},
-                {"name": "chainId", "type": "uint256"},
-                {"name": "safe", "type": "address"},
-            ]
-        },
-        {"name": "Safe Queue Service", "version": "1.0", "chainId": 1, "safe": SAFE},
+    # Independent EIP-712 test vectors in add, edit, delete order.
+    digests = (
+        "88eb0bf5f1014efce1567daee96010ddfec7cd067606f97b7d63b0a22bd5cec9",
+        "ffd785cd00b610435808a31052e3a2343f475e9f82a1d3d269164178d347ccc9",
+        "4e91d346e175f1ea11399e8788c0f44bc1fd83f2968271fbe8442004d37acaa0",
     )
-    for action, request, signed in zip(
-        ("add", "edit", "delete"),
+    for digest, request, signed in zip(
+        digests,
         http.call_args_list,
         signer.sign_raw_msghash.call_args_list,
         strict=True,
@@ -282,18 +333,30 @@ def test_delegate_writes_sign_the_action_and_scope(queue_client, monkeypatch):
             DELEGATE,
             OWNER,
         )
-        message_hash = hash_struct(
-            "Delegate",
+        assert signed.args[0].hex().removeprefix("0x") == digest
+
+
+def test_remove_delegate_preserves_wider_scope(queue_client):
+    client, http = queue_client
+    signer = Mock(address=OWNER)
+    signer.sign_raw_msghash.return_value = SIGNATURE
+    http.side_effect = [
+        response(404),
+        response(
+            200,
             {
-                "Delegate": [
-                    {"name": "delegateAddress", "type": "address"},
-                    {"name": "totp", "type": "uint256"},
-                    {"name": "action", "type": "string"},
+                "results": [
+                    {"delegator": OWNER, "delegate": DELEGATE, "chainId": None, "safe": SAFE}
                 ]
             },
-            {"delegateAddress": DELEGATE, "totp": 123, "action": action},
-        )
-        assert signed.args[0] == keccak(b"\x19\x01" + domain_hash + message_hash)
+        ),
+    ]
+
+    with pytest.raises(SafeClientException, match="across multiple Safes or chains"):
+        client.remove_delegate(DELEGATE, signer)
+
+    assert [call.args[0] for call in http.call_args_list] == ["DELETE", "GET"]
+    assert http.call_args_list[0].kwargs["json"]["chainId"] == 1
 
 
 def test_remove_delegate_refuses_a_bulk_delete(queue_client):

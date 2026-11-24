@@ -123,7 +123,7 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, s
     from ape.api import AccountAPI
 
     from ape_safe.accounts import get_signatures
-    from ape_safe.utils import get_safe_tx_hash
+    from ape_safe.client import ExecutedTxData
 
     nonce = safe.new_nonce if nonce is None else nonce
     txn = ecosystem.create_transaction(
@@ -133,54 +133,21 @@ def propose(cli_ctx, ecosystem, safe, data, gas_price, value, receiver, nonce, s
         nonce=nonce,
         receiver=receiver,
     )
-    safe_tx = safe.create_safe_tx(txn)
-    safe_tx_hash = get_safe_tx_hash(safe_tx)
+    safe_tx = safe.create_safe_tx(txn, nonce=nonce)
     signatures = get_signatures(safe_tx, safe.local_signers)
-
-    num_confirmations = 0
-    submitter = sender if isinstance(sender, AccountAPI) else None
-    if execute is None and submitter is None:
-        # Check if we _can_ execute and ask the user.
-        do_execute = (
-            len(safe.local_signers) > 0
-            and num_confirmations >= safe.confirmations_required
-            and click.confirm(f"Submit transaction '{safe_tx.nonce}'")
-        )
-        if do_execute:
-            # The user did provider a value for `--execute` however we are able to
-            # So we prompt them.
-            submitter = safe.select_signer(for_="submitter")
-
-    sender = submitter if isinstance(submitter, AccountAPI) else safe.select_signer(for_="sender")
-    safe.client.post_transaction(
-        safe_tx,
-        signatures,
-        submitter=sender.address,
-        contractTransactionHash=safe_tx_hash,
-    )
-
-    # Wait for new transaction to appear
-    timeout = 3
-    new_tx = None
-
-    while new_tx is None and timeout > 0:
-        new_tx = next(
-            safe.client.get_transactions(
-                starting_nonce=safe.next_nonce,
-                confirmed=False,
-                filter_by_ids=[safe_tx_hash],
-            ),
-            None,
-        )
-        timeout -= 1
-
-    if new_tx:
-        cli_ctx.logger.success(f"Proposed transaction '{safe_tx_hash}'.")
-    else:
-        cli_ctx.abort("Failed to propose transaction.")
+    if not isinstance(sender, AccountAPI):
+        sender = safe.select_signer(for_="sender")
+    safe_tx_hash = safe.propose_safe_tx(safe_tx, submitter=sender, sigs_by_signer=signatures)
+    cli_ctx.logger.success(f"Proposed transaction '{safe_tx_hash}'.")
 
     if execute:
-        _execute(safe, new_tx, sender)
+        new_tx = safe.client.get_safe_tx(safe_tx_hash)
+        if new_tx is None:
+            cli_ctx.abort(f"Proposal '{safe_tx_hash}' is not available to execute yet.")
+        elif isinstance(new_tx, ExecutedTxData) and new_tx.is_executed:
+            cli_ctx.logger.info(f"Transaction '{safe_tx_hash}' has already executed.")
+        else:
+            _execute(safe, new_tx, sender)
 
 
 @pending.command(cls=ConnectedProviderCommand)
@@ -216,7 +183,7 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
                     f"Signatures added to transaction '{safe_tx.nonce}' "
                     f"using accounts '{accounts_used_str}'."
                 )
-                num_confirmations += len(signatures_added)
+                num_confirmations = len(signatures_added)
 
         if execute is None and submitter is None:
             # Check if we _can_ execute and ask the user.
@@ -232,7 +199,7 @@ def approve(cli_ctx: SafeCliContext, safe, txn_ids, execute):
 
         if submitter:
             safe_tx_hash = get_safe_tx_hash(safe_tx)
-            txn.confirmations = safe.client.get_confirmations(safe_tx_hash)
+            txn.confirmations = list(safe.client.get_confirmations(safe_tx_hash))
             _execute(safe, txn, submitter)
 
     # If any txn_ids remain, they were not handled.
