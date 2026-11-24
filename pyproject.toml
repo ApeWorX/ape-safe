@@ -27,6 +27,7 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "eip712>=0.3,<0.4",
+    "eth-abi>=5.1,<6",
     "eth-ape>=0.8.43,<0.9",
     "eth-utils>=2.1.0,<6",
     "pydantic>=2.10.2,<3",

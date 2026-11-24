@@ -1,6 +1,11 @@
 import pytest
 from ape.api import AccountAPI
 from ape.types import AddressType
+from eip712.common import create_safe_tx_def
+
+from ape_safe import client as client_module
+from ape_safe.client import UnexecutedTxData
+from ape_safe.exceptions import SafeClientException
 
 
 def test_init(safe, OWNERS, THRESHOLD, safe_contract):
@@ -100,10 +105,11 @@ def test_safe_account_convert(safe):
     assert actual == safe.address
 
 
-def test_get_client(safe):
+def test_get_client(safe, monkeypatch):
     """
     Test getting a client for a specific chain ID.
     """
+    monkeypatch.setattr(client_module, "GATEWAY_API_KEY", "test-key")
     # Create a test deployed_chain_ids list
     safe_data = safe.account_data
     safe_data.deployed_chain_ids = [1, 10, 100]
@@ -112,3 +118,21 @@ def test_get_client(safe):
     # Should work for a specified chain ID
     client = safe.get_client(chain_id=1)
     assert "/eth/" in client.base_url
+
+
+def test_submit_upstream_hash_with_local_impersonation(safe, deployer, receiver, monkeypatch):
+    upstream_chain_id = 1 if safe.provider.chain_id != 1 else 10
+    nonce = safe.next_nonce
+    safe_tx = create_safe_tx_def(str(safe.version), safe.address, upstream_chain_id)(
+        to=receiver.address, nonce=nonce
+    )
+    txn = UnexecutedTxData.from_safe_tx(safe_tx, safe.confirmations_required).model_copy(
+        update={"queue_chain_id": upstream_chain_id}
+    )
+    monkeypatch.setattr(safe.client, "get_safe_tx", lambda _: txn)
+
+    with pytest.raises(SafeClientException, match="does not match its signed fields"):
+        safe.submit_safe_tx(txn.safe_tx_hash, submitter=deployer)
+
+    safe.submit_safe_tx(txn.safe_tx_hash, impersonate=True, submitter=deployer)
+    assert safe.next_nonce == nonce + 1

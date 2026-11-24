@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from ape.types import AddressType, HexBytes, MessageSignature
 from eip712.messages import calculate_hash
 from eth_pydantic_types import HexStr
-from eth_utils import to_hex, to_int
+from eth_utils import to_canonical_address, to_hex, to_int
 
 if TYPE_CHECKING:
     from .client.types import SafeTx, SafeTxID
@@ -22,6 +22,10 @@ def encode_signatures(signatures: Mapping[AddressType, MessageSignature]) -> Hex
             for sig in order_by_signer(signatures)
         )
     )
+
+
+def preapproved_signature(owner: AddressType) -> MessageSignature:
+    return MessageSignature(v=1, r=to_canonical_address(owner).rjust(32, b"\0"), s=b"\0" * 32)
 
 
 def get_safe_tx_hash(safe_tx: "SafeTx") -> "SafeTxID":

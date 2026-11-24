@@ -45,6 +45,9 @@ class BaseSafeClient(ABC):
     @abstractmethod
     def _all_transactions(self) -> Iterator[SafeApiTxData]: ...
 
+    def _pending_transactions(self) -> Iterator[SafeApiTxData]:
+        return self._all_transactions()
+
     @abstractmethod
     def get_safe_tx(self, safe_tx_hash: SafeTxID) -> SafeApiTxData | None: ...
 
@@ -84,7 +87,14 @@ class BaseSafeClient(ABC):
         next_nonce = self.get_next_nonce()
 
         # NOTE: We loop backwards.
-        for txn in self._all_transactions():
+        transactions = (
+            self._pending_transactions() if confirmed is False else self._all_transactions()
+        )
+        for txn in transactions:
+            # ExecutedTxData is a subclass of UnexecutedTxData.
+            if txn.nonce < next_nonce and type(txn) is UnexecutedTxData:
+                continue  # Skip orphaned proposals before using nonce order to stop.
+
             if ending_nonce is not None and txn.nonce > ending_nonce:
                 # NOTE: Skip all largest nonces first
                 continue
@@ -100,10 +110,6 @@ class BaseSafeClient(ABC):
 
                 elif confirmed and not is_confirmed:
                     continue  # NOTE: Skip not confirmed transactions
-
-            # NOTE: use `type(txn) is ...` because ExecutedTxData is a subclass of UnexecutedTxData
-            if txn.nonce < next_nonce and type(txn) is UnexecutedTxData:
-                continue  # NOTE: Skip orphaned transactions
 
             if filter_by_ids and txn.safe_tx_hash not in filter_by_ids:
                 continue  # NOTE: Skip transactions not in the filter
@@ -125,6 +131,9 @@ class BaseSafeClient(ABC):
 
     @abstractmethod
     def get_delegates(self) -> dict[AddressType, list[AddressType]]: ...
+
+    def is_delegate(self, address: AddressType) -> bool:
+        return any(address in delegates for delegates in self.get_delegates().values())
 
     @abstractmethod
     def add_delegate(self, delegate: AddressType, label: str, delegator: "AccountAPI"): ...
@@ -164,11 +173,13 @@ class RequestsClient(BaseSafeClient):
 
     def _request(self, method: str, url: str, json: dict | None = None, **kwargs) -> "Response":
         api_version = kwargs.pop("api_version", "v1")
+        base_url = kwargs.pop("base_url", self.base_url)
 
         # NOTE: paged requests include full url already
-        api_url = url if url.startswith(self.base_url) else f"{self.base_url}/{api_version}{url}"
+        api_url = url if url.startswith(f"{base_url}/") else f"{base_url}/{api_version}{url}"
 
         do_fail = not kwargs.pop("allow_failure", False)
+        allowed_statuses = kwargs.pop("allowed_statuses", ())
 
         # Use `or 10` to handle when None is explicit.
         kwargs["timeout"] = kwargs.get("timeout") or 10
@@ -178,7 +189,7 @@ class RequestsClient(BaseSafeClient):
         kwargs["headers"] = {**DEFAULT_HEADERS, **headers}
         response = self.session.request(method, api_url, json=json, **kwargs)
 
-        if not response.ok and do_fail:
+        if not response.ok and do_fail and response.status_code not in allowed_statuses:
             raise ClientResponseError(api_url, response)
 
         return response
