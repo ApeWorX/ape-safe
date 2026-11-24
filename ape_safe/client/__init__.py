@@ -372,29 +372,28 @@ class SafeClient(RequestsClient):
         url = f"/multisig-transactions/{safe_tx_hash}/signatures"
         items = list(signatures.items())
         for offset in range(0, len(items), 50):
-            batch = items[offset : offset + 50]
-            payload = {"signatures": self._encode_queue_signatures([sig for _, sig in batch])}
-            response = self._queue_request("POST", url, json=payload, allowed_statuses=(404, 409))
-            if response.status_code == 409:
-                # The service rejects the whole batch if another signer beat us to one approval.
-                txn = self._queue_transaction(safe_tx_hash)
-                if txn is not None and txn.get("txHash") is None:
-                    confirmed = {
-                        confirmation["owner"].lower() for confirmation in txn["confirmations"]
-                    }
-                    missing = [sig for owner, sig in batch if owner not in confirmed]
-                    if not missing:
-                        continue
-                    if len(missing) < len(batch):
-                        payload = {"signatures": self._encode_queue_signatures(missing)}
-                        response = self._queue_request(
-                            "POST", url, json=payload, allowed_statuses=(404,)
-                        )
+            batch = dict(items[offset : offset + 50])
+            while batch:
+                payload = {"signatures": self._encode_queue_signatures(list(batch.values()))}
+                response = self._queue_request(
+                    "POST", url, json=payload, allowed_statuses=(404, 409)
+                )
+                if response.status_code == 404:
+                    raise MultisigTransactionNotFoundError(safe_tx_hash, response.url, response)
+                if response.status_code != 409:
+                    break
 
-            if response.status_code == 404:
-                raise MultisigTransactionNotFoundError(safe_tx_hash, response.url, response)
-            if response.status_code == 409:
-                raise ClientResponseError(response.url, response)
+                # Retry only while the conflicting batch shrinks.
+                txn = self._queue_transaction(safe_tx_hash)
+                if txn is None or txn.get("txHash") is not None:
+                    raise ClientResponseError(response.url, response)
+                confirmed = {confirmation["owner"].lower() for confirmation in txn["confirmations"]}
+                missing = {
+                    owner: signature for owner, signature in batch.items() if owner not in confirmed
+                }
+                if len(missing) == len(batch):
+                    raise ClientResponseError(response.url, response)
+                batch = missing
 
     def post_signatures(
         self,

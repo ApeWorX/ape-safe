@@ -740,12 +740,10 @@ class SafeAccount(AccountAPI):
             ``ReceiptAPI``
         """
         if not isinstance(safe_tx, (SafeTxV1, SafeTxV2)):
-            safe_tx_id = safe_tx
-            safe_tx = self._load_safe_tx(safe_tx_id, chain_id=self.provider.chain_id)
-
-        else:
-            safe_tx_id = get_safe_tx_hash(safe_tx)
-        assert isinstance(safe_tx, (SafeTxV1, SafeTxV2))
+            # Impersonation computes the approval hash on the active contract from the fields.
+            # The Queue hash still has to match those fields in its original signing domain.
+            chain_id = None if impersonate else self.provider.chain_id
+            safe_tx = self._load_safe_tx(safe_tx, chain_id=chain_id)
 
         if impersonate:
             signatures = {}

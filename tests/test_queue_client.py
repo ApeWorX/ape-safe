@@ -260,6 +260,31 @@ def test_confirmation_conflict_retries_only_missing_signatures(queue_client):
     assert retry.kwargs["json"] == {"signatures": [to_hex(OTHER_SIGNATURE.encode_rsv())]}
 
 
+def test_confirmation_retries_while_concurrent_approvals_shrink_the_batch(queue_client):
+    client, http = queue_client
+    tx_hash = "0x" + "ab" * 32
+    third_owner = to_checksum_address("0x" + "bc" * 20)
+    third_signature = MessageSignature(v=27, r=b"\x05" * 32, s=b"\x06" * 32)
+    http.side_effect = [
+        response(200, queue_tx(5, tx_hash, [])),
+        response(409),
+        response(200, queue_tx(5, tx_hash, [confirmation()])),
+        response(409),
+        response(200, queue_tx(5, tx_hash, [confirmation(), confirmation(OTHER_OWNER)])),
+        response(201, []),
+    ]
+
+    client.post_signatures(
+        tx_hash, {OWNER: SIGNATURE, OTHER_OWNER: OTHER_SIGNATURE, third_owner: third_signature}
+    )
+
+    sent = [
+        call.kwargs["json"]["signatures"] for call in http.call_args_list if call.args[0] == "POST"
+    ]
+    assert [len(batch) for batch in sent] == [3, 2, 1]
+    assert sent[-1] == [to_hex(third_signature.encode_rsv())]
+
+
 def test_confirmation_rejects_a_transaction_from_another_chain(queue_client):
     client, http = queue_client
     tx_hash = "0x" + "ab" * 32
